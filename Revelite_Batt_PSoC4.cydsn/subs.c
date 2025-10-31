@@ -54,6 +54,66 @@ void LatchWrite(uint8 byAddress, uint8 byReg, uint8 byData) {
 }
 
 //
+// Quadrature Decoder functions
+//
+static int16_t iQuadPosition = 0;  // Start at 0% brightness
+static int32_t iLastRawCount = 0;   // Last raw counter value
+#define QUAD_MIN 0
+#define QUAD_MAX 100
+
+void InitQuadDec(void) {
+    QuadDec_Start();
+    iQuadPosition = 0;
+    iLastRawCount = 0;
+    QuadDec_WriteCounter(0);
+}
+
+// Get brightness scalar from 0.0 to 1.0
+float QuadDec_GetBrightnessScalar(void) {
+    int32_t rawCount = (int32_t)QuadDec_ReadCounter();
+    
+    // Calculate delta from last reading
+    int32_t delta = rawCount - iLastRawCount;
+    
+    // Apply delta to our position
+    iQuadPosition += (int16_t)delta;
+    
+    // Clamp to valid range
+    if (iQuadPosition < QUAD_MIN) {
+        iQuadPosition = QUAD_MIN;
+    }
+    else if (iQuadPosition > QUAD_MAX) {
+        iQuadPosition = QUAD_MAX;
+    }
+    
+    // Store current as last
+    iLastRawCount = rawCount;
+    
+    // Convert 0-100 to 0.0-1.0
+    float brightness = (float)iQuadPosition / 100.0f;
+    
+    // Final bounds check
+    if (brightness < 0.0f) brightness = 0.0f;
+    if (brightness > 1.0f) brightness = 1.0f;
+    
+    return brightness;
+}
+
+// Get raw counter value (0-100)
+int16_t QuadDec_GetPosition(void) {
+    return iQuadPosition;
+}
+
+// Set position (0-100)
+void QuadDec_SetPosition(int16_t position) {
+    if (position < QUAD_MIN) position = QUAD_MIN;
+    if (position > QUAD_MAX) position = QUAD_MAX;
+    
+    iQuadPosition = position;
+    QuadDec_WriteCounter(position);
+}
+
+//
 bool I2CM_SyncWrite(uint8 bySlaveAddr, uint8 *buffer, uint8 length) {
     
     bool error = false;

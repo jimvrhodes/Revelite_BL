@@ -29,6 +29,12 @@ bool I2CM_SyncWrite(uint8 bySlaveAddr, uint8 *buffer, uint8 length);
 void LatchRead(uint8 byAddress, uint8 byReg, uint8* byData, uint8 byLength);
 bool I2CM_SyncRead(uint8 bySlaveAddr, uint8 *buffer, uint8 length);
 
+// Quadrature decoder functions
+void InitQuadDec(void);
+float QuadDec_GetBrightnessScalar(void);
+int16_t QuadDec_GetPosition(void);
+void QuadDec_SetPosition(int16_t position);
+
 //
 void RW_EEPROMData(uint8);
 //
@@ -99,7 +105,7 @@ CY_ISR(DIM_ISR_Handler);
 #define ONDELAYTIME 100
 //
 //#define FILTER1 1.150f
-#define FILTER1 1.0025f
+#define FILTER1 1.0125f
 #define FILTERSTART FILTER1 // first timed on filter
 //
 enum { // ADC stuff

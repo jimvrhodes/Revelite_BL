@@ -97,8 +97,6 @@ volatile uint16 uiChargerStatus;
 volatile uint8_t byButtons = 0;
 
 int main(void) {
-
-    CyDelay(2000); // delay to let LTF driver come alive
         
     bool bWriteInfo = false;
     float fMasterScalar = 1.0f;
@@ -106,6 +104,9 @@ int main(void) {
     bool bWeNeedToStoreOffSaved = false;
     uint8 byLastButton = 0;
 
+    
+    PWM1_Write(0);
+    PWM2_Write(0);
     
     // ms timer
     CyIntSetSysVector((SysTick_IRQn + 16), fnTIMER_ISR);
@@ -115,16 +116,16 @@ int main(void) {
     
     PWM_1_Start();
     PWM_1_WritePeriod(PWMPERIOD);
-    PWM_1_WriteCompare(PWMOFF);
+    PWM_1_WriteCompare(0);  // Force off
     PWM_2_Start();
     PWM_2_WritePeriod(PWMPERIOD);
-    PWM_2_WriteCompare(PWMOFF);
+    PWM_2_WriteCompare(0);  // Force off
     DIM_isr_StartEx(DIM_ISR_Handler);
 
   	RW_EEPROMData(e_EEPROMREAD); // 1st time is to set eeprom to default if first time boot
 
-    uiPWMTarget1 = PWMOFF;
-    uiPWMTarget2 = PWMOFF;
+    uiPWMTarget1 = 0;  // Start at zero
+    uiPWMTarget2 = 0;  // Start at zero
     flSmoothFilter = FILTERSTART;
     
     I2CM_Start();
@@ -135,6 +136,12 @@ int main(void) {
     LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
     byLatch2 = DEFAULTLATCH2;
     LatchWrite(LATCH2, PCLA9538_OUTREG, byLatch2);
+    
+    // Initialize quadrature decoder  
+    InitQuadDec();
+    CyDelay(10);  // Give it time to settle
+    QuadDec_WriteCounter(0);  // Force to zero again
+    CyDelay(10);
     
     // turn on the boost
     byLatch2 |= BOOSTEN;
@@ -220,9 +227,28 @@ int main(void) {
         }
 #endif
 
-#define TESTBRILLIANCE 0.00f
-        uiPWMTarget1 = PWMMAX * TESTBRILLIANCE;
-        uiPWMTarget2 = PWMMAX * TESTBRILLIANCE;
+        // Get brightness from quadrature decoder (0.0 to 1.0)
+        float fBrightness = QuadDec_GetBrightnessScalar();
+        
+        // Clamp brightness to valid range
+        if (fBrightness < 0.0f) fBrightness = 0.0f;
+        if (fBrightness > 1.0f) fBrightness = 1.0f;
+        
+        uiPWMTarget1 = (uint16_t)(PWMMAX * fBrightness);
+        uiPWMTarget2 = (uint16_t)(PWMMAX * fBrightness);
+
+#ifdef DEBUGOUT
+        // Heartbeat every 2 seconds
+        static uint16_t heartbeat = 0;
+        if (!heartbeat) {
+            heartbeat = 2000;
+            int16_t pos = QuadDec_GetPosition();
+            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d\n\r", pos);
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+            // Don't wait for TX to complete
+        }
+        if (heartbeat) heartbeat--;
+#endif
 
         uiTemp = GetAverageTEMP(); // DRIVER temperature rollback?
         if(bWeHaveSampledTEMP) {
