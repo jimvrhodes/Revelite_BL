@@ -23,10 +23,11 @@ uint8 ReadButtonsOnChange(void) {
     bool bButton = 0;
 
     uint8 byBuffer[2];
-    LatchRead(LATCH1, PCLA9538_INREG, byBuffer[0]);
+    LatchRead(LATCH1, PCLA9538_INREG, &byBuffer, 1);
     uint8 byAllButtons = byBuffer[0]; // see if buttons are active
-    byAllButtons >>= 4;
-    byAllButtons = ~byAllButtons;
+    byAllButtons >>= 4;             // they live in the 4th bit position and three more
+    byAllButtons = ~byAllButtons;   // make positive logic, these are pullups and switch to GND
+    byAllButtons &= 0x07;           // just the three bits
     
     for(uint8 n=0;n<NUMBUTTONS;n++) {
         bButton = byAllButtons & (0x01 << n); // bit mapped to single bool

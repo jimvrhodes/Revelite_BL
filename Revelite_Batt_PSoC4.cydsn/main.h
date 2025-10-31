@@ -26,7 +26,7 @@ typedef uint8 BYTE;
 uint16 GetAverageTEMP(void);
 void LatchWrite(uint8 byAddress, uint8 byReg, uint8 byData);
 bool I2CM_SyncWrite(uint8 bySlaveAddr, uint8 *buffer, uint8 length);
-void LatchRead(uint8 byAddress, uint8 byReg, uint8 byData);
+void LatchRead(uint8 byAddress, uint8 byReg, uint8* byData, uint8 byLength);
 bool I2CM_SyncRead(uint8 bySlaveAddr, uint8 *buffer, uint8 length);
 
 //

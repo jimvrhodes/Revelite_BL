@@ -73,15 +73,15 @@ bool I2CM_SyncWrite(uint8 bySlaveAddr, uint8 *buffer, uint8 length) {
 }
 
 // this is the write to the connector board PCLA9538 latch
-void LatchRead(uint8 byAddress, uint8 byReg, uint8 byData) {
+void LatchRead(uint8 byAddress, uint8 byReg, uint8* byData, uint8 byLength) {
     
     uint8 buffer[2];
     buffer[0] = byReg;
-    I2CM_SyncWrite(byAddress, buffer, 2);    
+    I2CM_SyncWrite(byAddress, buffer, 1);    
     
     uint8 error = I2CM_SyncRead(byAddress, (uint8*)buffer, 1);
     
-    byData = buffer[0];  // return value
+    memcpy(byData, buffer, byLength);  // return value
 }
 
 //

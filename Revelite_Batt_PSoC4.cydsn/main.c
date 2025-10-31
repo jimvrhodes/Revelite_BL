@@ -196,17 +196,17 @@ int main(void) {
         else
             ERRLED_Write(0);
 
-        if(byButtons &= BUTTON1)
+        if(byButtons & BUTTON1)
             byLatch1 |= LED2;
         else
             byLatch1 &= ~LED2;
         
-        if(byButtons &= BUTTON2)
+        if(byButtons & BUTTON2)
             byLatch1 |= LED3;
         else
             byLatch1 &= ~LED3;
             
-        if(byButtons &= BUTTON3)
+        if(byButtons & BUTTON3)
             byLatch1 |= LED4;
         else
             byLatch1 &= ~LED4;

@@ -1,6 +1,0 @@
-C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\Revelite_Batt_PSoC4.cyprj|8b07d091-2627-4406-bfe1-acf3a9256c23
-C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\default\CyAnnotationLibrary\CyAnnotationLibrary.cylib\CyAnnotationLibrary.cyprj|b05256df-4bcb-4542-aa2d-f95f2de74ada
-C:\Users\jimvr\Documents\PSoC Creator\4.4\Downloads ( 4.4).cylib\Downloads ( 4.4).cyprj|b3118fa9-a675-438c-832d-1f8dbb79c965
-C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibraryupdates\CyComponentLibraryUpdates.cylib\CyComponentLibraryUpdates.cyprj|4405a5a3-af22-4622-9b2b-74bbf0da5229
-C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cycomponentlibrary\CyComponentLibrary.cylib\CyComponentLibrary.cyprj|883ef58f-faa0-45e0-83d1-61f0d311203a
-C:\Program Files (x86)\Cypress\PSoC Creator\4.4\PSoC Creator\psoc\content\cyprimitives\CyPrimitives.cylib\CyPrimitives.cyprj|529eac67-9508-45db-b4fe-f5826cf764f4
