@@ -103,6 +103,8 @@ int main(void) {
     bool bACTLEDIsOn = true;
     bool bWeNeedToStoreOffSaved = false;
     uint8 byLastButton = 0;
+    bool bLEDsOn = true;  // Track LED on/off state
+    float fLastBrightness = 0.0f;  // Store last brightness when turning off
 
     
     PWM1_Write(0);
@@ -213,10 +215,12 @@ int main(void) {
         else
             byLatch1 &= ~LED3;
             
-        if(byButtons & BUTTON3)
-            byLatch1 |= LED4;
-        else
-            byLatch1 &= ~LED4;
+        // this is our ON/OFF button - toggle LEDs
+        if((byButtons & BUTTON3) && !(byLastButton & BUTTON3)) {
+            // Button just pressed - toggle state
+            bLEDsOn = !bLEDsOn;
+        }
+        byLastButton = byButtons;
             
             
 #ifdef DEBUGOUT
@@ -234,8 +238,17 @@ int main(void) {
         if (fBrightness < 0.0f) fBrightness = 0.0f;
         if (fBrightness > 1.0f) fBrightness = 1.0f;
         
-        uiPWMTarget1 = (uint16_t)(PWMMAX * fBrightness);
-        uiPWMTarget2 = (uint16_t)(PWMMAX * fBrightness);
+        // Apply ON/OFF control
+        if (bLEDsOn) {
+            // LEDs are ON - use the brightness from encoder
+            uiPWMTarget1 = (uint16_t)(PWMMAX * fBrightness);
+            uiPWMTarget2 = (uint16_t)(PWMMAX * fBrightness);
+            fLastBrightness = fBrightness;  // Save for when we turn back on
+        } else {
+            // LEDs are OFF - set brightness to 0
+            uiPWMTarget1 = 0;
+            uiPWMTarget2 = 0;
+        }
 
 #ifdef DEBUGOUT
         // Heartbeat every 2 seconds
