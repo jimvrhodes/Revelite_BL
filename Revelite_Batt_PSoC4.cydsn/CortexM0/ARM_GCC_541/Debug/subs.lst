@@ -1,0 +1,2784 @@
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"subs.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.global	__aeabi_i2f
+  20              		.global	__aeabi_fcmpgt
+  21              		.section	.text.GetAverageTEMP,"ax",%progbits
+  22              		.align	2
+  23              		.global	GetAverageTEMP
+  24              		.code	16
+  25              		.thumb_func
+  26              		.type	GetAverageTEMP, %function
+  27              	GetAverageTEMP:
+  28              	.LFB33:
+  29              		.file 1 "subs.c"
+   1:subs.c        **** // File: subs.c
+   2:subs.c        **** // Project: Revelite
+   3:subs.c        **** //
+   4:subs.c        **** //
+   5:subs.c        **** 
+   6:subs.c        **** #include "project.h"
+   7:subs.c        **** #include "main.h"
+   8:subs.c        **** #include <math.h>
+   9:subs.c        **** #include <stdio.h>
+  10:subs.c        **** 
+  11:subs.c        **** extern structInfo Info;
+  12:subs.c        **** extern bool blSaveToInfo;
+  13:subs.c        **** 
+  14:subs.c        **** //
+  15:subs.c        **** // ADC stuff
+  16:subs.c        **** extern volatile uint32 dataReady;
+  17:subs.c        **** extern volatile int16 result[ADC_TOTAL_CHANNELS_NUM];
+  18:subs.c        **** uint16 GetAverageTemp(void);
+  19:subs.c        **** uint16 GetAverageVsense(void);
+  20:subs.c        **** //
+  21:subs.c        **** //
+  22:subs.c        **** //
+  23:subs.c        **** #define SAMPLES 64 // temps and ZTEN
+  24:subs.c        **** bool bWeHaveSampledTEMP = false;
+  25:subs.c        **** uint16 GetAverageTEMP(void) {
+  30              		.loc 1 25 0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 2
+
+
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34 0000 10B5     		push	{r4, lr}
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 4, -8
+  37              		.cfi_offset 14, -4
+  38              	.LVL0:
+  26:subs.c        ****     static uint16 uiBuffer[SAMPLES] = {0};
+  27:subs.c        ****     static uint16 byPointer = 0;
+  28:subs.c        ****     uint32 uiAverage = 0;
+  29:subs.c        ****     
+  30:subs.c        ****     // get the next sample into buffer, make 10-bit value for stability
+  31:subs.c        ****     uiBuffer[byPointer] = result[e_TEMP];
+  39              		.loc 1 31 0
+  40 0002 174A     		ldr	r2, .L9
+  41 0004 1488     		ldrh	r4, [r2]
+  42 0006 174B     		ldr	r3, .L9+4
+  43 0008 9888     		ldrh	r0, [r3, #4]
+  44 000a 6300     		lsls	r3, r4, #1
+  45 000c D318     		adds	r3, r2, r3
+  46 000e 9880     		strh	r0, [r3, #4]
+  32:subs.c        ****     if(uiBuffer[byPointer] > MAXADC)
+  47              		.loc 1 32 0
+  48 0010 FFF7FEFF 		bl	__aeabi_i2f
+  49              	.LVL1:
+  50 0014 1449     		ldr	r1, .L9+8
+  51 0016 FFF7FEFF 		bl	__aeabi_fcmpgt
+  52              	.LVL2:
+  53 001a 0028     		cmp	r0, #0
+  54 001c 05D0     		beq	.L8
+  33:subs.c        ****         uiBuffer[byPointer] = 0;
+  55              		.loc 1 33 0
+  56 001e 6400     		lsls	r4, r4, #1
+  57 0020 0F4B     		ldr	r3, .L9
+  58 0022 1C19     		adds	r4, r3, r4
+  59 0024 0023     		movs	r3, #0
+  60 0026 A380     		strh	r3, [r4, #4]
+  61 0028 0AE0     		b	.L4
+  62              	.L8:
+  34:subs.c        ****     else if(++byPointer > SAMPLES) {
+  63              		.loc 1 34 0
+  64 002a 0134     		adds	r4, r4, #1
+  65 002c A4B2     		uxth	r4, r4
+  66 002e 0C4B     		ldr	r3, .L9
+  67 0030 1C80     		strh	r4, [r3]
+  68 0032 402C     		cmp	r4, #64
+  69 0034 04D9     		bls	.L4
+  35:subs.c        ****         byPointer = 0;
+  70              		.loc 1 35 0
+  71 0036 0022     		movs	r2, #0
+  72 0038 1A80     		strh	r2, [r3]
+  36:subs.c        ****         bWeHaveSampledTEMP = true;
+  73              		.loc 1 36 0
+  74 003a 0132     		adds	r2, r2, #1
+  75 003c 0B4B     		ldr	r3, .L9+12
+  76 003e 1A71     		strb	r2, [r3, #4]
+  77              	.L4:
+  78              	.LVL3:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 3
+
+
+  79              	.LBB2:
+  37:subs.c        ****     }
+  38:subs.c        ****     // average by adding them all together, then dividing
+  39:subs.c        ****     for(uint8 n = 0;n<SAMPLES;n++)
+  80              		.loc 1 39 0
+  81 0040 0023     		movs	r3, #0
+  82              	.LBE2:
+  28:subs.c        ****     
+  83              		.loc 1 28 0
+  84 0042 0020     		movs	r0, #0
+  85              	.LBB3:
+  86              		.loc 1 39 0
+  87 0044 06E0     		b	.L5
+  88              	.LVL4:
+  89              	.L6:
+  40:subs.c        ****         uiAverage += uiBuffer[n];
+  90              		.loc 1 40 0 discriminator 3
+  91 0046 5A00     		lsls	r2, r3, #1
+  92 0048 0549     		ldr	r1, .L9
+  93 004a 8A18     		adds	r2, r1, r2
+  94 004c 9288     		ldrh	r2, [r2, #4]
+  95 004e 8018     		adds	r0, r0, r2
+  96              	.LVL5:
+  39:subs.c        ****         uiAverage += uiBuffer[n];
+  97              		.loc 1 39 0 discriminator 3
+  98 0050 0133     		adds	r3, r3, #1
+  99              	.LVL6:
+ 100 0052 DBB2     		uxtb	r3, r3
+ 101              	.LVL7:
+ 102              	.L5:
+  39:subs.c        ****         uiAverage += uiBuffer[n];
+ 103              		.loc 1 39 0 is_stmt 0 discriminator 1
+ 104 0054 3F2B     		cmp	r3, #63
+ 105 0056 F6D9     		bls	.L6
+ 106              	.LBE3:
+  41:subs.c        ****     // return the average    
+  42:subs.c        ****     return((uint16)(uiAverage/SAMPLES));
+ 107              		.loc 1 42 0 is_stmt 1
+ 108 0058 8009     		lsrs	r0, r0, #6
+ 109              	.LVL8:
+ 110 005a 80B2     		uxth	r0, r0
+  43:subs.c        **** }
+ 111              		.loc 1 43 0
+ 112              		@ sp needed
+ 113 005c 10BD     		pop	{r4, pc}
+ 114              	.L10:
+ 115 005e C046     		.align	2
+ 116              	.L9:
+ 117 0060 00000000 		.word	.LANCHOR0
+ 118 0064 00000000 		.word	result
+ 119 0068 00E0FF44 		.word	1157619712
+ 120 006c 80000000 		.word	.LANCHOR1
+ 121              		.cfi_endproc
+ 122              	.LFE33:
+ 123              		.size	GetAverageTEMP, .-GetAverageTEMP
+ 124              		.section	.text.I2CM_SyncWrite,"ax",%progbits
+ 125              		.align	2
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 4
+
+
+ 126              		.global	I2CM_SyncWrite
+ 127              		.code	16
+ 128              		.thumb_func
+ 129              		.type	I2CM_SyncWrite, %function
+ 130              	I2CM_SyncWrite:
+ 131              	.LFB35:
+  44:subs.c        **** //
+  45:subs.c        **** 
+  46:subs.c        **** // this is the write to the connector board PCLA9538 latch
+  47:subs.c        **** void LatchWrite(uint8 byAddress, uint8 byReg, uint8 byData) {
+  48:subs.c        ****     
+  49:subs.c        ****     uint8 buffer[2];
+  50:subs.c        ****     buffer[0] = byReg;
+  51:subs.c        ****     buffer[1] = byData;
+  52:subs.c        ****         
+  53:subs.c        ****     uint8 error = I2CM_SyncWrite(byAddress, (uint8*)buffer, 2);
+  54:subs.c        **** }
+  55:subs.c        **** 
+  56:subs.c        **** //
+  57:subs.c        **** bool I2CM_SyncWrite(uint8 bySlaveAddr, uint8 *buffer, uint8 length) {
+ 132              		.loc 1 57 0
+ 133              		.cfi_startproc
+ 134              		@ args = 0, pretend = 0, frame = 0
+ 135              		@ frame_needed = 0, uses_anonymous_args = 0
+ 136              	.LVL9:
+ 137 0000 70B5     		push	{r4, r5, r6, lr}
+ 138              		.cfi_def_cfa_offset 16
+ 139              		.cfi_offset 4, -16
+ 140              		.cfi_offset 5, -12
+ 141              		.cfi_offset 6, -8
+ 142              		.cfi_offset 14, -4
+ 143 0002 0400     		movs	r4, r0
+ 144 0004 0E00     		movs	r6, r1
+ 145 0006 1500     		movs	r5, r2
+ 146              	.LVL10:
+  58:subs.c        ****     
+  59:subs.c        ****     bool error = false;
+  60:subs.c        ****     
+  61:subs.c        ****     I2CM_I2CMasterClearStatus();
+ 147              		.loc 1 61 0
+ 148 0008 FFF7FEFF 		bl	I2CM_I2CMasterClearStatus
+ 149              	.LVL11:
+  62:subs.c        ****     uint32 status = I2CM_I2CMasterSendStart(bySlaveAddr, I2CM_I2C_WRITE_XFER_MODE, 100);
+ 150              		.loc 1 62 0
+ 151 000c 6422     		movs	r2, #100
+ 152 000e 0021     		movs	r1, #0
+ 153 0010 2000     		movs	r0, r4
+ 154 0012 FFF7FEFF 		bl	I2CM_I2CMasterSendStart
+ 155              	.LVL12:
+  63:subs.c        ****     if(status == I2CM_I2C_MSTR_NO_ERROR)	{	
+ 156              		.loc 1 63 0
+ 157 0016 0028     		cmp	r0, #0
+ 158 0018 09D0     		beq	.L15
+ 159              	.LBB4:
+ 160 001a 0BE0     		b	.L13
+ 161              	.LVL13:
+ 162              	.L14:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 5
+
+
+  64:subs.c        **** 		for(uint8 i = 0; i<length; i++) {
+  65:subs.c        **** 			status = I2CM_I2CMasterWriteByte(buffer[i], 25);
+ 163              		.loc 1 65 0
+ 164 001c 305D     		ldrb	r0, [r6, r4]
+ 165              	.LVL14:
+ 166 001e 1921     		movs	r1, #25
+ 167 0020 FFF7FEFF 		bl	I2CM_I2CMasterWriteByte
+ 168              	.LVL15:
+  66:subs.c        **** 			if(status != I2CM_I2C_MSTR_NO_ERROR)
+ 169              		.loc 1 66 0
+ 170 0024 0028     		cmp	r0, #0
+ 171 0026 05D1     		bne	.L13
+  64:subs.c        **** 		for(uint8 i = 0; i<length; i++) {
+ 172              		.loc 1 64 0 discriminator 2
+ 173 0028 0134     		adds	r4, r4, #1
+ 174              	.LVL16:
+ 175 002a E4B2     		uxtb	r4, r4
+ 176              	.LVL17:
+ 177 002c 00E0     		b	.L12
+ 178              	.LVL18:
+ 179              	.L15:
+ 180              	.LBE4:
+ 181 002e 0024     		movs	r4, #0
+ 182              	.L12:
+ 183              	.LVL19:
+ 184              	.LBB5:
+  64:subs.c        **** 		for(uint8 i = 0; i<length; i++) {
+ 185              		.loc 1 64 0 is_stmt 0 discriminator 1
+ 186 0030 AC42     		cmp	r4, r5
+ 187 0032 F3D3     		bcc	.L14
+ 188              	.LVL20:
+ 189              	.L13:
+ 190              	.LBE5:
+  67:subs.c        **** 				break;
+  68:subs.c        **** 		}
+  69:subs.c        ****     }
+  70:subs.c        ****     
+  71:subs.c        **** 	I2CM_I2CMasterSendStop(25);    
+ 191              		.loc 1 71 0 is_stmt 1
+ 192 0034 1920     		movs	r0, #25
+ 193              	.LVL21:
+ 194 0036 FFF7FEFF 		bl	I2CM_I2CMasterSendStop
+ 195              	.LVL22:
+  72:subs.c        ****     return error;
+  73:subs.c        **** }
+ 196              		.loc 1 73 0
+ 197 003a 0020     		movs	r0, #0
+ 198              		@ sp needed
+ 199              	.LVL23:
+ 200 003c 70BD     		pop	{r4, r5, r6, pc}
+ 201              		.cfi_endproc
+ 202              	.LFE35:
+ 203              		.size	I2CM_SyncWrite, .-I2CM_SyncWrite
+ 204 003e C046     		.section	.text.LatchWrite,"ax",%progbits
+ 205              		.align	2
+ 206              		.global	LatchWrite
+ 207              		.code	16
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 6
+
+
+ 208              		.thumb_func
+ 209              		.type	LatchWrite, %function
+ 210              	LatchWrite:
+ 211              	.LFB34:
+  47:subs.c        ****     
+ 212              		.loc 1 47 0
+ 213              		.cfi_startproc
+ 214              		@ args = 0, pretend = 0, frame = 8
+ 215              		@ frame_needed = 0, uses_anonymous_args = 0
+ 216              	.LVL24:
+ 217 0000 00B5     		push	{lr}
+ 218              		.cfi_def_cfa_offset 4
+ 219              		.cfi_offset 14, -4
+ 220 0002 83B0     		sub	sp, sp, #12
+ 221              		.cfi_def_cfa_offset 16
+  50:subs.c        ****     buffer[1] = byData;
+ 222              		.loc 1 50 0
+ 223 0004 01AB     		add	r3, sp, #4
+ 224 0006 1970     		strb	r1, [r3]
+  51:subs.c        ****         
+ 225              		.loc 1 51 0
+ 226 0008 5A70     		strb	r2, [r3, #1]
+  53:subs.c        **** }
+ 227              		.loc 1 53 0
+ 228 000a 0222     		movs	r2, #2
+ 229              	.LVL25:
+ 230 000c 1900     		movs	r1, r3
+ 231              	.LVL26:
+ 232 000e FFF7FEFF 		bl	I2CM_SyncWrite
+ 233              	.LVL27:
+  54:subs.c        **** 
+ 234              		.loc 1 54 0
+ 235 0012 03B0     		add	sp, sp, #12
+ 236              		@ sp needed
+ 237 0014 00BD     		pop	{pc}
+ 238              		.cfi_endproc
+ 239              	.LFE34:
+ 240              		.size	LatchWrite, .-LatchWrite
+ 241 0016 C046     		.section	.text.I2CM_SyncRead,"ax",%progbits
+ 242              		.align	2
+ 243              		.global	I2CM_SyncRead
+ 244              		.code	16
+ 245              		.thumb_func
+ 246              		.type	I2CM_SyncRead, %function
+ 247              	I2CM_SyncRead:
+ 248              	.LFB37:
+  74:subs.c        **** 
+  75:subs.c        **** // this is the write to the connector board PCLA9538 latch
+  76:subs.c        **** void LatchRead(uint8 byAddress, uint8 byReg, uint8 byData) {
+  77:subs.c        ****     
+  78:subs.c        ****     uint8 buffer[2];
+  79:subs.c        ****     buffer[0] = byReg;
+  80:subs.c        ****     I2CM_SyncWrite(byAddress, buffer, 2);    
+  81:subs.c        ****     
+  82:subs.c        ****     uint8 error = I2CM_SyncRead(byAddress, (uint8*)buffer, 1);
+  83:subs.c        ****     
+  84:subs.c        ****     byData = buffer[0];  // return value
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 7
+
+
+  85:subs.c        **** }
+  86:subs.c        **** 
+  87:subs.c        **** //
+  88:subs.c        **** // I2C using Start, Data, Stop methods, these are called by the next set of routines
+  89:subs.c        **** //
+  90:subs.c        **** bool I2CM_SyncRead(uint8 bySlaveAddr, uint8 *buffer, uint8 length) {
+ 249              		.loc 1 90 0
+ 250              		.cfi_startproc
+ 251              		@ args = 0, pretend = 0, frame = 0
+ 252              		@ frame_needed = 0, uses_anonymous_args = 0
+ 253              	.LVL28:
+ 254 0000 70B5     		push	{r4, r5, r6, lr}
+ 255              		.cfi_def_cfa_offset 16
+ 256              		.cfi_offset 4, -16
+ 257              		.cfi_offset 5, -12
+ 258              		.cfi_offset 6, -8
+ 259              		.cfi_offset 14, -4
+ 260 0002 0400     		movs	r4, r0
+ 261 0004 0E00     		movs	r6, r1
+ 262 0006 1500     		movs	r5, r2
+ 263              	.LVL29:
+  91:subs.c        ****     bool error = false;
+  92:subs.c        ****     
+  93:subs.c        ****   	I2CM_I2CMasterClearStatus();
+ 264              		.loc 1 93 0
+ 265 0008 FFF7FEFF 		bl	I2CM_I2CMasterClearStatus
+ 266              	.LVL30:
+  94:subs.c        ****     uint32 status = I2CM_I2CMasterSendStart(bySlaveAddr, I2CM_I2C_READ_XFER_MODE, 100);
+ 267              		.loc 1 94 0
+ 268 000c 6422     		movs	r2, #100
+ 269 000e 0121     		movs	r1, #1
+ 270 0010 2000     		movs	r0, r4
+ 271 0012 FFF7FEFF 		bl	I2CM_I2CMasterSendStart
+ 272              	.LVL31:
+  95:subs.c        **** 	if(status == I2CM_I2C_MSTR_NO_ERROR) {
+ 273              		.loc 1 95 0
+ 274 0016 0028     		cmp	r0, #0
+ 275 0018 11D0     		beq	.L23
+ 276              	.LBB6:
+ 277 001a 13E0     		b	.L19
+ 278              	.LVL32:
+ 279              	.L22:
+  96:subs.c        ****     	for(uint8 i=0; i<length; i++) {
+  97:subs.c        ****     		if(i<(length-1))
+ 280              		.loc 1 97 0
+ 281 001c 6B1E     		subs	r3, r5, #1
+ 282 001e 9C42     		cmp	r4, r3
+ 283 0020 05DA     		bge	.L20
+  98:subs.c        ****     			I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, (buffer+i), 10);
+ 284              		.loc 1 98 0
+ 285 0022 3119     		adds	r1, r6, r4
+ 286 0024 0A22     		movs	r2, #10
+ 287 0026 0020     		movs	r0, #0
+ 288 0028 FFF7FEFF 		bl	I2CM_I2CMasterReadByte
+ 289              	.LVL33:
+ 290 002c 04E0     		b	.L21
+ 291              	.L20:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 8
+
+
+  99:subs.c        ****     		else
+ 100:subs.c        ****     			I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (buffer+i), 10);
+ 292              		.loc 1 100 0
+ 293 002e 3119     		adds	r1, r6, r4
+ 294 0030 0A22     		movs	r2, #10
+ 295 0032 0120     		movs	r0, #1
+ 296 0034 FFF7FEFF 		bl	I2CM_I2CMasterReadByte
+ 297              	.LVL34:
+ 298              	.L21:
+  96:subs.c        ****     		if(i<(length-1))
+ 299              		.loc 1 96 0 discriminator 2
+ 300 0038 0134     		adds	r4, r4, #1
+ 301              	.LVL35:
+ 302 003a E4B2     		uxtb	r4, r4
+ 303              	.LVL36:
+ 304 003c 00E0     		b	.L18
+ 305              	.LVL37:
+ 306              	.L23:
+ 307              	.LBE6:
+ 308 003e 0024     		movs	r4, #0
+ 309              	.LVL38:
+ 310              	.L18:
+ 311              	.LBB7:
+  96:subs.c        ****     		if(i<(length-1))
+ 312              		.loc 1 96 0 is_stmt 0 discriminator 1
+ 313 0040 AC42     		cmp	r4, r5
+ 314 0042 EBD3     		bcc	.L22
+ 315              	.LVL39:
+ 316              	.L19:
+ 317              	.LBE7:
+ 101:subs.c        ****         }
+ 102:subs.c        ****     }
+ 103:subs.c        ****     
+ 104:subs.c        **** 	I2CM_I2CMasterSendStop(25);
+ 318              		.loc 1 104 0 is_stmt 1
+ 319 0044 1920     		movs	r0, #25
+ 320 0046 FFF7FEFF 		bl	I2CM_I2CMasterSendStop
+ 321              	.LVL40:
+ 105:subs.c        ****     return(error);
+ 106:subs.c        **** }
+ 322              		.loc 1 106 0
+ 323 004a 0020     		movs	r0, #0
+ 324              		@ sp needed
+ 325              	.LVL41:
+ 326 004c 70BD     		pop	{r4, r5, r6, pc}
+ 327              		.cfi_endproc
+ 328              	.LFE37:
+ 329              		.size	I2CM_SyncRead, .-I2CM_SyncRead
+ 330 004e C046     		.section	.text.LatchRead,"ax",%progbits
+ 331              		.align	2
+ 332              		.global	LatchRead
+ 333              		.code	16
+ 334              		.thumb_func
+ 335              		.type	LatchRead, %function
+ 336              	LatchRead:
+ 337              	.LFB36:
+  76:subs.c        ****     
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 9
+
+
+ 338              		.loc 1 76 0
+ 339              		.cfi_startproc
+ 340              		@ args = 0, pretend = 0, frame = 8
+ 341              		@ frame_needed = 0, uses_anonymous_args = 0
+ 342              	.LVL42:
+ 343 0000 30B5     		push	{r4, r5, lr}
+ 344              		.cfi_def_cfa_offset 12
+ 345              		.cfi_offset 4, -12
+ 346              		.cfi_offset 5, -8
+ 347              		.cfi_offset 14, -4
+ 348 0002 83B0     		sub	sp, sp, #12
+ 349              		.cfi_def_cfa_offset 24
+ 350 0004 0500     		movs	r5, r0
+  79:subs.c        ****     I2CM_SyncWrite(byAddress, buffer, 2);    
+ 351              		.loc 1 79 0
+ 352 0006 01AC     		add	r4, sp, #4
+ 353 0008 2170     		strb	r1, [r4]
+  80:subs.c        ****     
+ 354              		.loc 1 80 0
+ 355 000a 0222     		movs	r2, #2
+ 356              	.LVL43:
+ 357 000c 2100     		movs	r1, r4
+ 358              	.LVL44:
+ 359 000e FFF7FEFF 		bl	I2CM_SyncWrite
+ 360              	.LVL45:
+  82:subs.c        ****     
+ 361              		.loc 1 82 0
+ 362 0012 0122     		movs	r2, #1
+ 363 0014 2100     		movs	r1, r4
+ 364 0016 2800     		movs	r0, r5
+ 365 0018 FFF7FEFF 		bl	I2CM_SyncRead
+ 366              	.LVL46:
+  85:subs.c        **** 
+ 367              		.loc 1 85 0
+ 368 001c 03B0     		add	sp, sp, #12
+ 369              		@ sp needed
+ 370              	.LVL47:
+ 371 001e 30BD     		pop	{r4, r5, pc}
+ 372              		.cfi_endproc
+ 373              	.LFE36:
+ 374              		.size	LatchRead, .-LatchRead
+ 375              		.section	.text.RW_EEPROMData,"ax",%progbits
+ 376              		.align	2
+ 377              		.global	RW_EEPROMData
+ 378              		.code	16
+ 379              		.thumb_func
+ 380              		.type	RW_EEPROMData, %function
+ 381              	RW_EEPROMData:
+ 382              	.LFB38:
+ 107:subs.c        **** 
+ 108:subs.c        **** 
+ 109:subs.c        **** // EEPROM stuff
+ 110:subs.c        **** const structInfo defaultInfo = {
+ 111:subs.c        **** 
+ 112:subs.c        ****     .bWeHaveLearned = false,
+ 113:subs.c        ****     .uiCalCh1 = 0,
+ 114:subs.c        ****     .uiCalCh2 = 0,
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 10
+
+
+ 115:subs.c        **** 	
+ 116:subs.c        **** 	.byEEPROMSave1 = 0x55,
+ 117:subs.c        **** 	.byEEPROMSave2 = 0xAA,
+ 118:subs.c        **** };
+ 119:subs.c        **** 
+ 120:subs.c        **** #define INFO_ROW       	(CY_FLASH_NUMBER_ROWS - 2u)
+ 121:subs.c        **** #define INFO_ADDR      	(INFO_ROW * CY_FLASH_SIZEOF_ROW)
+ 122:subs.c        **** uint8 Info_Mem[CY_FLASH_SIZEOF_ROW];
+ 123:subs.c        **** void RW_EEPROMData(uint8 RW) {
+ 383              		.loc 1 123 0
+ 384              		.cfi_startproc
+ 385              		@ args = 0, pretend = 0, frame = 0
+ 386              		@ frame_needed = 0, uses_anonymous_args = 0
+ 387              	.LVL48:
+ 388 0000 70B5     		push	{r4, r5, r6, lr}
+ 389              		.cfi_def_cfa_offset 16
+ 390              		.cfi_offset 4, -16
+ 391              		.cfi_offset 5, -12
+ 392              		.cfi_offset 6, -8
+ 393              		.cfi_offset 14, -4
+ 394 0002 051E     		subs	r5, r0, #0
+ 124:subs.c        ****     
+ 125:subs.c        **** 	if (RW == e_EEPROMWRITE) {
+ 395              		.loc 1 125 0
+ 396 0004 0ED1     		bne	.L26
+ 126:subs.c        **** 		Info.byEEPROMSave1 = 0x55;
+ 397              		.loc 1 126 0
+ 398 0006 1849     		ldr	r1, .L29
+ 399 0008 5523     		movs	r3, #85
+ 400 000a 4B71     		strb	r3, [r1, #5]
+ 127:subs.c        **** 		Info.byEEPROMSave2 = 0xAA;
+ 401              		.loc 1 127 0
+ 402 000c 5533     		adds	r3, r3, #85
+ 403 000e 8B71     		strb	r3, [r1, #6]
+ 128:subs.c        **** 		memcpy(Info_Mem,(uint8*)&Info, sizeof(structInfo));
+ 404              		.loc 1 128 0
+ 405 0010 164C     		ldr	r4, .L29+4
+ 406 0012 0722     		movs	r2, #7
+ 407 0014 2000     		movs	r0, r4
+ 408              	.LVL49:
+ 409 0016 FFF7FEFF 		bl	memcpy
+ 410              	.LVL50:
+ 129:subs.c        **** 	    CySysFlashWriteRow(INFO_ROW, Info_Mem);
+ 411              		.loc 1 129 0
+ 412 001a 2100     		movs	r1, r4
+ 413 001c FE20     		movs	r0, #254
+ 414 001e FFF7FEFF 		bl	CySysFlashWriteRow
+ 415              	.LVL51:
+ 416 0022 1FE0     		b	.L25
+ 417              	.LVL52:
+ 418              	.L26:
+ 130:subs.c        **** 	} else {
+ 131:subs.c        **** 		memcpy((uint8*)&Info, (uint8*)INFO_ADDR, sizeof(structInfo));
+ 419              		.loc 1 131 0
+ 420 0024 104C     		ldr	r4, .L29
+ 421 0026 0722     		movs	r2, #7
+ 422 0028 FE21     		movs	r1, #254
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 11
+
+
+ 423 002a C901     		lsls	r1, r1, #7
+ 424 002c 2000     		movs	r0, r4
+ 425              	.LVL53:
+ 426 002e FFF7FEFF 		bl	memcpy
+ 427              	.LVL54:
+ 132:subs.c        **** 		if (Info.byEEPROMSave1 != 0x55 || Info.byEEPROMSave2 != 0xAA || RW == e_EEPROMFLUSHRESTORE){
+ 428              		.loc 1 132 0
+ 429 0032 6379     		ldrb	r3, [r4, #5]
+ 430 0034 552B     		cmp	r3, #85
+ 431 0036 05D1     		bne	.L28
+ 432              		.loc 1 132 0 is_stmt 0 discriminator 1
+ 433 0038 0B4B     		ldr	r3, .L29
+ 434 003a 9B79     		ldrb	r3, [r3, #6]
+ 435 003c AA2B     		cmp	r3, #170
+ 436 003e 01D1     		bne	.L28
+ 437              		.loc 1 132 0 discriminator 2
+ 438 0040 022D     		cmp	r5, #2
+ 439 0042 0FD1     		bne	.L25
+ 440              	.L28:
+ 133:subs.c        ****             Info = defaultInfo; // we are brand new or are told to be brand new, make it happen
+ 441              		.loc 1 133 0 is_stmt 1
+ 442 0044 084D     		ldr	r5, .L29
+ 443 0046 0722     		movs	r2, #7
+ 444 0048 0949     		ldr	r1, .L29+8
+ 445 004a 2800     		movs	r0, r5
+ 446 004c FFF7FEFF 		bl	memcpy
+ 447              	.LVL55:
+ 134:subs.c        ****             memcpy(Info_Mem,(uint8*)&Info, sizeof(structInfo));
+ 448              		.loc 1 134 0
+ 449 0050 064C     		ldr	r4, .L29+4
+ 450 0052 0722     		movs	r2, #7
+ 451 0054 2900     		movs	r1, r5
+ 452 0056 2000     		movs	r0, r4
+ 453 0058 FFF7FEFF 		bl	memcpy
+ 454              	.LVL56:
+ 135:subs.c        **** 			CySysFlashWriteRow(INFO_ROW, Info_Mem);
+ 455              		.loc 1 135 0
+ 456 005c 2100     		movs	r1, r4
+ 457 005e FE20     		movs	r0, #254
+ 458 0060 FFF7FEFF 		bl	CySysFlashWriteRow
+ 459              	.LVL57:
+ 460              	.L25:
+ 136:subs.c        **** 		}
+ 137:subs.c        **** 	}
+ 138:subs.c        **** }
+ 461              		.loc 1 138 0
+ 462              		@ sp needed
+ 463 0064 70BD     		pop	{r4, r5, r6, pc}
+ 464              	.L30:
+ 465 0066 C046     		.align	2
+ 466              	.L29:
+ 467 0068 00000000 		.word	Info
+ 468 006c 00000000 		.word	Info_Mem
+ 469 0070 00000000 		.word	.LANCHOR2
+ 470              		.cfi_endproc
+ 471              	.LFE38:
+ 472              		.size	RW_EEPROMData, .-RW_EEPROMData
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 12
+
+
+ 473              		.comm	Info_Mem,128,4
+ 474              		.global	defaultInfo
+ 475              		.global	bWeHaveSampledTEMP
+ 476              		.section	.rodata
+ 477              		.align	2
+ 478              		.set	.LANCHOR2,. + 0
+ 479              		.type	defaultInfo, %object
+ 480              		.size	defaultInfo, 7
+ 481              	defaultInfo:
+ 482 0000 00       		.byte	0
+ 483 0001 0000     		.2byte	0
+ 484 0003 0000     		.2byte	0
+ 485 0005 55       		.byte	85
+ 486 0006 AA       		.byte	-86
+ 487              		.bss
+ 488              		.align	2
+ 489              		.set	.LANCHOR0,. + 0
+ 490              		.set	.LANCHOR1,. + 128
+ 491              		.type	byPointer.7656, %object
+ 492              		.size	byPointer.7656, 2
+ 493              	byPointer.7656:
+ 494 0000 0000     		.space	2
+ 495 0002 0000     		.space	2
+ 496              		.type	uiBuffer.7655, %object
+ 497              		.size	uiBuffer.7655, 128
+ 498              	uiBuffer.7655:
+ 499 0004 00000000 		.space	128
+ 499      00000000 
+ 499      00000000 
+ 499      00000000 
+ 499      00000000 
+ 500              		.type	bWeHaveSampledTEMP, %object
+ 501              		.size	bWeHaveSampledTEMP, 1
+ 502              	bWeHaveSampledTEMP:
+ 503 0084 00       		.space	1
+ 504              		.text
+ 505              	.Letext0:
+ 506              		.file 2 "Generated_Source\\PSoC4/cytypes.h"
+ 507              		.file 3 "main.h"
+ 508              		.file 4 "Generated_Source\\PSoC4/I2CM_I2C.h"
+ 509              		.file 5 "Generated_Source\\PSoC4/CyFlash.h"
+ 510              		.section	.debug_info,"",%progbits
+ 511              	.Ldebug_info0:
+ 512 0000 35060000 		.4byte	0x635
+ 513 0004 0400     		.2byte	0x4
+ 514 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 515 000a 04       		.byte	0x4
+ 516 000b 01       		.uleb128 0x1
+ 517 000c DF000000 		.4byte	.LASF62
+ 518 0010 0C       		.byte	0xc
+ 519 0011 A5010000 		.4byte	.LASF63
+ 520 0015 3A000000 		.4byte	.LASF64
+ 521 0019 48000000 		.4byte	.Ldebug_ranges0+0x48
+ 522 001d 00000000 		.4byte	0
+ 523 0021 00000000 		.4byte	.Ldebug_line0
+ 524 0025 02       		.uleb128 0x2
+ 525 0026 01       		.byte	0x1
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 13
+
+
+ 526 0027 06       		.byte	0x6
+ 527 0028 12020000 		.4byte	.LASF0
+ 528 002c 02       		.uleb128 0x2
+ 529 002d 01       		.byte	0x1
+ 530 002e 08       		.byte	0x8
+ 531 002f FA010000 		.4byte	.LASF1
+ 532 0033 02       		.uleb128 0x2
+ 533 0034 02       		.byte	0x2
+ 534 0035 05       		.byte	0x5
+ 535 0036 20000000 		.4byte	.LASF2
+ 536 003a 02       		.uleb128 0x2
+ 537 003b 02       		.byte	0x2
+ 538 003c 07       		.byte	0x7
+ 539 003d E7020000 		.4byte	.LASF3
+ 540 0041 02       		.uleb128 0x2
+ 541 0042 04       		.byte	0x4
+ 542 0043 05       		.byte	0x5
+ 543 0044 BA010000 		.4byte	.LASF4
+ 544 0048 02       		.uleb128 0x2
+ 545 0049 04       		.byte	0x4
+ 546 004a 07       		.byte	0x7
+ 547 004b 61020000 		.4byte	.LASF5
+ 548 004f 02       		.uleb128 0x2
+ 549 0050 08       		.byte	0x8
+ 550 0051 05       		.byte	0x5
+ 551 0052 AC010000 		.4byte	.LASF6
+ 552 0056 02       		.uleb128 0x2
+ 553 0057 08       		.byte	0x8
+ 554 0058 07       		.byte	0x7
+ 555 0059 1E020000 		.4byte	.LASF7
+ 556 005d 03       		.uleb128 0x3
+ 557 005e 04       		.byte	0x4
+ 558 005f 05       		.byte	0x5
+ 559 0060 696E7400 		.ascii	"int\000"
+ 560 0064 02       		.uleb128 0x2
+ 561 0065 04       		.byte	0x4
+ 562 0066 07       		.byte	0x7
+ 563 0067 3A020000 		.4byte	.LASF8
+ 564 006b 04       		.uleb128 0x4
+ 565 006c 73010000 		.4byte	.LASF9
+ 566 0070 02       		.byte	0x2
+ 567 0071 FC01     		.2byte	0x1fc
+ 568 0073 2C000000 		.4byte	0x2c
+ 569 0077 04       		.uleb128 0x4
+ 570 0078 28030000 		.4byte	.LASF10
+ 571 007c 02       		.byte	0x2
+ 572 007d FD01     		.2byte	0x1fd
+ 573 007f 3A000000 		.4byte	0x3a
+ 574 0083 04       		.uleb128 0x4
+ 575 0084 36030000 		.4byte	.LASF11
+ 576 0088 02       		.byte	0x2
+ 577 0089 FE01     		.2byte	0x1fe
+ 578 008b 48000000 		.4byte	0x48
+ 579 008f 04       		.uleb128 0x4
+ 580 0090 6D010000 		.4byte	.LASF12
+ 581 0094 02       		.byte	0x2
+ 582 0095 0002     		.2byte	0x200
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 14
+
+
+ 583 0097 33000000 		.4byte	0x33
+ 584 009b 02       		.uleb128 0x2
+ 585 009c 04       		.byte	0x4
+ 586 009d 04       		.byte	0x4
+ 587 009e 9F010000 		.4byte	.LASF13
+ 588 00a2 02       		.uleb128 0x2
+ 589 00a3 08       		.byte	0x8
+ 590 00a4 04       		.byte	0x4
+ 591 00a5 46030000 		.4byte	.LASF14
+ 592 00a9 02       		.uleb128 0x2
+ 593 00aa 01       		.byte	0x1
+ 594 00ab 08       		.byte	0x8
+ 595 00ac D3020000 		.4byte	.LASF15
+ 596 00b0 02       		.uleb128 0x2
+ 597 00b1 08       		.byte	0x8
+ 598 00b2 04       		.byte	0x4
+ 599 00b3 EE010000 		.4byte	.LASF16
+ 600 00b7 02       		.uleb128 0x2
+ 601 00b8 04       		.byte	0x4
+ 602 00b9 07       		.byte	0x7
+ 603 00ba 78030000 		.4byte	.LASF17
+ 604 00be 05       		.uleb128 0x5
+ 605 00bf 04       		.byte	0x4
+ 606 00c0 6B000000 		.4byte	0x6b
+ 607 00c4 06       		.uleb128 0x6
+ 608 00c5 2A000000 		.4byte	.LASF18
+ 609 00c9 03       		.byte	0x3
+ 610 00ca 17       		.byte	0x17
+ 611 00cb 6B000000 		.4byte	0x6b
+ 612 00cf 07       		.uleb128 0x7
+ 613 00d0 01       		.byte	0x1
+ 614 00d1 2C000000 		.4byte	0x2c
+ 615 00d5 03       		.byte	0x3
+ 616 00d6 69       		.byte	0x69
+ 617 00d7 FA000000 		.4byte	0xfa
+ 618 00db 08       		.uleb128 0x8
+ 619 00dc 0F030000 		.4byte	.LASF19
+ 620 00e0 00       		.byte	0
+ 621 00e1 08       		.uleb128 0x8
+ 622 00e2 AE020000 		.4byte	.LASF20
+ 623 00e6 01       		.byte	0x1
+ 624 00e7 08       		.uleb128 0x8
+ 625 00e8 8B020000 		.4byte	.LASF21
+ 626 00ec 02       		.byte	0x2
+ 627 00ed 08       		.uleb128 0x8
+ 628 00ee C1000000 		.4byte	.LASF22
+ 629 00f2 03       		.byte	0x3
+ 630 00f3 08       		.uleb128 0x8
+ 631 00f4 84000000 		.4byte	.LASF23
+ 632 00f8 04       		.byte	0x4
+ 633 00f9 00       		.byte	0
+ 634 00fa 07       		.uleb128 0x7
+ 635 00fb 01       		.byte	0x1
+ 636 00fc 2C000000 		.4byte	0x2c
+ 637 0100 03       		.byte	0x3
+ 638 0101 7D       		.byte	0x7d
+ 639 0102 19010000 		.4byte	0x119
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 15
+
+
+ 640 0106 08       		.uleb128 0x8
+ 641 0107 AA030000 		.4byte	.LASF24
+ 642 010b 00       		.byte	0
+ 643 010c 08       		.uleb128 0x8
+ 644 010d 13000000 		.4byte	.LASF25
+ 645 0111 01       		.byte	0x1
+ 646 0112 08       		.uleb128 0x8
+ 647 0113 83010000 		.4byte	.LASF26
+ 648 0117 02       		.byte	0x2
+ 649 0118 00       		.byte	0
+ 650 0119 09       		.uleb128 0x9
+ 651 011a 07       		.byte	0x7
+ 652 011b 03       		.byte	0x3
+ 653 011c 85       		.byte	0x85
+ 654 011d 5E010000 		.4byte	0x15e
+ 655 0121 0A       		.uleb128 0xa
+ 656 0122 FA020000 		.4byte	.LASF27
+ 657 0126 03       		.byte	0x3
+ 658 0127 87       		.byte	0x87
+ 659 0128 5E010000 		.4byte	0x15e
+ 660 012c 00       		.byte	0
+ 661 012d 0A       		.uleb128 0xa
+ 662 012e 82020000 		.4byte	.LASF28
+ 663 0132 03       		.byte	0x3
+ 664 0133 89       		.byte	0x89
+ 665 0134 77000000 		.4byte	0x77
+ 666 0138 01       		.byte	0x1
+ 667 0139 0A       		.uleb128 0xa
+ 668 013a DE020000 		.4byte	.LASF29
+ 669 013e 03       		.byte	0x3
+ 670 013f 8A       		.byte	0x8a
+ 671 0140 77000000 		.4byte	0x77
+ 672 0144 03       		.byte	0x3
+ 673 0145 0A       		.uleb128 0xa
+ 674 0146 92020000 		.4byte	.LASF30
+ 675 014a 03       		.byte	0x3
+ 676 014b 8C       		.byte	0x8c
+ 677 014c C4000000 		.4byte	0xc4
+ 678 0150 05       		.byte	0x5
+ 679 0151 0A       		.uleb128 0xa
+ 680 0152 A0020000 		.4byte	.LASF31
+ 681 0156 03       		.byte	0x3
+ 682 0157 8D       		.byte	0x8d
+ 683 0158 C4000000 		.4byte	0xc4
+ 684 015c 06       		.byte	0x6
+ 685 015d 00       		.byte	0
+ 686 015e 02       		.uleb128 0x2
+ 687 015f 01       		.byte	0x1
+ 688 0160 02       		.byte	0x2
+ 689 0161 09030000 		.4byte	.LASF32
+ 690 0165 06       		.uleb128 0x6
+ 691 0166 2F000000 		.4byte	.LASF33
+ 692 016a 03       		.byte	0x3
+ 693 016b 8E       		.byte	0x8e
+ 694 016c 19010000 		.4byte	0x119
+ 695 0170 0B       		.uleb128 0xb
+ 696 0171 73020000 		.4byte	.LASF37
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 16
+
+
+ 697 0175 01       		.byte	0x1
+ 698 0176 19       		.byte	0x19
+ 699 0177 77000000 		.4byte	0x77
+ 700 017b 00000000 		.4byte	.LFB33
+ 701 017f 70000000 		.4byte	.LFE33-.LFB33
+ 702 0183 01       		.uleb128 0x1
+ 703 0184 9C       		.byte	0x9c
+ 704 0185 CE010000 		.4byte	0x1ce
+ 705 0189 0C       		.uleb128 0xc
+ 706 018a B8030000 		.4byte	.LASF34
+ 707 018e 01       		.byte	0x1
+ 708 018f 1A       		.byte	0x1a
+ 709 0190 CE010000 		.4byte	0x1ce
+ 710 0194 05       		.uleb128 0x5
+ 711 0195 03       		.byte	0x3
+ 712 0196 04000000 		.4byte	uiBuffer.7655
+ 713 019a 0C       		.uleb128 0xc
+ 714 019b B7000000 		.4byte	.LASF35
+ 715 019f 01       		.byte	0x1
+ 716 01a0 1B       		.byte	0x1b
+ 717 01a1 77000000 		.4byte	0x77
+ 718 01a5 05       		.uleb128 0x5
+ 719 01a6 03       		.byte	0x3
+ 720 01a7 00000000 		.4byte	byPointer.7656
+ 721 01ab 0D       		.uleb128 0xd
+ 722 01ac 08020000 		.4byte	.LASF36
+ 723 01b0 01       		.byte	0x1
+ 724 01b1 1C       		.byte	0x1c
+ 725 01b2 83000000 		.4byte	0x83
+ 726 01b6 00000000 		.4byte	.LLST0
+ 727 01ba 0E       		.uleb128 0xe
+ 728 01bb 00000000 		.4byte	.Ldebug_ranges0+0
+ 729 01bf 0F       		.uleb128 0xf
+ 730 01c0 6E00     		.ascii	"n\000"
+ 731 01c2 01       		.byte	0x1
+ 732 01c3 27       		.byte	0x27
+ 733 01c4 6B000000 		.4byte	0x6b
+ 734 01c8 1F000000 		.4byte	.LLST1
+ 735 01cc 00       		.byte	0
+ 736 01cd 00       		.byte	0
+ 737 01ce 10       		.uleb128 0x10
+ 738 01cf 77000000 		.4byte	0x77
+ 739 01d3 DE010000 		.4byte	0x1de
+ 740 01d7 11       		.uleb128 0x11
+ 741 01d8 B7000000 		.4byte	0xb7
+ 742 01dc 3F       		.byte	0x3f
+ 743 01dd 00       		.byte	0
+ 744 01de 12       		.uleb128 0x12
+ 745 01df 91000000 		.4byte	.LASF38
+ 746 01e3 01       		.byte	0x1
+ 747 01e4 39       		.byte	0x39
+ 748 01e5 5E010000 		.4byte	0x15e
+ 749 01e9 00000000 		.4byte	.LFB35
+ 750 01ed 3E000000 		.4byte	.LFE35-.LFB35
+ 751 01f1 01       		.uleb128 0x1
+ 752 01f2 9C       		.byte	0x9c
+ 753 01f3 9D020000 		.4byte	0x29d
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 17
+
+
+ 754 01f7 13       		.uleb128 0x13
+ 755 01f8 07000000 		.4byte	.LASF39
+ 756 01fc 01       		.byte	0x1
+ 757 01fd 39       		.byte	0x39
+ 758 01fe 6B000000 		.4byte	0x6b
+ 759 0202 49000000 		.4byte	.LLST2
+ 760 0206 13       		.uleb128 0x13
+ 761 0207 2F030000 		.4byte	.LASF40
+ 762 020b 01       		.byte	0x1
+ 763 020c 39       		.byte	0x39
+ 764 020d BE000000 		.4byte	0xbe
+ 765 0211 6A000000 		.4byte	.LLST3
+ 766 0215 13       		.uleb128 0x13
+ 767 0216 98010000 		.4byte	.LASF41
+ 768 021a 01       		.byte	0x1
+ 769 021b 39       		.byte	0x39
+ 770 021c 6B000000 		.4byte	0x6b
+ 771 0220 96000000 		.4byte	.LLST4
+ 772 0224 14       		.uleb128 0x14
+ 773 0225 A4030000 		.4byte	.LASF42
+ 774 0229 01       		.byte	0x1
+ 775 022a 3B       		.byte	0x3b
+ 776 022b 5E010000 		.4byte	0x15e
+ 777 022f 00       		.byte	0
+ 778 0230 0D       		.uleb128 0xd
+ 779 0231 B5020000 		.4byte	.LASF43
+ 780 0235 01       		.byte	0x1
+ 781 0236 3E       		.byte	0x3e
+ 782 0237 83000000 		.4byte	0x83
+ 783 023b B7000000 		.4byte	.LLST5
+ 784 023f 15       		.uleb128 0x15
+ 785 0240 18000000 		.4byte	.Ldebug_ranges0+0x18
+ 786 0244 65020000 		.4byte	0x265
+ 787 0248 0F       		.uleb128 0xf
+ 788 0249 6900     		.ascii	"i\000"
+ 789 024b 01       		.byte	0x1
+ 790 024c 40       		.byte	0x40
+ 791 024d 6B000000 		.4byte	0x6b
+ 792 0251 D5000000 		.4byte	.LLST6
+ 793 0255 16       		.uleb128 0x16
+ 794 0256 24000000 		.4byte	.LVL15
+ 795 025a E8050000 		.4byte	0x5e8
+ 796 025e 17       		.uleb128 0x17
+ 797 025f 01       		.uleb128 0x1
+ 798 0260 51       		.byte	0x51
+ 799 0261 01       		.uleb128 0x1
+ 800 0262 49       		.byte	0x49
+ 801 0263 00       		.byte	0
+ 802 0264 00       		.byte	0
+ 803 0265 18       		.uleb128 0x18
+ 804 0266 0C000000 		.4byte	.LVL11
+ 805 026a F4050000 		.4byte	0x5f4
+ 806 026e 19       		.uleb128 0x19
+ 807 026f 16000000 		.4byte	.LVL12
+ 808 0273 00060000 		.4byte	0x600
+ 809 0277 8D020000 		.4byte	0x28d
+ 810 027b 17       		.uleb128 0x17
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 18
+
+
+ 811 027c 01       		.uleb128 0x1
+ 812 027d 50       		.byte	0x50
+ 813 027e 02       		.uleb128 0x2
+ 814 027f 74       		.byte	0x74
+ 815 0280 00       		.sleb128 0
+ 816 0281 17       		.uleb128 0x17
+ 817 0282 01       		.uleb128 0x1
+ 818 0283 51       		.byte	0x51
+ 819 0284 01       		.uleb128 0x1
+ 820 0285 30       		.byte	0x30
+ 821 0286 17       		.uleb128 0x17
+ 822 0287 01       		.uleb128 0x1
+ 823 0288 52       		.byte	0x52
+ 824 0289 02       		.uleb128 0x2
+ 825 028a 08       		.byte	0x8
+ 826 028b 64       		.byte	0x64
+ 827 028c 00       		.byte	0
+ 828 028d 16       		.uleb128 0x16
+ 829 028e 3A000000 		.4byte	.LVL22
+ 830 0292 0C060000 		.4byte	0x60c
+ 831 0296 17       		.uleb128 0x17
+ 832 0297 01       		.uleb128 0x1
+ 833 0298 50       		.byte	0x50
+ 834 0299 01       		.uleb128 0x1
+ 835 029a 49       		.byte	0x49
+ 836 029b 00       		.byte	0
+ 837 029c 00       		.byte	0
+ 838 029d 1A       		.uleb128 0x1a
+ 839 029e 8F030000 		.4byte	.LASF48
+ 840 02a2 01       		.byte	0x1
+ 841 02a3 2F       		.byte	0x2f
+ 842 02a4 00000000 		.4byte	.LFB34
+ 843 02a8 16000000 		.4byte	.LFE34-.LFB34
+ 844 02ac 01       		.uleb128 0x1
+ 845 02ad 9C       		.byte	0x9c
+ 846 02ae 0E030000 		.4byte	0x30e
+ 847 02b2 13       		.uleb128 0x13
+ 848 02b3 9A030000 		.4byte	.LASF44
+ 849 02b7 01       		.byte	0x1
+ 850 02b8 2F       		.byte	0x2f
+ 851 02b9 6B000000 		.4byte	0x6b
+ 852 02bd FE000000 		.4byte	.LLST7
+ 853 02c1 13       		.uleb128 0x13
+ 854 02c2 D8020000 		.4byte	.LASF45
+ 855 02c6 01       		.byte	0x1
+ 856 02c7 2F       		.byte	0x2f
+ 857 02c8 6B000000 		.4byte	0x6b
+ 858 02cc 1F010000 		.4byte	.LLST8
+ 859 02d0 13       		.uleb128 0x13
+ 860 02d1 71030000 		.4byte	.LASF46
+ 861 02d5 01       		.byte	0x1
+ 862 02d6 2F       		.byte	0x2f
+ 863 02d7 6B000000 		.4byte	0x6b
+ 864 02db 4C010000 		.4byte	.LLST9
+ 865 02df 0C       		.uleb128 0xc
+ 866 02e0 2F030000 		.4byte	.LASF40
+ 867 02e4 01       		.byte	0x1
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 19
+
+
+ 868 02e5 31       		.byte	0x31
+ 869 02e6 0E030000 		.4byte	0x30e
+ 870 02ea 02       		.uleb128 0x2
+ 871 02eb 91       		.byte	0x91
+ 872 02ec 74       		.sleb128 -12
+ 873 02ed 1B       		.uleb128 0x1b
+ 874 02ee A4030000 		.4byte	.LASF42
+ 875 02f2 01       		.byte	0x1
+ 876 02f3 35       		.byte	0x35
+ 877 02f4 6B000000 		.4byte	0x6b
+ 878 02f8 16       		.uleb128 0x16
+ 879 02f9 12000000 		.4byte	.LVL27
+ 880 02fd DE010000 		.4byte	0x1de
+ 881 0301 17       		.uleb128 0x17
+ 882 0302 01       		.uleb128 0x1
+ 883 0303 51       		.byte	0x51
+ 884 0304 02       		.uleb128 0x2
+ 885 0305 91       		.byte	0x91
+ 886 0306 74       		.sleb128 -12
+ 887 0307 17       		.uleb128 0x17
+ 888 0308 01       		.uleb128 0x1
+ 889 0309 52       		.byte	0x52
+ 890 030a 01       		.uleb128 0x1
+ 891 030b 32       		.byte	0x32
+ 892 030c 00       		.byte	0
+ 893 030d 00       		.byte	0
+ 894 030e 10       		.uleb128 0x10
+ 895 030f 6B000000 		.4byte	0x6b
+ 896 0313 1E030000 		.4byte	0x31e
+ 897 0317 11       		.uleb128 0x11
+ 898 0318 B7000000 		.4byte	0xb7
+ 899 031c 01       		.byte	0x1
+ 900 031d 00       		.byte	0
+ 901 031e 12       		.uleb128 0x12
+ 902 031f 1A030000 		.4byte	.LASF47
+ 903 0323 01       		.byte	0x1
+ 904 0324 5A       		.byte	0x5a
+ 905 0325 5E010000 		.4byte	0x15e
+ 906 0329 00000000 		.4byte	.LFB37
+ 907 032d 4E000000 		.4byte	.LFE37-.LFB37
+ 908 0331 01       		.uleb128 0x1
+ 909 0332 9C       		.byte	0x9c
+ 910 0333 0C040000 		.4byte	0x40c
+ 911 0337 13       		.uleb128 0x13
+ 912 0338 07000000 		.4byte	.LASF39
+ 913 033c 01       		.byte	0x1
+ 914 033d 5A       		.byte	0x5a
+ 915 033e 6B000000 		.4byte	0x6b
+ 916 0342 79010000 		.4byte	.LLST10
+ 917 0346 13       		.uleb128 0x13
+ 918 0347 2F030000 		.4byte	.LASF40
+ 919 034b 01       		.byte	0x1
+ 920 034c 5A       		.byte	0x5a
+ 921 034d BE000000 		.4byte	0xbe
+ 922 0351 9A010000 		.4byte	.LLST11
+ 923 0355 13       		.uleb128 0x13
+ 924 0356 98010000 		.4byte	.LASF41
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 20
+
+
+ 925 035a 01       		.byte	0x1
+ 926 035b 5A       		.byte	0x5a
+ 927 035c 6B000000 		.4byte	0x6b
+ 928 0360 C6010000 		.4byte	.LLST12
+ 929 0364 14       		.uleb128 0x14
+ 930 0365 A4030000 		.4byte	.LASF42
+ 931 0369 01       		.byte	0x1
+ 932 036a 5B       		.byte	0x5b
+ 933 036b 5E010000 		.4byte	0x15e
+ 934 036f 00       		.byte	0
+ 935 0370 0D       		.uleb128 0xd
+ 936 0371 B5020000 		.4byte	.LASF43
+ 937 0375 01       		.byte	0x1
+ 938 0376 5E       		.byte	0x5e
+ 939 0377 83000000 		.4byte	0x83
+ 940 037b E7010000 		.4byte	.LLST13
+ 941 037f 15       		.uleb128 0x15
+ 942 0380 30000000 		.4byte	.Ldebug_ranges0+0x30
+ 943 0384 D4030000 		.4byte	0x3d4
+ 944 0388 0F       		.uleb128 0xf
+ 945 0389 6900     		.ascii	"i\000"
+ 946 038b 01       		.byte	0x1
+ 947 038c 60       		.byte	0x60
+ 948 038d 6B000000 		.4byte	0x6b
+ 949 0391 05020000 		.4byte	.LLST14
+ 950 0395 19       		.uleb128 0x19
+ 951 0396 2C000000 		.4byte	.LVL33
+ 952 039a 18060000 		.4byte	0x618
+ 953 039e B6030000 		.4byte	0x3b6
+ 954 03a2 17       		.uleb128 0x17
+ 955 03a3 01       		.uleb128 0x1
+ 956 03a4 50       		.byte	0x50
+ 957 03a5 01       		.uleb128 0x1
+ 958 03a6 30       		.byte	0x30
+ 959 03a7 17       		.uleb128 0x17
+ 960 03a8 01       		.uleb128 0x1
+ 961 03a9 51       		.byte	0x51
+ 962 03aa 05       		.uleb128 0x5
+ 963 03ab 76       		.byte	0x76
+ 964 03ac 00       		.sleb128 0
+ 965 03ad 74       		.byte	0x74
+ 966 03ae 00       		.sleb128 0
+ 967 03af 22       		.byte	0x22
+ 968 03b0 17       		.uleb128 0x17
+ 969 03b1 01       		.uleb128 0x1
+ 970 03b2 52       		.byte	0x52
+ 971 03b3 01       		.uleb128 0x1
+ 972 03b4 3A       		.byte	0x3a
+ 973 03b5 00       		.byte	0
+ 974 03b6 16       		.uleb128 0x16
+ 975 03b7 38000000 		.4byte	.LVL34
+ 976 03bb 18060000 		.4byte	0x618
+ 977 03bf 17       		.uleb128 0x17
+ 978 03c0 01       		.uleb128 0x1
+ 979 03c1 50       		.byte	0x50
+ 980 03c2 01       		.uleb128 0x1
+ 981 03c3 31       		.byte	0x31
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 21
+
+
+ 982 03c4 17       		.uleb128 0x17
+ 983 03c5 01       		.uleb128 0x1
+ 984 03c6 51       		.byte	0x51
+ 985 03c7 05       		.uleb128 0x5
+ 986 03c8 76       		.byte	0x76
+ 987 03c9 00       		.sleb128 0
+ 988 03ca 74       		.byte	0x74
+ 989 03cb 00       		.sleb128 0
+ 990 03cc 22       		.byte	0x22
+ 991 03cd 17       		.uleb128 0x17
+ 992 03ce 01       		.uleb128 0x1
+ 993 03cf 52       		.byte	0x52
+ 994 03d0 01       		.uleb128 0x1
+ 995 03d1 3A       		.byte	0x3a
+ 996 03d2 00       		.byte	0
+ 997 03d3 00       		.byte	0
+ 998 03d4 18       		.uleb128 0x18
+ 999 03d5 0C000000 		.4byte	.LVL30
+ 1000 03d9 F4050000 		.4byte	0x5f4
+ 1001 03dd 19       		.uleb128 0x19
+ 1002 03de 16000000 		.4byte	.LVL31
+ 1003 03e2 00060000 		.4byte	0x600
+ 1004 03e6 FC030000 		.4byte	0x3fc
+ 1005 03ea 17       		.uleb128 0x17
+ 1006 03eb 01       		.uleb128 0x1
+ 1007 03ec 50       		.byte	0x50
+ 1008 03ed 02       		.uleb128 0x2
+ 1009 03ee 74       		.byte	0x74
+ 1010 03ef 00       		.sleb128 0
+ 1011 03f0 17       		.uleb128 0x17
+ 1012 03f1 01       		.uleb128 0x1
+ 1013 03f2 51       		.byte	0x51
+ 1014 03f3 01       		.uleb128 0x1
+ 1015 03f4 31       		.byte	0x31
+ 1016 03f5 17       		.uleb128 0x17
+ 1017 03f6 01       		.uleb128 0x1
+ 1018 03f7 52       		.byte	0x52
+ 1019 03f8 02       		.uleb128 0x2
+ 1020 03f9 08       		.byte	0x8
+ 1021 03fa 64       		.byte	0x64
+ 1022 03fb 00       		.byte	0
+ 1023 03fc 16       		.uleb128 0x16
+ 1024 03fd 4A000000 		.4byte	.LVL40
+ 1025 0401 0C060000 		.4byte	0x60c
+ 1026 0405 17       		.uleb128 0x17
+ 1027 0406 01       		.uleb128 0x1
+ 1028 0407 50       		.byte	0x50
+ 1029 0408 01       		.uleb128 0x1
+ 1030 0409 49       		.byte	0x49
+ 1031 040a 00       		.byte	0
+ 1032 040b 00       		.byte	0
+ 1033 040c 1A       		.uleb128 0x1a
+ 1034 040d 79010000 		.4byte	.LASF49
+ 1035 0411 01       		.byte	0x1
+ 1036 0412 4C       		.byte	0x4c
+ 1037 0413 00000000 		.4byte	.LFB36
+ 1038 0417 20000000 		.4byte	.LFE36-.LFB36
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 22
+
+
+ 1039 041b 01       		.uleb128 0x1
+ 1040 041c 9C       		.byte	0x9c
+ 1041 041d A2040000 		.4byte	0x4a2
+ 1042 0421 13       		.uleb128 0x13
+ 1043 0422 9A030000 		.4byte	.LASF44
+ 1044 0426 01       		.byte	0x1
+ 1045 0427 4C       		.byte	0x4c
+ 1046 0428 6B000000 		.4byte	0x6b
+ 1047 042c 2E020000 		.4byte	.LLST15
+ 1048 0430 13       		.uleb128 0x13
+ 1049 0431 D8020000 		.4byte	.LASF45
+ 1050 0435 01       		.byte	0x1
+ 1051 0436 4C       		.byte	0x4c
+ 1052 0437 6B000000 		.4byte	0x6b
+ 1053 043b 4F020000 		.4byte	.LLST16
+ 1054 043f 13       		.uleb128 0x13
+ 1055 0440 71030000 		.4byte	.LASF46
+ 1056 0444 01       		.byte	0x1
+ 1057 0445 4C       		.byte	0x4c
+ 1058 0446 6B000000 		.4byte	0x6b
+ 1059 044a 7C020000 		.4byte	.LLST17
+ 1060 044e 0C       		.uleb128 0xc
+ 1061 044f 2F030000 		.4byte	.LASF40
+ 1062 0453 01       		.byte	0x1
+ 1063 0454 4E       		.byte	0x4e
+ 1064 0455 0E030000 		.4byte	0x30e
+ 1065 0459 02       		.uleb128 0x2
+ 1066 045a 91       		.byte	0x91
+ 1067 045b 6C       		.sleb128 -20
+ 1068 045c 1B       		.uleb128 0x1b
+ 1069 045d A4030000 		.4byte	.LASF42
+ 1070 0461 01       		.byte	0x1
+ 1071 0462 52       		.byte	0x52
+ 1072 0463 6B000000 		.4byte	0x6b
+ 1073 0467 19       		.uleb128 0x19
+ 1074 0468 12000000 		.4byte	.LVL45
+ 1075 046c DE010000 		.4byte	0x1de
+ 1076 0470 86040000 		.4byte	0x486
+ 1077 0474 17       		.uleb128 0x17
+ 1078 0475 01       		.uleb128 0x1
+ 1079 0476 50       		.byte	0x50
+ 1080 0477 02       		.uleb128 0x2
+ 1081 0478 75       		.byte	0x75
+ 1082 0479 00       		.sleb128 0
+ 1083 047a 17       		.uleb128 0x17
+ 1084 047b 01       		.uleb128 0x1
+ 1085 047c 51       		.byte	0x51
+ 1086 047d 02       		.uleb128 0x2
+ 1087 047e 74       		.byte	0x74
+ 1088 047f 00       		.sleb128 0
+ 1089 0480 17       		.uleb128 0x17
+ 1090 0481 01       		.uleb128 0x1
+ 1091 0482 52       		.byte	0x52
+ 1092 0483 01       		.uleb128 0x1
+ 1093 0484 32       		.byte	0x32
+ 1094 0485 00       		.byte	0
+ 1095 0486 16       		.uleb128 0x16
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 23
+
+
+ 1096 0487 1C000000 		.4byte	.LVL46
+ 1097 048b 1E030000 		.4byte	0x31e
+ 1098 048f 17       		.uleb128 0x17
+ 1099 0490 01       		.uleb128 0x1
+ 1100 0491 50       		.byte	0x50
+ 1101 0492 02       		.uleb128 0x2
+ 1102 0493 75       		.byte	0x75
+ 1103 0494 00       		.sleb128 0
+ 1104 0495 17       		.uleb128 0x17
+ 1105 0496 01       		.uleb128 0x1
+ 1106 0497 51       		.byte	0x51
+ 1107 0498 02       		.uleb128 0x2
+ 1108 0499 74       		.byte	0x74
+ 1109 049a 00       		.sleb128 0
+ 1110 049b 17       		.uleb128 0x17
+ 1111 049c 01       		.uleb128 0x1
+ 1112 049d 52       		.byte	0x52
+ 1113 049e 01       		.uleb128 0x1
+ 1114 049f 31       		.byte	0x31
+ 1115 04a0 00       		.byte	0
+ 1116 04a1 00       		.byte	0
+ 1117 04a2 1A       		.uleb128 0x1a
+ 1118 04a3 81030000 		.4byte	.LASF50
+ 1119 04a7 01       		.byte	0x1
+ 1120 04a8 7B       		.byte	0x7b
+ 1121 04a9 00000000 		.4byte	.LFB38
+ 1122 04ad 74000000 		.4byte	.LFE38-.LFB38
+ 1123 04b1 01       		.uleb128 0x1
+ 1124 04b2 9C       		.byte	0x9c
+ 1125 04b3 70050000 		.4byte	0x570
+ 1126 04b7 1C       		.uleb128 0x1c
+ 1127 04b8 525700   		.ascii	"RW\000"
+ 1128 04bb 01       		.byte	0x1
+ 1129 04bc 7B       		.byte	0x7b
+ 1130 04bd 6B000000 		.4byte	0x6b
+ 1131 04c1 B5020000 		.4byte	.LLST18
+ 1132 04c5 19       		.uleb128 0x19
+ 1133 04c6 1A000000 		.4byte	.LVL50
+ 1134 04ca 24060000 		.4byte	0x624
+ 1135 04ce DE040000 		.4byte	0x4de
+ 1136 04d2 17       		.uleb128 0x17
+ 1137 04d3 01       		.uleb128 0x1
+ 1138 04d4 50       		.byte	0x50
+ 1139 04d5 02       		.uleb128 0x2
+ 1140 04d6 74       		.byte	0x74
+ 1141 04d7 00       		.sleb128 0
+ 1142 04d8 17       		.uleb128 0x17
+ 1143 04d9 01       		.uleb128 0x1
+ 1144 04da 52       		.byte	0x52
+ 1145 04db 01       		.uleb128 0x1
+ 1146 04dc 37       		.byte	0x37
+ 1147 04dd 00       		.byte	0
+ 1148 04de 19       		.uleb128 0x19
+ 1149 04df 22000000 		.4byte	.LVL51
+ 1150 04e3 2D060000 		.4byte	0x62d
+ 1151 04e7 F8040000 		.4byte	0x4f8
+ 1152 04eb 17       		.uleb128 0x17
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 24
+
+
+ 1153 04ec 01       		.uleb128 0x1
+ 1154 04ed 50       		.byte	0x50
+ 1155 04ee 02       		.uleb128 0x2
+ 1156 04ef 08       		.byte	0x8
+ 1157 04f0 FE       		.byte	0xfe
+ 1158 04f1 17       		.uleb128 0x17
+ 1159 04f2 01       		.uleb128 0x1
+ 1160 04f3 51       		.byte	0x51
+ 1161 04f4 02       		.uleb128 0x2
+ 1162 04f5 74       		.byte	0x74
+ 1163 04f6 00       		.sleb128 0
+ 1164 04f7 00       		.byte	0
+ 1165 04f8 19       		.uleb128 0x19
+ 1166 04f9 32000000 		.4byte	.LVL54
+ 1167 04fd 24060000 		.4byte	0x624
+ 1168 0501 18050000 		.4byte	0x518
+ 1169 0505 17       		.uleb128 0x17
+ 1170 0506 01       		.uleb128 0x1
+ 1171 0507 50       		.byte	0x50
+ 1172 0508 02       		.uleb128 0x2
+ 1173 0509 74       		.byte	0x74
+ 1174 050a 00       		.sleb128 0
+ 1175 050b 17       		.uleb128 0x17
+ 1176 050c 01       		.uleb128 0x1
+ 1177 050d 51       		.byte	0x51
+ 1178 050e 03       		.uleb128 0x3
+ 1179 050f 0A       		.byte	0xa
+ 1180 0510 007F     		.2byte	0x7f00
+ 1181 0512 17       		.uleb128 0x17
+ 1182 0513 01       		.uleb128 0x1
+ 1183 0514 52       		.byte	0x52
+ 1184 0515 01       		.uleb128 0x1
+ 1185 0516 37       		.byte	0x37
+ 1186 0517 00       		.byte	0
+ 1187 0518 19       		.uleb128 0x19
+ 1188 0519 50000000 		.4byte	.LVL55
+ 1189 051d 24060000 		.4byte	0x624
+ 1190 0521 3A050000 		.4byte	0x53a
+ 1191 0525 17       		.uleb128 0x17
+ 1192 0526 01       		.uleb128 0x1
+ 1193 0527 50       		.byte	0x50
+ 1194 0528 02       		.uleb128 0x2
+ 1195 0529 74       		.byte	0x74
+ 1196 052a 00       		.sleb128 0
+ 1197 052b 17       		.uleb128 0x17
+ 1198 052c 01       		.uleb128 0x1
+ 1199 052d 51       		.byte	0x51
+ 1200 052e 05       		.uleb128 0x5
+ 1201 052f 03       		.byte	0x3
+ 1202 0530 00000000 		.4byte	.LANCHOR2
+ 1203 0534 17       		.uleb128 0x17
+ 1204 0535 01       		.uleb128 0x1
+ 1205 0536 52       		.byte	0x52
+ 1206 0537 01       		.uleb128 0x1
+ 1207 0538 37       		.byte	0x37
+ 1208 0539 00       		.byte	0
+ 1209 053a 19       		.uleb128 0x19
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 25
+
+
+ 1210 053b 5C000000 		.4byte	.LVL56
+ 1211 053f 24060000 		.4byte	0x624
+ 1212 0543 59050000 		.4byte	0x559
+ 1213 0547 17       		.uleb128 0x17
+ 1214 0548 01       		.uleb128 0x1
+ 1215 0549 50       		.byte	0x50
+ 1216 054a 02       		.uleb128 0x2
+ 1217 054b 74       		.byte	0x74
+ 1218 054c 00       		.sleb128 0
+ 1219 054d 17       		.uleb128 0x17
+ 1220 054e 01       		.uleb128 0x1
+ 1221 054f 51       		.byte	0x51
+ 1222 0550 02       		.uleb128 0x2
+ 1223 0551 75       		.byte	0x75
+ 1224 0552 00       		.sleb128 0
+ 1225 0553 17       		.uleb128 0x17
+ 1226 0554 01       		.uleb128 0x1
+ 1227 0555 52       		.byte	0x52
+ 1228 0556 01       		.uleb128 0x1
+ 1229 0557 37       		.byte	0x37
+ 1230 0558 00       		.byte	0
+ 1231 0559 16       		.uleb128 0x16
+ 1232 055a 64000000 		.4byte	.LVL57
+ 1233 055e 2D060000 		.4byte	0x62d
+ 1234 0562 17       		.uleb128 0x17
+ 1235 0563 01       		.uleb128 0x1
+ 1236 0564 50       		.byte	0x50
+ 1237 0565 02       		.uleb128 0x2
+ 1238 0566 08       		.byte	0x8
+ 1239 0567 FE       		.byte	0xfe
+ 1240 0568 17       		.uleb128 0x17
+ 1241 0569 01       		.uleb128 0x1
+ 1242 056a 51       		.byte	0x51
+ 1243 056b 02       		.uleb128 0x2
+ 1244 056c 74       		.byte	0x74
+ 1245 056d 00       		.sleb128 0
+ 1246 056e 00       		.byte	0
+ 1247 056f 00       		.byte	0
+ 1248 0570 1D       		.uleb128 0x1d
+ 1249 0571 35020000 		.4byte	.LASF51
+ 1250 0575 01       		.byte	0x1
+ 1251 0576 0B       		.byte	0xb
+ 1252 0577 65010000 		.4byte	0x165
+ 1253 057b 10       		.uleb128 0x10
+ 1254 057c 8B050000 		.4byte	0x58b
+ 1255 0580 8B050000 		.4byte	0x58b
+ 1256 0584 11       		.uleb128 0x11
+ 1257 0585 B7000000 		.4byte	0xb7
+ 1258 0589 04       		.byte	0x4
+ 1259 058a 00       		.byte	0
+ 1260 058b 1E       		.uleb128 0x1e
+ 1261 058c 8F000000 		.4byte	0x8f
+ 1262 0590 1D       		.uleb128 0x1d
+ 1263 0591 00000000 		.4byte	.LASF52
+ 1264 0595 01       		.byte	0x1
+ 1265 0596 11       		.byte	0x11
+ 1266 0597 9B050000 		.4byte	0x59b
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 26
+
+
+ 1267 059b 1E       		.uleb128 0x1e
+ 1268 059c 7B050000 		.4byte	0x57b
+ 1269 05a0 1F       		.uleb128 0x1f
+ 1270 05a1 DB010000 		.4byte	.LASF53
+ 1271 05a5 01       		.byte	0x1
+ 1272 05a6 18       		.byte	0x18
+ 1273 05a7 5E010000 		.4byte	0x15e
+ 1274 05ab 05       		.uleb128 0x5
+ 1275 05ac 03       		.byte	0x3
+ 1276 05ad 00000000 		.4byte	bWeHaveSampledTEMP
+ 1277 05b1 1F       		.uleb128 0x1f
+ 1278 05b2 65030000 		.4byte	.LASF54
+ 1279 05b6 01       		.byte	0x1
+ 1280 05b7 6E       		.byte	0x6e
+ 1281 05b8 C2050000 		.4byte	0x5c2
+ 1282 05bc 05       		.uleb128 0x5
+ 1283 05bd 03       		.byte	0x3
+ 1284 05be 00000000 		.4byte	defaultInfo
+ 1285 05c2 20       		.uleb128 0x20
+ 1286 05c3 65010000 		.4byte	0x165
+ 1287 05c7 10       		.uleb128 0x10
+ 1288 05c8 6B000000 		.4byte	0x6b
+ 1289 05cc D7050000 		.4byte	0x5d7
+ 1290 05d0 11       		.uleb128 0x11
+ 1291 05d1 B7000000 		.4byte	0xb7
+ 1292 05d5 7F       		.byte	0x7f
+ 1293 05d6 00       		.byte	0
+ 1294 05d7 1F       		.uleb128 0x1f
+ 1295 05d8 3D030000 		.4byte	.LASF55
+ 1296 05dc 01       		.byte	0x1
+ 1297 05dd 7A       		.byte	0x7a
+ 1298 05de C7050000 		.4byte	0x5c7
+ 1299 05e2 05       		.uleb128 0x5
+ 1300 05e3 03       		.byte	0x3
+ 1301 05e4 00000000 		.4byte	Info_Mem
+ 1302 05e8 21       		.uleb128 0x21
+ 1303 05e9 C3010000 		.4byte	.LASF56
+ 1304 05ed C3010000 		.4byte	.LASF56
+ 1305 05f1 04       		.byte	0x4
+ 1306 05f2 1E01     		.2byte	0x11e
+ 1307 05f4 21       		.uleb128 0x21
+ 1308 05f5 47020000 		.4byte	.LASF57
+ 1309 05f9 47020000 		.4byte	.LASF57
+ 1310 05fd 04       		.byte	0x4
+ 1311 05fe 1001     		.2byte	0x110
+ 1312 0600 21       		.uleb128 0x21
+ 1313 0601 4D030000 		.4byte	.LASF58
+ 1314 0605 4D030000 		.4byte	.LASF58
+ 1315 0609 04       		.byte	0x4
+ 1316 060a 1B01     		.2byte	0x11b
+ 1317 060c 21       		.uleb128 0x21
+ 1318 060d BC020000 		.4byte	.LASF59
+ 1319 0611 BC020000 		.4byte	.LASF59
+ 1320 0615 04       		.byte	0x4
+ 1321 0616 1D01     		.2byte	0x11d
+ 1322 0618 21       		.uleb128 0x21
+ 1323 0619 A0000000 		.4byte	.LASF60
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 27
+
+
+ 1324 061d A0000000 		.4byte	.LASF60
+ 1325 0621 04       		.byte	0x4
+ 1326 0622 1F01     		.2byte	0x11f
+ 1327 0624 22       		.uleb128 0x22
+ 1328 0625 7D000000 		.4byte	.LASF65
+ 1329 0629 7D000000 		.4byte	.LASF65
+ 1330 062d 23       		.uleb128 0x23
+ 1331 062e CC000000 		.4byte	.LASF61
+ 1332 0632 CC000000 		.4byte	.LASF61
+ 1333 0636 05       		.byte	0x5
+ 1334 0637 4E       		.byte	0x4e
+ 1335 0638 00       		.byte	0
+ 1336              		.section	.debug_abbrev,"",%progbits
+ 1337              	.Ldebug_abbrev0:
+ 1338 0000 01       		.uleb128 0x1
+ 1339 0001 11       		.uleb128 0x11
+ 1340 0002 01       		.byte	0x1
+ 1341 0003 25       		.uleb128 0x25
+ 1342 0004 0E       		.uleb128 0xe
+ 1343 0005 13       		.uleb128 0x13
+ 1344 0006 0B       		.uleb128 0xb
+ 1345 0007 03       		.uleb128 0x3
+ 1346 0008 0E       		.uleb128 0xe
+ 1347 0009 1B       		.uleb128 0x1b
+ 1348 000a 0E       		.uleb128 0xe
+ 1349 000b 55       		.uleb128 0x55
+ 1350 000c 17       		.uleb128 0x17
+ 1351 000d 11       		.uleb128 0x11
+ 1352 000e 01       		.uleb128 0x1
+ 1353 000f 10       		.uleb128 0x10
+ 1354 0010 17       		.uleb128 0x17
+ 1355 0011 00       		.byte	0
+ 1356 0012 00       		.byte	0
+ 1357 0013 02       		.uleb128 0x2
+ 1358 0014 24       		.uleb128 0x24
+ 1359 0015 00       		.byte	0
+ 1360 0016 0B       		.uleb128 0xb
+ 1361 0017 0B       		.uleb128 0xb
+ 1362 0018 3E       		.uleb128 0x3e
+ 1363 0019 0B       		.uleb128 0xb
+ 1364 001a 03       		.uleb128 0x3
+ 1365 001b 0E       		.uleb128 0xe
+ 1366 001c 00       		.byte	0
+ 1367 001d 00       		.byte	0
+ 1368 001e 03       		.uleb128 0x3
+ 1369 001f 24       		.uleb128 0x24
+ 1370 0020 00       		.byte	0
+ 1371 0021 0B       		.uleb128 0xb
+ 1372 0022 0B       		.uleb128 0xb
+ 1373 0023 3E       		.uleb128 0x3e
+ 1374 0024 0B       		.uleb128 0xb
+ 1375 0025 03       		.uleb128 0x3
+ 1376 0026 08       		.uleb128 0x8
+ 1377 0027 00       		.byte	0
+ 1378 0028 00       		.byte	0
+ 1379 0029 04       		.uleb128 0x4
+ 1380 002a 16       		.uleb128 0x16
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 28
+
+
+ 1381 002b 00       		.byte	0
+ 1382 002c 03       		.uleb128 0x3
+ 1383 002d 0E       		.uleb128 0xe
+ 1384 002e 3A       		.uleb128 0x3a
+ 1385 002f 0B       		.uleb128 0xb
+ 1386 0030 3B       		.uleb128 0x3b
+ 1387 0031 05       		.uleb128 0x5
+ 1388 0032 49       		.uleb128 0x49
+ 1389 0033 13       		.uleb128 0x13
+ 1390 0034 00       		.byte	0
+ 1391 0035 00       		.byte	0
+ 1392 0036 05       		.uleb128 0x5
+ 1393 0037 0F       		.uleb128 0xf
+ 1394 0038 00       		.byte	0
+ 1395 0039 0B       		.uleb128 0xb
+ 1396 003a 0B       		.uleb128 0xb
+ 1397 003b 49       		.uleb128 0x49
+ 1398 003c 13       		.uleb128 0x13
+ 1399 003d 00       		.byte	0
+ 1400 003e 00       		.byte	0
+ 1401 003f 06       		.uleb128 0x6
+ 1402 0040 16       		.uleb128 0x16
+ 1403 0041 00       		.byte	0
+ 1404 0042 03       		.uleb128 0x3
+ 1405 0043 0E       		.uleb128 0xe
+ 1406 0044 3A       		.uleb128 0x3a
+ 1407 0045 0B       		.uleb128 0xb
+ 1408 0046 3B       		.uleb128 0x3b
+ 1409 0047 0B       		.uleb128 0xb
+ 1410 0048 49       		.uleb128 0x49
+ 1411 0049 13       		.uleb128 0x13
+ 1412 004a 00       		.byte	0
+ 1413 004b 00       		.byte	0
+ 1414 004c 07       		.uleb128 0x7
+ 1415 004d 04       		.uleb128 0x4
+ 1416 004e 01       		.byte	0x1
+ 1417 004f 0B       		.uleb128 0xb
+ 1418 0050 0B       		.uleb128 0xb
+ 1419 0051 49       		.uleb128 0x49
+ 1420 0052 13       		.uleb128 0x13
+ 1421 0053 3A       		.uleb128 0x3a
+ 1422 0054 0B       		.uleb128 0xb
+ 1423 0055 3B       		.uleb128 0x3b
+ 1424 0056 0B       		.uleb128 0xb
+ 1425 0057 01       		.uleb128 0x1
+ 1426 0058 13       		.uleb128 0x13
+ 1427 0059 00       		.byte	0
+ 1428 005a 00       		.byte	0
+ 1429 005b 08       		.uleb128 0x8
+ 1430 005c 28       		.uleb128 0x28
+ 1431 005d 00       		.byte	0
+ 1432 005e 03       		.uleb128 0x3
+ 1433 005f 0E       		.uleb128 0xe
+ 1434 0060 1C       		.uleb128 0x1c
+ 1435 0061 0B       		.uleb128 0xb
+ 1436 0062 00       		.byte	0
+ 1437 0063 00       		.byte	0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 29
+
+
+ 1438 0064 09       		.uleb128 0x9
+ 1439 0065 13       		.uleb128 0x13
+ 1440 0066 01       		.byte	0x1
+ 1441 0067 0B       		.uleb128 0xb
+ 1442 0068 0B       		.uleb128 0xb
+ 1443 0069 3A       		.uleb128 0x3a
+ 1444 006a 0B       		.uleb128 0xb
+ 1445 006b 3B       		.uleb128 0x3b
+ 1446 006c 0B       		.uleb128 0xb
+ 1447 006d 01       		.uleb128 0x1
+ 1448 006e 13       		.uleb128 0x13
+ 1449 006f 00       		.byte	0
+ 1450 0070 00       		.byte	0
+ 1451 0071 0A       		.uleb128 0xa
+ 1452 0072 0D       		.uleb128 0xd
+ 1453 0073 00       		.byte	0
+ 1454 0074 03       		.uleb128 0x3
+ 1455 0075 0E       		.uleb128 0xe
+ 1456 0076 3A       		.uleb128 0x3a
+ 1457 0077 0B       		.uleb128 0xb
+ 1458 0078 3B       		.uleb128 0x3b
+ 1459 0079 0B       		.uleb128 0xb
+ 1460 007a 49       		.uleb128 0x49
+ 1461 007b 13       		.uleb128 0x13
+ 1462 007c 38       		.uleb128 0x38
+ 1463 007d 0B       		.uleb128 0xb
+ 1464 007e 00       		.byte	0
+ 1465 007f 00       		.byte	0
+ 1466 0080 0B       		.uleb128 0xb
+ 1467 0081 2E       		.uleb128 0x2e
+ 1468 0082 01       		.byte	0x1
+ 1469 0083 3F       		.uleb128 0x3f
+ 1470 0084 19       		.uleb128 0x19
+ 1471 0085 03       		.uleb128 0x3
+ 1472 0086 0E       		.uleb128 0xe
+ 1473 0087 3A       		.uleb128 0x3a
+ 1474 0088 0B       		.uleb128 0xb
+ 1475 0089 3B       		.uleb128 0x3b
+ 1476 008a 0B       		.uleb128 0xb
+ 1477 008b 27       		.uleb128 0x27
+ 1478 008c 19       		.uleb128 0x19
+ 1479 008d 49       		.uleb128 0x49
+ 1480 008e 13       		.uleb128 0x13
+ 1481 008f 11       		.uleb128 0x11
+ 1482 0090 01       		.uleb128 0x1
+ 1483 0091 12       		.uleb128 0x12
+ 1484 0092 06       		.uleb128 0x6
+ 1485 0093 40       		.uleb128 0x40
+ 1486 0094 18       		.uleb128 0x18
+ 1487 0095 9642     		.uleb128 0x2116
+ 1488 0097 19       		.uleb128 0x19
+ 1489 0098 01       		.uleb128 0x1
+ 1490 0099 13       		.uleb128 0x13
+ 1491 009a 00       		.byte	0
+ 1492 009b 00       		.byte	0
+ 1493 009c 0C       		.uleb128 0xc
+ 1494 009d 34       		.uleb128 0x34
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 30
+
+
+ 1495 009e 00       		.byte	0
+ 1496 009f 03       		.uleb128 0x3
+ 1497 00a0 0E       		.uleb128 0xe
+ 1498 00a1 3A       		.uleb128 0x3a
+ 1499 00a2 0B       		.uleb128 0xb
+ 1500 00a3 3B       		.uleb128 0x3b
+ 1501 00a4 0B       		.uleb128 0xb
+ 1502 00a5 49       		.uleb128 0x49
+ 1503 00a6 13       		.uleb128 0x13
+ 1504 00a7 02       		.uleb128 0x2
+ 1505 00a8 18       		.uleb128 0x18
+ 1506 00a9 00       		.byte	0
+ 1507 00aa 00       		.byte	0
+ 1508 00ab 0D       		.uleb128 0xd
+ 1509 00ac 34       		.uleb128 0x34
+ 1510 00ad 00       		.byte	0
+ 1511 00ae 03       		.uleb128 0x3
+ 1512 00af 0E       		.uleb128 0xe
+ 1513 00b0 3A       		.uleb128 0x3a
+ 1514 00b1 0B       		.uleb128 0xb
+ 1515 00b2 3B       		.uleb128 0x3b
+ 1516 00b3 0B       		.uleb128 0xb
+ 1517 00b4 49       		.uleb128 0x49
+ 1518 00b5 13       		.uleb128 0x13
+ 1519 00b6 02       		.uleb128 0x2
+ 1520 00b7 17       		.uleb128 0x17
+ 1521 00b8 00       		.byte	0
+ 1522 00b9 00       		.byte	0
+ 1523 00ba 0E       		.uleb128 0xe
+ 1524 00bb 0B       		.uleb128 0xb
+ 1525 00bc 01       		.byte	0x1
+ 1526 00bd 55       		.uleb128 0x55
+ 1527 00be 17       		.uleb128 0x17
+ 1528 00bf 00       		.byte	0
+ 1529 00c0 00       		.byte	0
+ 1530 00c1 0F       		.uleb128 0xf
+ 1531 00c2 34       		.uleb128 0x34
+ 1532 00c3 00       		.byte	0
+ 1533 00c4 03       		.uleb128 0x3
+ 1534 00c5 08       		.uleb128 0x8
+ 1535 00c6 3A       		.uleb128 0x3a
+ 1536 00c7 0B       		.uleb128 0xb
+ 1537 00c8 3B       		.uleb128 0x3b
+ 1538 00c9 0B       		.uleb128 0xb
+ 1539 00ca 49       		.uleb128 0x49
+ 1540 00cb 13       		.uleb128 0x13
+ 1541 00cc 02       		.uleb128 0x2
+ 1542 00cd 17       		.uleb128 0x17
+ 1543 00ce 00       		.byte	0
+ 1544 00cf 00       		.byte	0
+ 1545 00d0 10       		.uleb128 0x10
+ 1546 00d1 01       		.uleb128 0x1
+ 1547 00d2 01       		.byte	0x1
+ 1548 00d3 49       		.uleb128 0x49
+ 1549 00d4 13       		.uleb128 0x13
+ 1550 00d5 01       		.uleb128 0x1
+ 1551 00d6 13       		.uleb128 0x13
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 31
+
+
+ 1552 00d7 00       		.byte	0
+ 1553 00d8 00       		.byte	0
+ 1554 00d9 11       		.uleb128 0x11
+ 1555 00da 21       		.uleb128 0x21
+ 1556 00db 00       		.byte	0
+ 1557 00dc 49       		.uleb128 0x49
+ 1558 00dd 13       		.uleb128 0x13
+ 1559 00de 2F       		.uleb128 0x2f
+ 1560 00df 0B       		.uleb128 0xb
+ 1561 00e0 00       		.byte	0
+ 1562 00e1 00       		.byte	0
+ 1563 00e2 12       		.uleb128 0x12
+ 1564 00e3 2E       		.uleb128 0x2e
+ 1565 00e4 01       		.byte	0x1
+ 1566 00e5 3F       		.uleb128 0x3f
+ 1567 00e6 19       		.uleb128 0x19
+ 1568 00e7 03       		.uleb128 0x3
+ 1569 00e8 0E       		.uleb128 0xe
+ 1570 00e9 3A       		.uleb128 0x3a
+ 1571 00ea 0B       		.uleb128 0xb
+ 1572 00eb 3B       		.uleb128 0x3b
+ 1573 00ec 0B       		.uleb128 0xb
+ 1574 00ed 27       		.uleb128 0x27
+ 1575 00ee 19       		.uleb128 0x19
+ 1576 00ef 49       		.uleb128 0x49
+ 1577 00f0 13       		.uleb128 0x13
+ 1578 00f1 11       		.uleb128 0x11
+ 1579 00f2 01       		.uleb128 0x1
+ 1580 00f3 12       		.uleb128 0x12
+ 1581 00f4 06       		.uleb128 0x6
+ 1582 00f5 40       		.uleb128 0x40
+ 1583 00f6 18       		.uleb128 0x18
+ 1584 00f7 9742     		.uleb128 0x2117
+ 1585 00f9 19       		.uleb128 0x19
+ 1586 00fa 01       		.uleb128 0x1
+ 1587 00fb 13       		.uleb128 0x13
+ 1588 00fc 00       		.byte	0
+ 1589 00fd 00       		.byte	0
+ 1590 00fe 13       		.uleb128 0x13
+ 1591 00ff 05       		.uleb128 0x5
+ 1592 0100 00       		.byte	0
+ 1593 0101 03       		.uleb128 0x3
+ 1594 0102 0E       		.uleb128 0xe
+ 1595 0103 3A       		.uleb128 0x3a
+ 1596 0104 0B       		.uleb128 0xb
+ 1597 0105 3B       		.uleb128 0x3b
+ 1598 0106 0B       		.uleb128 0xb
+ 1599 0107 49       		.uleb128 0x49
+ 1600 0108 13       		.uleb128 0x13
+ 1601 0109 02       		.uleb128 0x2
+ 1602 010a 17       		.uleb128 0x17
+ 1603 010b 00       		.byte	0
+ 1604 010c 00       		.byte	0
+ 1605 010d 14       		.uleb128 0x14
+ 1606 010e 34       		.uleb128 0x34
+ 1607 010f 00       		.byte	0
+ 1608 0110 03       		.uleb128 0x3
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 32
+
+
+ 1609 0111 0E       		.uleb128 0xe
+ 1610 0112 3A       		.uleb128 0x3a
+ 1611 0113 0B       		.uleb128 0xb
+ 1612 0114 3B       		.uleb128 0x3b
+ 1613 0115 0B       		.uleb128 0xb
+ 1614 0116 49       		.uleb128 0x49
+ 1615 0117 13       		.uleb128 0x13
+ 1616 0118 1C       		.uleb128 0x1c
+ 1617 0119 0B       		.uleb128 0xb
+ 1618 011a 00       		.byte	0
+ 1619 011b 00       		.byte	0
+ 1620 011c 15       		.uleb128 0x15
+ 1621 011d 0B       		.uleb128 0xb
+ 1622 011e 01       		.byte	0x1
+ 1623 011f 55       		.uleb128 0x55
+ 1624 0120 17       		.uleb128 0x17
+ 1625 0121 01       		.uleb128 0x1
+ 1626 0122 13       		.uleb128 0x13
+ 1627 0123 00       		.byte	0
+ 1628 0124 00       		.byte	0
+ 1629 0125 16       		.uleb128 0x16
+ 1630 0126 898201   		.uleb128 0x4109
+ 1631 0129 01       		.byte	0x1
+ 1632 012a 11       		.uleb128 0x11
+ 1633 012b 01       		.uleb128 0x1
+ 1634 012c 31       		.uleb128 0x31
+ 1635 012d 13       		.uleb128 0x13
+ 1636 012e 00       		.byte	0
+ 1637 012f 00       		.byte	0
+ 1638 0130 17       		.uleb128 0x17
+ 1639 0131 8A8201   		.uleb128 0x410a
+ 1640 0134 00       		.byte	0
+ 1641 0135 02       		.uleb128 0x2
+ 1642 0136 18       		.uleb128 0x18
+ 1643 0137 9142     		.uleb128 0x2111
+ 1644 0139 18       		.uleb128 0x18
+ 1645 013a 00       		.byte	0
+ 1646 013b 00       		.byte	0
+ 1647 013c 18       		.uleb128 0x18
+ 1648 013d 898201   		.uleb128 0x4109
+ 1649 0140 00       		.byte	0
+ 1650 0141 11       		.uleb128 0x11
+ 1651 0142 01       		.uleb128 0x1
+ 1652 0143 31       		.uleb128 0x31
+ 1653 0144 13       		.uleb128 0x13
+ 1654 0145 00       		.byte	0
+ 1655 0146 00       		.byte	0
+ 1656 0147 19       		.uleb128 0x19
+ 1657 0148 898201   		.uleb128 0x4109
+ 1658 014b 01       		.byte	0x1
+ 1659 014c 11       		.uleb128 0x11
+ 1660 014d 01       		.uleb128 0x1
+ 1661 014e 31       		.uleb128 0x31
+ 1662 014f 13       		.uleb128 0x13
+ 1663 0150 01       		.uleb128 0x1
+ 1664 0151 13       		.uleb128 0x13
+ 1665 0152 00       		.byte	0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 33
+
+
+ 1666 0153 00       		.byte	0
+ 1667 0154 1A       		.uleb128 0x1a
+ 1668 0155 2E       		.uleb128 0x2e
+ 1669 0156 01       		.byte	0x1
+ 1670 0157 3F       		.uleb128 0x3f
+ 1671 0158 19       		.uleb128 0x19
+ 1672 0159 03       		.uleb128 0x3
+ 1673 015a 0E       		.uleb128 0xe
+ 1674 015b 3A       		.uleb128 0x3a
+ 1675 015c 0B       		.uleb128 0xb
+ 1676 015d 3B       		.uleb128 0x3b
+ 1677 015e 0B       		.uleb128 0xb
+ 1678 015f 27       		.uleb128 0x27
+ 1679 0160 19       		.uleb128 0x19
+ 1680 0161 11       		.uleb128 0x11
+ 1681 0162 01       		.uleb128 0x1
+ 1682 0163 12       		.uleb128 0x12
+ 1683 0164 06       		.uleb128 0x6
+ 1684 0165 40       		.uleb128 0x40
+ 1685 0166 18       		.uleb128 0x18
+ 1686 0167 9742     		.uleb128 0x2117
+ 1687 0169 19       		.uleb128 0x19
+ 1688 016a 01       		.uleb128 0x1
+ 1689 016b 13       		.uleb128 0x13
+ 1690 016c 00       		.byte	0
+ 1691 016d 00       		.byte	0
+ 1692 016e 1B       		.uleb128 0x1b
+ 1693 016f 34       		.uleb128 0x34
+ 1694 0170 00       		.byte	0
+ 1695 0171 03       		.uleb128 0x3
+ 1696 0172 0E       		.uleb128 0xe
+ 1697 0173 3A       		.uleb128 0x3a
+ 1698 0174 0B       		.uleb128 0xb
+ 1699 0175 3B       		.uleb128 0x3b
+ 1700 0176 0B       		.uleb128 0xb
+ 1701 0177 49       		.uleb128 0x49
+ 1702 0178 13       		.uleb128 0x13
+ 1703 0179 00       		.byte	0
+ 1704 017a 00       		.byte	0
+ 1705 017b 1C       		.uleb128 0x1c
+ 1706 017c 05       		.uleb128 0x5
+ 1707 017d 00       		.byte	0
+ 1708 017e 03       		.uleb128 0x3
+ 1709 017f 08       		.uleb128 0x8
+ 1710 0180 3A       		.uleb128 0x3a
+ 1711 0181 0B       		.uleb128 0xb
+ 1712 0182 3B       		.uleb128 0x3b
+ 1713 0183 0B       		.uleb128 0xb
+ 1714 0184 49       		.uleb128 0x49
+ 1715 0185 13       		.uleb128 0x13
+ 1716 0186 02       		.uleb128 0x2
+ 1717 0187 17       		.uleb128 0x17
+ 1718 0188 00       		.byte	0
+ 1719 0189 00       		.byte	0
+ 1720 018a 1D       		.uleb128 0x1d
+ 1721 018b 34       		.uleb128 0x34
+ 1722 018c 00       		.byte	0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 34
+
+
+ 1723 018d 03       		.uleb128 0x3
+ 1724 018e 0E       		.uleb128 0xe
+ 1725 018f 3A       		.uleb128 0x3a
+ 1726 0190 0B       		.uleb128 0xb
+ 1727 0191 3B       		.uleb128 0x3b
+ 1728 0192 0B       		.uleb128 0xb
+ 1729 0193 49       		.uleb128 0x49
+ 1730 0194 13       		.uleb128 0x13
+ 1731 0195 3F       		.uleb128 0x3f
+ 1732 0196 19       		.uleb128 0x19
+ 1733 0197 3C       		.uleb128 0x3c
+ 1734 0198 19       		.uleb128 0x19
+ 1735 0199 00       		.byte	0
+ 1736 019a 00       		.byte	0
+ 1737 019b 1E       		.uleb128 0x1e
+ 1738 019c 35       		.uleb128 0x35
+ 1739 019d 00       		.byte	0
+ 1740 019e 49       		.uleb128 0x49
+ 1741 019f 13       		.uleb128 0x13
+ 1742 01a0 00       		.byte	0
+ 1743 01a1 00       		.byte	0
+ 1744 01a2 1F       		.uleb128 0x1f
+ 1745 01a3 34       		.uleb128 0x34
+ 1746 01a4 00       		.byte	0
+ 1747 01a5 03       		.uleb128 0x3
+ 1748 01a6 0E       		.uleb128 0xe
+ 1749 01a7 3A       		.uleb128 0x3a
+ 1750 01a8 0B       		.uleb128 0xb
+ 1751 01a9 3B       		.uleb128 0x3b
+ 1752 01aa 0B       		.uleb128 0xb
+ 1753 01ab 49       		.uleb128 0x49
+ 1754 01ac 13       		.uleb128 0x13
+ 1755 01ad 3F       		.uleb128 0x3f
+ 1756 01ae 19       		.uleb128 0x19
+ 1757 01af 02       		.uleb128 0x2
+ 1758 01b0 18       		.uleb128 0x18
+ 1759 01b1 00       		.byte	0
+ 1760 01b2 00       		.byte	0
+ 1761 01b3 20       		.uleb128 0x20
+ 1762 01b4 26       		.uleb128 0x26
+ 1763 01b5 00       		.byte	0
+ 1764 01b6 49       		.uleb128 0x49
+ 1765 01b7 13       		.uleb128 0x13
+ 1766 01b8 00       		.byte	0
+ 1767 01b9 00       		.byte	0
+ 1768 01ba 21       		.uleb128 0x21
+ 1769 01bb 2E       		.uleb128 0x2e
+ 1770 01bc 00       		.byte	0
+ 1771 01bd 3F       		.uleb128 0x3f
+ 1772 01be 19       		.uleb128 0x19
+ 1773 01bf 3C       		.uleb128 0x3c
+ 1774 01c0 19       		.uleb128 0x19
+ 1775 01c1 6E       		.uleb128 0x6e
+ 1776 01c2 0E       		.uleb128 0xe
+ 1777 01c3 03       		.uleb128 0x3
+ 1778 01c4 0E       		.uleb128 0xe
+ 1779 01c5 3A       		.uleb128 0x3a
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 35
+
+
+ 1780 01c6 0B       		.uleb128 0xb
+ 1781 01c7 3B       		.uleb128 0x3b
+ 1782 01c8 05       		.uleb128 0x5
+ 1783 01c9 00       		.byte	0
+ 1784 01ca 00       		.byte	0
+ 1785 01cb 22       		.uleb128 0x22
+ 1786 01cc 2E       		.uleb128 0x2e
+ 1787 01cd 00       		.byte	0
+ 1788 01ce 3F       		.uleb128 0x3f
+ 1789 01cf 19       		.uleb128 0x19
+ 1790 01d0 3C       		.uleb128 0x3c
+ 1791 01d1 19       		.uleb128 0x19
+ 1792 01d2 6E       		.uleb128 0x6e
+ 1793 01d3 0E       		.uleb128 0xe
+ 1794 01d4 03       		.uleb128 0x3
+ 1795 01d5 0E       		.uleb128 0xe
+ 1796 01d6 00       		.byte	0
+ 1797 01d7 00       		.byte	0
+ 1798 01d8 23       		.uleb128 0x23
+ 1799 01d9 2E       		.uleb128 0x2e
+ 1800 01da 00       		.byte	0
+ 1801 01db 3F       		.uleb128 0x3f
+ 1802 01dc 19       		.uleb128 0x19
+ 1803 01dd 3C       		.uleb128 0x3c
+ 1804 01de 19       		.uleb128 0x19
+ 1805 01df 6E       		.uleb128 0x6e
+ 1806 01e0 0E       		.uleb128 0xe
+ 1807 01e1 03       		.uleb128 0x3
+ 1808 01e2 0E       		.uleb128 0xe
+ 1809 01e3 3A       		.uleb128 0x3a
+ 1810 01e4 0B       		.uleb128 0xb
+ 1811 01e5 3B       		.uleb128 0x3b
+ 1812 01e6 0B       		.uleb128 0xb
+ 1813 01e7 00       		.byte	0
+ 1814 01e8 00       		.byte	0
+ 1815 01e9 00       		.byte	0
+ 1816              		.section	.debug_loc,"",%progbits
+ 1817              	.Ldebug_loc0:
+ 1818              	.LLST0:
+ 1819 0000 02000000 		.4byte	.LVL0
+ 1820 0004 46000000 		.4byte	.LVL4
+ 1821 0008 0200     		.2byte	0x2
+ 1822 000a 30       		.byte	0x30
+ 1823 000b 9F       		.byte	0x9f
+ 1824 000c 46000000 		.4byte	.LVL4
+ 1825 0010 5A000000 		.4byte	.LVL8
+ 1826 0014 0100     		.2byte	0x1
+ 1827 0016 50       		.byte	0x50
+ 1828 0017 00000000 		.4byte	0
+ 1829 001b 00000000 		.4byte	0
+ 1830              	.LLST1:
+ 1831 001f 40000000 		.4byte	.LVL3
+ 1832 0023 46000000 		.4byte	.LVL4
+ 1833 0027 0200     		.2byte	0x2
+ 1834 0029 30       		.byte	0x30
+ 1835 002a 9F       		.byte	0x9f
+ 1836 002b 46000000 		.4byte	.LVL4
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 36
+
+
+ 1837 002f 52000000 		.4byte	.LVL6
+ 1838 0033 0100     		.2byte	0x1
+ 1839 0035 53       		.byte	0x53
+ 1840 0036 54000000 		.4byte	.LVL7
+ 1841 003a 70000000 		.4byte	.LFE33
+ 1842 003e 0100     		.2byte	0x1
+ 1843 0040 53       		.byte	0x53
+ 1844 0041 00000000 		.4byte	0
+ 1845 0045 00000000 		.4byte	0
+ 1846              	.LLST2:
+ 1847 0049 00000000 		.4byte	.LVL9
+ 1848 004d 0B000000 		.4byte	.LVL11-1
+ 1849 0051 0100     		.2byte	0x1
+ 1850 0053 50       		.byte	0x50
+ 1851 0054 0B000000 		.4byte	.LVL11-1
+ 1852 0058 3E000000 		.4byte	.LFE35
+ 1853 005c 0400     		.2byte	0x4
+ 1854 005e F3       		.byte	0xf3
+ 1855 005f 01       		.uleb128 0x1
+ 1856 0060 50       		.byte	0x50
+ 1857 0061 9F       		.byte	0x9f
+ 1858 0062 00000000 		.4byte	0
+ 1859 0066 00000000 		.4byte	0
+ 1860              	.LLST3:
+ 1861 006a 00000000 		.4byte	.LVL9
+ 1862 006e 0B000000 		.4byte	.LVL11-1
+ 1863 0072 0100     		.2byte	0x1
+ 1864 0074 51       		.byte	0x51
+ 1865 0075 0B000000 		.4byte	.LVL11-1
+ 1866 0079 3C000000 		.4byte	.LVL23
+ 1867 007d 0100     		.2byte	0x1
+ 1868 007f 56       		.byte	0x56
+ 1869 0080 3C000000 		.4byte	.LVL23
+ 1870 0084 3E000000 		.4byte	.LFE35
+ 1871 0088 0400     		.2byte	0x4
+ 1872 008a F3       		.byte	0xf3
+ 1873 008b 01       		.uleb128 0x1
+ 1874 008c 51       		.byte	0x51
+ 1875 008d 9F       		.byte	0x9f
+ 1876 008e 00000000 		.4byte	0
+ 1877 0092 00000000 		.4byte	0
+ 1878              	.LLST4:
+ 1879 0096 00000000 		.4byte	.LVL9
+ 1880 009a 0B000000 		.4byte	.LVL11-1
+ 1881 009e 0100     		.2byte	0x1
+ 1882 00a0 52       		.byte	0x52
+ 1883 00a1 0B000000 		.4byte	.LVL11-1
+ 1884 00a5 3E000000 		.4byte	.LFE35
+ 1885 00a9 0400     		.2byte	0x4
+ 1886 00ab F3       		.byte	0xf3
+ 1887 00ac 01       		.uleb128 0x1
+ 1888 00ad 52       		.byte	0x52
+ 1889 00ae 9F       		.byte	0x9f
+ 1890 00af 00000000 		.4byte	0
+ 1891 00b3 00000000 		.4byte	0
+ 1892              	.LLST5:
+ 1893 00b7 16000000 		.4byte	.LVL12
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 37
+
+
+ 1894 00bb 1E000000 		.4byte	.LVL14
+ 1895 00bf 0100     		.2byte	0x1
+ 1896 00c1 50       		.byte	0x50
+ 1897 00c2 24000000 		.4byte	.LVL15
+ 1898 00c6 36000000 		.4byte	.LVL21
+ 1899 00ca 0100     		.2byte	0x1
+ 1900 00cc 50       		.byte	0x50
+ 1901 00cd 00000000 		.4byte	0
+ 1902 00d1 00000000 		.4byte	0
+ 1903              	.LLST6:
+ 1904 00d5 1C000000 		.4byte	.LVL13
+ 1905 00d9 2A000000 		.4byte	.LVL16
+ 1906 00dd 0100     		.2byte	0x1
+ 1907 00df 54       		.byte	0x54
+ 1908 00e0 2C000000 		.4byte	.LVL17
+ 1909 00e4 2E000000 		.4byte	.LVL18
+ 1910 00e8 0100     		.2byte	0x1
+ 1911 00ea 54       		.byte	0x54
+ 1912 00eb 30000000 		.4byte	.LVL19
+ 1913 00ef 34000000 		.4byte	.LVL20
+ 1914 00f3 0100     		.2byte	0x1
+ 1915 00f5 54       		.byte	0x54
+ 1916 00f6 00000000 		.4byte	0
+ 1917 00fa 00000000 		.4byte	0
+ 1918              	.LLST7:
+ 1919 00fe 00000000 		.4byte	.LVL24
+ 1920 0102 11000000 		.4byte	.LVL27-1
+ 1921 0106 0100     		.2byte	0x1
+ 1922 0108 50       		.byte	0x50
+ 1923 0109 11000000 		.4byte	.LVL27-1
+ 1924 010d 16000000 		.4byte	.LFE34
+ 1925 0111 0400     		.2byte	0x4
+ 1926 0113 F3       		.byte	0xf3
+ 1927 0114 01       		.uleb128 0x1
+ 1928 0115 50       		.byte	0x50
+ 1929 0116 9F       		.byte	0x9f
+ 1930 0117 00000000 		.4byte	0
+ 1931 011b 00000000 		.4byte	0
+ 1932              	.LLST8:
+ 1933 011f 00000000 		.4byte	.LVL24
+ 1934 0123 0E000000 		.4byte	.LVL26
+ 1935 0127 0100     		.2byte	0x1
+ 1936 0129 51       		.byte	0x51
+ 1937 012a 0E000000 		.4byte	.LVL26
+ 1938 012e 11000000 		.4byte	.LVL27-1
+ 1939 0132 0200     		.2byte	0x2
+ 1940 0134 73       		.byte	0x73
+ 1941 0135 00       		.sleb128 0
+ 1942 0136 11000000 		.4byte	.LVL27-1
+ 1943 013a 16000000 		.4byte	.LFE34
+ 1944 013e 0400     		.2byte	0x4
+ 1945 0140 F3       		.byte	0xf3
+ 1946 0141 01       		.uleb128 0x1
+ 1947 0142 51       		.byte	0x51
+ 1948 0143 9F       		.byte	0x9f
+ 1949 0144 00000000 		.4byte	0
+ 1950 0148 00000000 		.4byte	0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 38
+
+
+ 1951              	.LLST9:
+ 1952 014c 00000000 		.4byte	.LVL24
+ 1953 0150 0C000000 		.4byte	.LVL25
+ 1954 0154 0100     		.2byte	0x1
+ 1955 0156 52       		.byte	0x52
+ 1956 0157 0C000000 		.4byte	.LVL25
+ 1957 015b 11000000 		.4byte	.LVL27-1
+ 1958 015f 0200     		.2byte	0x2
+ 1959 0161 73       		.byte	0x73
+ 1960 0162 01       		.sleb128 1
+ 1961 0163 11000000 		.4byte	.LVL27-1
+ 1962 0167 16000000 		.4byte	.LFE34
+ 1963 016b 0400     		.2byte	0x4
+ 1964 016d F3       		.byte	0xf3
+ 1965 016e 01       		.uleb128 0x1
+ 1966 016f 52       		.byte	0x52
+ 1967 0170 9F       		.byte	0x9f
+ 1968 0171 00000000 		.4byte	0
+ 1969 0175 00000000 		.4byte	0
+ 1970              	.LLST10:
+ 1971 0179 00000000 		.4byte	.LVL28
+ 1972 017d 0B000000 		.4byte	.LVL30-1
+ 1973 0181 0100     		.2byte	0x1
+ 1974 0183 50       		.byte	0x50
+ 1975 0184 0B000000 		.4byte	.LVL30-1
+ 1976 0188 4E000000 		.4byte	.LFE37
+ 1977 018c 0400     		.2byte	0x4
+ 1978 018e F3       		.byte	0xf3
+ 1979 018f 01       		.uleb128 0x1
+ 1980 0190 50       		.byte	0x50
+ 1981 0191 9F       		.byte	0x9f
+ 1982 0192 00000000 		.4byte	0
+ 1983 0196 00000000 		.4byte	0
+ 1984              	.LLST11:
+ 1985 019a 00000000 		.4byte	.LVL28
+ 1986 019e 0B000000 		.4byte	.LVL30-1
+ 1987 01a2 0100     		.2byte	0x1
+ 1988 01a4 51       		.byte	0x51
+ 1989 01a5 0B000000 		.4byte	.LVL30-1
+ 1990 01a9 4C000000 		.4byte	.LVL41
+ 1991 01ad 0100     		.2byte	0x1
+ 1992 01af 56       		.byte	0x56
+ 1993 01b0 4C000000 		.4byte	.LVL41
+ 1994 01b4 4E000000 		.4byte	.LFE37
+ 1995 01b8 0400     		.2byte	0x4
+ 1996 01ba F3       		.byte	0xf3
+ 1997 01bb 01       		.uleb128 0x1
+ 1998 01bc 51       		.byte	0x51
+ 1999 01bd 9F       		.byte	0x9f
+ 2000 01be 00000000 		.4byte	0
+ 2001 01c2 00000000 		.4byte	0
+ 2002              	.LLST12:
+ 2003 01c6 00000000 		.4byte	.LVL28
+ 2004 01ca 0B000000 		.4byte	.LVL30-1
+ 2005 01ce 0100     		.2byte	0x1
+ 2006 01d0 52       		.byte	0x52
+ 2007 01d1 0B000000 		.4byte	.LVL30-1
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 39
+
+
+ 2008 01d5 4E000000 		.4byte	.LFE37
+ 2009 01d9 0400     		.2byte	0x4
+ 2010 01db F3       		.byte	0xf3
+ 2011 01dc 01       		.uleb128 0x1
+ 2012 01dd 52       		.byte	0x52
+ 2013 01de 9F       		.byte	0x9f
+ 2014 01df 00000000 		.4byte	0
+ 2015 01e3 00000000 		.4byte	0
+ 2016              	.LLST13:
+ 2017 01e7 16000000 		.4byte	.LVL31
+ 2018 01eb 1C000000 		.4byte	.LVL32
+ 2019 01ef 0100     		.2byte	0x1
+ 2020 01f1 50       		.byte	0x50
+ 2021 01f2 3E000000 		.4byte	.LVL37
+ 2022 01f6 40000000 		.4byte	.LVL38
+ 2023 01fa 0100     		.2byte	0x1
+ 2024 01fc 50       		.byte	0x50
+ 2025 01fd 00000000 		.4byte	0
+ 2026 0201 00000000 		.4byte	0
+ 2027              	.LLST14:
+ 2028 0205 1C000000 		.4byte	.LVL32
+ 2029 0209 3A000000 		.4byte	.LVL35
+ 2030 020d 0100     		.2byte	0x1
+ 2031 020f 54       		.byte	0x54
+ 2032 0210 3C000000 		.4byte	.LVL36
+ 2033 0214 3E000000 		.4byte	.LVL37
+ 2034 0218 0100     		.2byte	0x1
+ 2035 021a 54       		.byte	0x54
+ 2036 021b 40000000 		.4byte	.LVL38
+ 2037 021f 44000000 		.4byte	.LVL39
+ 2038 0223 0100     		.2byte	0x1
+ 2039 0225 54       		.byte	0x54
+ 2040 0226 00000000 		.4byte	0
+ 2041 022a 00000000 		.4byte	0
+ 2042              	.LLST15:
+ 2043 022e 00000000 		.4byte	.LVL42
+ 2044 0232 11000000 		.4byte	.LVL45-1
+ 2045 0236 0100     		.2byte	0x1
+ 2046 0238 50       		.byte	0x50
+ 2047 0239 11000000 		.4byte	.LVL45-1
+ 2048 023d 20000000 		.4byte	.LFE36
+ 2049 0241 0400     		.2byte	0x4
+ 2050 0243 F3       		.byte	0xf3
+ 2051 0244 01       		.uleb128 0x1
+ 2052 0245 50       		.byte	0x50
+ 2053 0246 9F       		.byte	0x9f
+ 2054 0247 00000000 		.4byte	0
+ 2055 024b 00000000 		.4byte	0
+ 2056              	.LLST16:
+ 2057 024f 00000000 		.4byte	.LVL42
+ 2058 0253 0E000000 		.4byte	.LVL44
+ 2059 0257 0100     		.2byte	0x1
+ 2060 0259 51       		.byte	0x51
+ 2061 025a 0E000000 		.4byte	.LVL44
+ 2062 025e 11000000 		.4byte	.LVL45-1
+ 2063 0262 0200     		.2byte	0x2
+ 2064 0264 71       		.byte	0x71
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 40
+
+
+ 2065 0265 00       		.sleb128 0
+ 2066 0266 11000000 		.4byte	.LVL45-1
+ 2067 026a 20000000 		.4byte	.LFE36
+ 2068 026e 0400     		.2byte	0x4
+ 2069 0270 F3       		.byte	0xf3
+ 2070 0271 01       		.uleb128 0x1
+ 2071 0272 51       		.byte	0x51
+ 2072 0273 9F       		.byte	0x9f
+ 2073 0274 00000000 		.4byte	0
+ 2074 0278 00000000 		.4byte	0
+ 2075              	.LLST17:
+ 2076 027c 00000000 		.4byte	.LVL42
+ 2077 0280 0C000000 		.4byte	.LVL43
+ 2078 0284 0100     		.2byte	0x1
+ 2079 0286 52       		.byte	0x52
+ 2080 0287 0C000000 		.4byte	.LVL43
+ 2081 028b 1C000000 		.4byte	.LVL46
+ 2082 028f 0400     		.2byte	0x4
+ 2083 0291 F3       		.byte	0xf3
+ 2084 0292 01       		.uleb128 0x1
+ 2085 0293 52       		.byte	0x52
+ 2086 0294 9F       		.byte	0x9f
+ 2087 0295 1C000000 		.4byte	.LVL46
+ 2088 0299 1E000000 		.4byte	.LVL47
+ 2089 029d 0200     		.2byte	0x2
+ 2090 029f 74       		.byte	0x74
+ 2091 02a0 00       		.sleb128 0
+ 2092 02a1 1E000000 		.4byte	.LVL47
+ 2093 02a5 20000000 		.4byte	.LFE36
+ 2094 02a9 0200     		.2byte	0x2
+ 2095 02ab 91       		.byte	0x91
+ 2096 02ac 6C       		.sleb128 -20
+ 2097 02ad 00000000 		.4byte	0
+ 2098 02b1 00000000 		.4byte	0
+ 2099              	.LLST18:
+ 2100 02b5 00000000 		.4byte	.LVL48
+ 2101 02b9 16000000 		.4byte	.LVL49
+ 2102 02bd 0100     		.2byte	0x1
+ 2103 02bf 50       		.byte	0x50
+ 2104 02c0 16000000 		.4byte	.LVL49
+ 2105 02c4 24000000 		.4byte	.LVL52
+ 2106 02c8 0400     		.2byte	0x4
+ 2107 02ca F3       		.byte	0xf3
+ 2108 02cb 01       		.uleb128 0x1
+ 2109 02cc 50       		.byte	0x50
+ 2110 02cd 9F       		.byte	0x9f
+ 2111 02ce 24000000 		.4byte	.LVL52
+ 2112 02d2 2E000000 		.4byte	.LVL53
+ 2113 02d6 0100     		.2byte	0x1
+ 2114 02d8 50       		.byte	0x50
+ 2115 02d9 2E000000 		.4byte	.LVL53
+ 2116 02dd 74000000 		.4byte	.LFE38
+ 2117 02e1 0400     		.2byte	0x4
+ 2118 02e3 F3       		.byte	0xf3
+ 2119 02e4 01       		.uleb128 0x1
+ 2120 02e5 50       		.byte	0x50
+ 2121 02e6 9F       		.byte	0x9f
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 41
+
+
+ 2122 02e7 00000000 		.4byte	0
+ 2123 02eb 00000000 		.4byte	0
+ 2124              		.section	.debug_aranges,"",%progbits
+ 2125 0000 44000000 		.4byte	0x44
+ 2126 0004 0200     		.2byte	0x2
+ 2127 0006 00000000 		.4byte	.Ldebug_info0
+ 2128 000a 04       		.byte	0x4
+ 2129 000b 00       		.byte	0
+ 2130 000c 0000     		.2byte	0
+ 2131 000e 0000     		.2byte	0
+ 2132 0010 00000000 		.4byte	.LFB33
+ 2133 0014 70000000 		.4byte	.LFE33-.LFB33
+ 2134 0018 00000000 		.4byte	.LFB35
+ 2135 001c 3E000000 		.4byte	.LFE35-.LFB35
+ 2136 0020 00000000 		.4byte	.LFB34
+ 2137 0024 16000000 		.4byte	.LFE34-.LFB34
+ 2138 0028 00000000 		.4byte	.LFB37
+ 2139 002c 4E000000 		.4byte	.LFE37-.LFB37
+ 2140 0030 00000000 		.4byte	.LFB36
+ 2141 0034 20000000 		.4byte	.LFE36-.LFB36
+ 2142 0038 00000000 		.4byte	.LFB38
+ 2143 003c 74000000 		.4byte	.LFE38-.LFB38
+ 2144 0040 00000000 		.4byte	0
+ 2145 0044 00000000 		.4byte	0
+ 2146              		.section	.debug_ranges,"",%progbits
+ 2147              	.Ldebug_ranges0:
+ 2148 0000 40000000 		.4byte	.LBB2
+ 2149 0004 42000000 		.4byte	.LBE2
+ 2150 0008 44000000 		.4byte	.LBB3
+ 2151 000c 58000000 		.4byte	.LBE3
+ 2152 0010 00000000 		.4byte	0
+ 2153 0014 00000000 		.4byte	0
+ 2154 0018 1A000000 		.4byte	.LBB4
+ 2155 001c 2E000000 		.4byte	.LBE4
+ 2156 0020 30000000 		.4byte	.LBB5
+ 2157 0024 34000000 		.4byte	.LBE5
+ 2158 0028 00000000 		.4byte	0
+ 2159 002c 00000000 		.4byte	0
+ 2160 0030 1A000000 		.4byte	.LBB6
+ 2161 0034 3E000000 		.4byte	.LBE6
+ 2162 0038 40000000 		.4byte	.LBB7
+ 2163 003c 44000000 		.4byte	.LBE7
+ 2164 0040 00000000 		.4byte	0
+ 2165 0044 00000000 		.4byte	0
+ 2166 0048 00000000 		.4byte	.LFB33
+ 2167 004c 70000000 		.4byte	.LFE33
+ 2168 0050 00000000 		.4byte	.LFB35
+ 2169 0054 3E000000 		.4byte	.LFE35
+ 2170 0058 00000000 		.4byte	.LFB34
+ 2171 005c 16000000 		.4byte	.LFE34
+ 2172 0060 00000000 		.4byte	.LFB37
+ 2173 0064 4E000000 		.4byte	.LFE37
+ 2174 0068 00000000 		.4byte	.LFB36
+ 2175 006c 20000000 		.4byte	.LFE36
+ 2176 0070 00000000 		.4byte	.LFB38
+ 2177 0074 74000000 		.4byte	.LFE38
+ 2178 0078 00000000 		.4byte	0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 42
+
+
+ 2179 007c 00000000 		.4byte	0
+ 2180              		.section	.debug_line,"",%progbits
+ 2181              	.Ldebug_line0:
+ 2182 0000 2F010000 		.section	.debug_str,"MS",%progbits,1
+ 2182      02006600 
+ 2182      00000201 
+ 2182      FB0E0D00 
+ 2182      01010101 
+ 2183              	.LASF52:
+ 2184 0000 72657375 		.ascii	"result\000"
+ 2184      6C7400
+ 2185              	.LASF39:
+ 2186 0007 6279536C 		.ascii	"bySlaveAddr\000"
+ 2186      61766541 
+ 2186      64647200 
+ 2187              	.LASF25:
+ 2188 0013 655F4545 		.ascii	"e_EEPROMREAD\000"
+ 2188      50524F4D 
+ 2188      52454144 
+ 2188      00
+ 2189              	.LASF2:
+ 2190 0020 73686F72 		.ascii	"short int\000"
+ 2190      7420696E 
+ 2190      7400
+ 2191              	.LASF18:
+ 2192 002a 42595445 		.ascii	"BYTE\000"
+ 2192      00
+ 2193              	.LASF33:
+ 2194 002f 73747275 		.ascii	"structInfo\000"
+ 2194      6374496E 
+ 2194      666F00
+ 2195              	.LASF64:
+ 2196 003a 433A5C55 		.ascii	"C:\\Users\\jimvr\\WarpWorking\\Revelite_Batt\\Revel"
+ 2196      73657273 
+ 2196      5C6A696D 
+ 2196      76725C57 
+ 2196      61727057 
+ 2197 0068 6974655F 		.ascii	"ite_Batt_PSoC4.cydsn\000"
+ 2197      42617474 
+ 2197      5F50536F 
+ 2197      43342E63 
+ 2197      7964736E 
+ 2198              	.LASF65:
+ 2199 007d 6D656D63 		.ascii	"memcpy\000"
+ 2199      707900
+ 2200              	.LASF23:
+ 2201 0084 655F4241 		.ascii	"e_BATTVSENSE\000"
+ 2201      54545653 
+ 2201      454E5345 
+ 2201      00
+ 2202              	.LASF38:
+ 2203 0091 4932434D 		.ascii	"I2CM_SyncWrite\000"
+ 2203      5F53796E 
+ 2203      63577269 
+ 2203      746500
+ 2204              	.LASF60:
+ 2205 00a0 4932434D 		.ascii	"I2CM_I2CMasterReadByte\000"
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 43
+
+
+ 2205      5F493243 
+ 2205      4D617374 
+ 2205      65725265 
+ 2205      61644279 
+ 2206              	.LASF35:
+ 2207 00b7 6279506F 		.ascii	"byPointer\000"
+ 2207      696E7465 
+ 2207      7200
+ 2208              	.LASF22:
+ 2209 00c1 655F4241 		.ascii	"e_BATTTEMP\000"
+ 2209      54545445 
+ 2209      4D5000
+ 2210              	.LASF61:
+ 2211 00cc 43795379 		.ascii	"CySysFlashWriteRow\000"
+ 2211      73466C61 
+ 2211      73685772 
+ 2211      69746552 
+ 2211      6F7700
+ 2212              	.LASF62:
+ 2213 00df 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 2213      43313120 
+ 2213      352E342E 
+ 2213      31203230 
+ 2213      31363036 
+ 2214 0112 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 2214      20726576 
+ 2214      6973696F 
+ 2214      6E203233 
+ 2214      37373135 
+ 2215 0145 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 2215      66756E63 
+ 2215      74696F6E 
+ 2215      2D736563 
+ 2215      74696F6E 
+ 2216              	.LASF12:
+ 2217 016d 696E7431 		.ascii	"int16\000"
+ 2217      3600
+ 2218              	.LASF9:
+ 2219 0173 75696E74 		.ascii	"uint8\000"
+ 2219      3800
+ 2220              	.LASF49:
+ 2221 0179 4C617463 		.ascii	"LatchRead\000"
+ 2221      68526561 
+ 2221      6400
+ 2222              	.LASF26:
+ 2223 0183 655F4545 		.ascii	"e_EEPROMFLUSHRESTORE\000"
+ 2223      50524F4D 
+ 2223      464C5553 
+ 2223      48524553 
+ 2223      544F5245 
+ 2224              	.LASF41:
+ 2225 0198 6C656E67 		.ascii	"length\000"
+ 2225      746800
+ 2226              	.LASF13:
+ 2227 019f 666C6F61 		.ascii	"float\000"
+ 2227      7400
+ 2228              	.LASF63:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 44
+
+
+ 2229 01a5 73756273 		.ascii	"subs.c\000"
+ 2229      2E6300
+ 2230              	.LASF6:
+ 2231 01ac 6C6F6E67 		.ascii	"long long int\000"
+ 2231      206C6F6E 
+ 2231      6720696E 
+ 2231      7400
+ 2232              	.LASF4:
+ 2233 01ba 6C6F6E67 		.ascii	"long int\000"
+ 2233      20696E74 
+ 2233      00
+ 2234              	.LASF56:
+ 2235 01c3 4932434D 		.ascii	"I2CM_I2CMasterWriteByte\000"
+ 2235      5F493243 
+ 2235      4D617374 
+ 2235      65725772 
+ 2235      69746542 
+ 2236              	.LASF53:
+ 2237 01db 62576548 		.ascii	"bWeHaveSampledTEMP\000"
+ 2237      61766553 
+ 2237      616D706C 
+ 2237      65645445 
+ 2237      4D5000
+ 2238              	.LASF16:
+ 2239 01ee 6C6F6E67 		.ascii	"long double\000"
+ 2239      20646F75 
+ 2239      626C6500 
+ 2240              	.LASF1:
+ 2241 01fa 756E7369 		.ascii	"unsigned char\000"
+ 2241      676E6564 
+ 2241      20636861 
+ 2241      7200
+ 2242              	.LASF36:
+ 2243 0208 75694176 		.ascii	"uiAverage\000"
+ 2243      65726167 
+ 2243      6500
+ 2244              	.LASF0:
+ 2245 0212 7369676E 		.ascii	"signed char\000"
+ 2245      65642063 
+ 2245      68617200 
+ 2246              	.LASF7:
+ 2247 021e 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 2247      206C6F6E 
+ 2247      6720756E 
+ 2247      7369676E 
+ 2247      65642069 
+ 2248              	.LASF51:
+ 2249 0235 496E666F 		.ascii	"Info\000"
+ 2249      00
+ 2250              	.LASF8:
+ 2251 023a 756E7369 		.ascii	"unsigned int\000"
+ 2251      676E6564 
+ 2251      20696E74 
+ 2251      00
+ 2252              	.LASF57:
+ 2253 0247 4932434D 		.ascii	"I2CM_I2CMasterClearStatus\000"
+ 2253      5F493243 
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 45
+
+
+ 2253      4D617374 
+ 2253      6572436C 
+ 2253      65617253 
+ 2254              	.LASF5:
+ 2255 0261 6C6F6E67 		.ascii	"long unsigned int\000"
+ 2255      20756E73 
+ 2255      69676E65 
+ 2255      6420696E 
+ 2255      7400
+ 2256              	.LASF37:
+ 2257 0273 47657441 		.ascii	"GetAverageTEMP\000"
+ 2257      76657261 
+ 2257      67655445 
+ 2257      4D5000
+ 2258              	.LASF28:
+ 2259 0282 75694361 		.ascii	"uiCalCh1\000"
+ 2259      6C436831 
+ 2259      00
+ 2260              	.LASF21:
+ 2261 028b 655F5445 		.ascii	"e_TEMP\000"
+ 2261      4D5000
+ 2262              	.LASF30:
+ 2263 0292 62794545 		.ascii	"byEEPROMSave1\000"
+ 2263      50524F4D 
+ 2263      53617665 
+ 2263      3100
+ 2264              	.LASF31:
+ 2265 02a0 62794545 		.ascii	"byEEPROMSave2\000"
+ 2265      50524F4D 
+ 2265      53617665 
+ 2265      3200
+ 2266              	.LASF20:
+ 2267 02ae 655F5642 		.ascii	"e_VBUS\000"
+ 2267      555300
+ 2268              	.LASF43:
+ 2269 02b5 73746174 		.ascii	"status\000"
+ 2269      757300
+ 2270              	.LASF59:
+ 2271 02bc 4932434D 		.ascii	"I2CM_I2CMasterSendStop\000"
+ 2271      5F493243 
+ 2271      4D617374 
+ 2271      65725365 
+ 2271      6E645374 
+ 2272              	.LASF15:
+ 2273 02d3 63686172 		.ascii	"char\000"
+ 2273      00
+ 2274              	.LASF45:
+ 2275 02d8 62795265 		.ascii	"byReg\000"
+ 2275      6700
+ 2276              	.LASF29:
+ 2277 02de 75694361 		.ascii	"uiCalCh2\000"
+ 2277      6C436832 
+ 2277      00
+ 2278              	.LASF3:
+ 2279 02e7 73686F72 		.ascii	"short unsigned int\000"
+ 2279      7420756E 
+ 2279      7369676E 
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 46
+
+
+ 2279      65642069 
+ 2279      6E7400
+ 2280              	.LASF27:
+ 2281 02fa 62576548 		.ascii	"bWeHaveLearned\000"
+ 2281      6176654C 
+ 2281      6561726E 
+ 2281      656400
+ 2282              	.LASF32:
+ 2283 0309 5F426F6F 		.ascii	"_Bool\000"
+ 2283      6C00
+ 2284              	.LASF19:
+ 2285 030f 655F5643 		.ascii	"e_VCHARGER\000"
+ 2285      48415247 
+ 2285      455200
+ 2286              	.LASF47:
+ 2287 031a 4932434D 		.ascii	"I2CM_SyncRead\000"
+ 2287      5F53796E 
+ 2287      63526561 
+ 2287      6400
+ 2288              	.LASF10:
+ 2289 0328 75696E74 		.ascii	"uint16\000"
+ 2289      313600
+ 2290              	.LASF40:
+ 2291 032f 62756666 		.ascii	"buffer\000"
+ 2291      657200
+ 2292              	.LASF11:
+ 2293 0336 75696E74 		.ascii	"uint32\000"
+ 2293      333200
+ 2294              	.LASF55:
+ 2295 033d 496E666F 		.ascii	"Info_Mem\000"
+ 2295      5F4D656D 
+ 2295      00
+ 2296              	.LASF14:
+ 2297 0346 646F7562 		.ascii	"double\000"
+ 2297      6C6500
+ 2298              	.LASF58:
+ 2299 034d 4932434D 		.ascii	"I2CM_I2CMasterSendStart\000"
+ 2299      5F493243 
+ 2299      4D617374 
+ 2299      65725365 
+ 2299      6E645374 
+ 2300              	.LASF54:
+ 2301 0365 64656661 		.ascii	"defaultInfo\000"
+ 2301      756C7449 
+ 2301      6E666F00 
+ 2302              	.LASF46:
+ 2303 0371 62794461 		.ascii	"byData\000"
+ 2303      746100
+ 2304              	.LASF17:
+ 2305 0378 73697A65 		.ascii	"sizetype\000"
+ 2305      74797065 
+ 2305      00
+ 2306              	.LASF50:
+ 2307 0381 52575F45 		.ascii	"RW_EEPROMData\000"
+ 2307      4550524F 
+ 2307      4D446174 
+ 2307      6100
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccAmGD3f.s 			page 47
+
+
+ 2308              	.LASF48:
+ 2309 038f 4C617463 		.ascii	"LatchWrite\000"
+ 2309      68577269 
+ 2309      746500
+ 2310              	.LASF44:
+ 2311 039a 62794164 		.ascii	"byAddress\000"
+ 2311      64726573 
+ 2311      7300
+ 2312              	.LASF42:
+ 2313 03a4 6572726F 		.ascii	"error\000"
+ 2313      7200
+ 2314              	.LASF24:
+ 2315 03aa 655F4545 		.ascii	"e_EEPROMWRITE\000"
+ 2315      50524F4D 
+ 2315      57524954 
+ 2315      4500
+ 2316              	.LASF34:
+ 2317 03b8 75694275 		.ascii	"uiBuffer\000"
+ 2317      66666572 
+ 2317      00
+ 2318              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

@@ -1,0 +1,34 @@
+This is a battery powered LED light with two channels.
+The schematic blocks are: 
+ - USBCPD input to a 
+- Texas Instruments BQ25730 battery charger via I2C
+- through a LTC2944 fuel gauge management IC via I2C
+- through a boost
+- to two Infineon ILD8150 LED drivers
+
+Right now the basics are working on the hardware, looks good.  I have LEDs on and generating light.
+
+I need help getting the battery charger working.
+Then we need to be able to monitor the battery charger
+Then we need to engage the LT2944 fuel gauge management chip
+
+I have a PSoC Creator project in C:\Users\jimvr\WarpWorking\Revelite_Batt
+battery.c and .h are where I want the charger code to go
+LT2944.c and .h for the fuel gauge
+
+I have a 14.4V LiPo battery pack connected to the battery input
+USBV is connected to the board
+LEDs are on at a very low output
+
+Can you help me to get the charger and the fuel gauge going?
+What do I need to get for you?
+
+
+Battery config is 4S - 4 cells in series
+Let's start with 1A of charge current
+there is main.c and subs.c for all code, isr.c is there too for timers, LED output filter and analog measurements
+I2CM is the master I2C devlce
+LT2944 7-bit device address is 1100100 or 0x64
+Battery is 50.4WHours, that is 50 watt hours
+
+NOte that I also have a serial debug terminal, there is code in main.c for an example, perhaps we need a CLI.c layer as well (command line interface) so that we can use that.  This is a CY8C4245PVI so we have some room, but not a lot of FLASH to implement complicated debug terminals

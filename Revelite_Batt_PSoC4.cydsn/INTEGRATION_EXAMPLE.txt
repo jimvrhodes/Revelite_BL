@@ -1,0 +1,181 @@
+=================================================================================
+REVELITE BATTERY SYSTEM - INTEGRATION GUIDE
+=================================================================================
+
+This guide shows how to integrate the BQ25730 charger, LTC2944 fuel gauge, 
+and CLI into your main.c file.
+
+=================================================================================
+1. ADD INCLUDES TO main.c (after line 56)
+=================================================================================
+
+#include "CLI.h"
+
+=================================================================================
+2. REPLACE CHARGER INITIALIZATION IN main() (lines 134-139)
+=================================================================================
+
+Replace this code:
+    // get teh charger talking
+    BQ25720_Write(0x15, 8400); // Set charge voltage to 8.4V
+    BQ25720_Write(0x14, 2000); // Set charge current to 2A
+    BQ25720_Write(0x12, 0x0000); // Enable charging
+
+    uiChargerStatus = BQ25720_ReadStatus();
+
+With this:
+    // Initialize battery charger (BQ25730) for 4S LiPo
+    if (BQ25730_Init()) {
+        // Charger initialized successfully
+        // Already configured for 16.8V max, 1A charge current
+    }
+    
+    // Initialize fuel gauge (LTC2944)
+    // Use M_1024 prescaler for ~3500mAh battery
+    LTC2944_Init((uint16_t)BATTERY_CAPACITY_MAH, LTC2944_PRESCALER_M_1024);
+
+=================================================================================
+3. ADD CLI INITIALIZATION (after UART_Start() on line 142)
+=================================================================================
+
+#ifdef DEBUGOUT
+    UART_Start();
+    CLI_Init();  // Add this line
+#endif
+
+=================================================================================
+4. OPTION A: USE CLI FOR INTERACTIVE DEBUGGING
+=================================================================================
+
+Add this in the main loop (for loop, line 160+) to process CLI commands:
+
+#ifdef DEBUGOUT
+        // Process CLI input
+        if (UART_SpiUartGetRxBufferSize() > 0) {
+            uint8_t byte = UART_SpiUartReadRxData();
+            CLI_ProcessByte((char)byte);
+        }
+#endif
+
+CLI Commands available:
+  h - Help menu
+  i - Initialize charger & fuel gauge
+  b - Battery charger status
+  f - Fuel gauge status  
+  a - All status
+  e - Enable charging
+  d - Disable charging
+
+=================================================================================
+4. OPTION B: AUTOMATIC STATUS REPORTING (Replace lines 179-186)
+=================================================================================
+
+Replace the existing UART debug output with this for automatic periodic updates:
+
+#ifdef DEBUGOUT
+        if(!ulUARTTempOutputTimer) {
+            ulUARTTempOutputTimer = UARTTEMPOUTPUTTIME;
+            
+            // Get charger status
+            BatteryStatus_t batt = BQ25730_GetStatus();
+            
+            // Get fuel gauge status
+            FuelGauge_t fg = LTC2944_GetStatus();
+            
+            // Print comprehensive status
+            uint16 count = sprintf((char*)byUARTBuffer,
+                "Temp:%u PWM:%u,%u Batt:%.0fmV %dmA %s SOC:%.1f%% VBUS:%.0fmV Chrg:0x%04X\\n\\r",
+                GetAverageTEMP(),
+                uiPWMTarget1, uiPWMTarget2,
+                fg.voltage_mv,
+                batt.battery_current_ma,
+                batt.is_charging ? "CHG" : "---",
+                fg.state_of_charge,
+                fg.voltage_mv,
+                batt.charger_status);
+            
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+            while(UART_SpiUartGetTxBufferSize() != 0);
+        }
+#endif
+
+=================================================================================
+5. ADD PERIODIC MONITORING (Optional - in main loop)
+=================================================================================
+
+Add a timer to periodically check battery status:
+
+// Add to global variables at top of main.c
+volatile uint16 uiBatteryMonitorTimer = 0;
+
+// Add to timer ISR in isr.c
+if(uiBatteryMonitorTimer) uiBatteryMonitorTimer--;
+
+// Add in main loop
+if(!uiBatteryMonitorTimer) {
+    uiBatteryMonitorTimer = 1000; // Check every 1 second
+    
+    BatteryStatus_t batt = BQ25730_GetStatus();
+    FuelGauge_t fg = LTC2944_GetStatus();
+    
+    // Check for faults
+    if(batt.fault_present) {
+        // Handle charger fault
+        // Turn off LEDs, sound alarm, etc.
+    }
+    
+    // Check low battery
+    if(fg.state_of_charge < 10.0f) {
+        // Low battery warning
+    }
+    
+    // Update Info structure for EEPROM saving if needed
+    // Info.battery_soc = (uint8)fg.state_of_charge;
+}
+
+=================================================================================
+6. COMPILE AND TEST
+=================================================================================
+
+1. Build the project in PSoC Creator
+2. Program the device
+3. Open serial terminal (115200 baud, 8N1)
+4. Type 'h' for help
+5. Type 'i' to initialize both ICs
+6. Type 'a' to see all status
+7. Type 'e' to enable charging
+8. Monitor status with 'b' and 'f' commands
+
+=================================================================================
+7. TROUBLESHOOTING
+=================================================================================
+
+If charger doesn't respond:
+- Check I2C address is 0x6B (7-bit)
+- Verify I2C pull-ups are present
+- Check power to BQ25730
+- Use 'i' command to reinitialize
+
+If fuel gauge doesn't respond:
+- Check I2C address is 0x64 (7-bit)
+- Verify sense resistor is 50mOhm
+- Check power to LTC2944
+
+=================================================================================
+8. FLASH SIZE CONSIDERATIONS (PSoC4 CY8C4245PVI)
+=================================================================================
+
+The CLI adds approximately:
+- CLI.c: ~2KB
+- sprintf for formatting: ~1-2KB (already used in your code)
+- Total addition: ~2-3KB
+
+If flash is tight, you can:
+- Remove CLI and use Option B (automatic reporting)
+- Reduce sprintf usage with simpler formatting
+- Remove help text strings
+- Use uint16_t printf instead of float (saves ~1KB)
+
+=================================================================================
+END OF INTEGRATION GUIDE
+=================================================================================

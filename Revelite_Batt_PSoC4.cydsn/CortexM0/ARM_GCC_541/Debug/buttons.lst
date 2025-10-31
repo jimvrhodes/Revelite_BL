@@ -1,0 +1,1630 @@
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m0
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"buttons.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.ReadButtonsOnChange,"ax",%progbits
+  20              		.align	2
+  21              		.global	ReadButtonsOnChange
+  22              		.code	16
+  23              		.thumb_func
+  24              		.type	ReadButtonsOnChange, %function
+  25              	ReadButtonsOnChange:
+  26              	.LFB33:
+  27              		.file 1 "buttons.c"
+   1:buttons.c     **** //
+   2:buttons.c     **** // buttons.c
+   3:buttons.c     **** //
+   4:buttons.c     **** // Handles the 6 button up, down, repeat modes
+   5:buttons.c     **** //
+   6:buttons.c     **** //
+   7:buttons.c     **** 
+   8:buttons.c     **** #include <project.h>
+   9:buttons.c     **** #include "main.h"
+  10:buttons.c     **** #include "buttons.h"
+  11:buttons.c     **** #include <math.h>
+  12:buttons.c     **** #include <stddef.h>
+  13:buttons.c     **** #include <stdio.h>
+  14:buttons.c     **** #include <stdlib.h>
+  15:buttons.c     **** 
+  16:buttons.c     **** 
+  17:buttons.c     **** extern volatile structInfo Info;
+  18:buttons.c     **** extern volatile structButtonState ButtonState; // state of the guttons
+  19:buttons.c     **** extern volatile uint16 uiButtonTimer[NUMBUTTONS];
+  20:buttons.c     **** 
+  21:buttons.c     **** uint8 ReadButtonsOnChange(void) {
+  28              		.loc 1 21 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 8
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 70B5     		push	{r4, r5, r6, lr}
+  33              		.cfi_def_cfa_offset 16
+  34              		.cfi_offset 4, -16
+  35              		.cfi_offset 5, -12
+  36              		.cfi_offset 6, -8
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 2
+
+
+  37              		.cfi_offset 14, -4
+  38 0002 82B0     		sub	sp, sp, #8
+  39              		.cfi_def_cfa_offset 24
+  40              	.LVL0:
+  22:buttons.c     **** 	static uint8 byButtonState[NUMBUTTONS] = {e_NOBUTTON, e_NOBUTTON, e_NOBUTTON};
+  23:buttons.c     ****     bool bButton = 0;
+  24:buttons.c     **** 
+  25:buttons.c     ****     uint8 byBuffer[2];
+  26:buttons.c     ****     LatchRead(LATCH1, PCLA9538_INREG, byBuffer[0]);
+  41              		.loc 1 26 0
+  42 0004 01AB     		add	r3, sp, #4
+  43 0006 1C78     		ldrb	r4, [r3]
+  44 0008 2200     		movs	r2, r4
+  45 000a 0021     		movs	r1, #0
+  46 000c 7020     		movs	r0, #112
+  47 000e FFF7FEFF 		bl	LatchRead
+  48              	.LVL1:
+  27:buttons.c     ****     uint8 byAllButtons = byBuffer[0]; // see if buttons are active
+  28:buttons.c     ****     byAllButtons >>= 4;
+  49              		.loc 1 28 0
+  50 0012 2409     		lsrs	r4, r4, #4
+  51              	.LVL2:
+  29:buttons.c     ****     byAllButtons = ~byAllButtons;
+  52              		.loc 1 29 0
+  53 0014 E443     		mvns	r4, r4
+  54              	.LVL3:
+  55 0016 E4B2     		uxtb	r4, r4
+  56              	.LVL4:
+  57              	.LBB2:
+  30:buttons.c     ****     
+  31:buttons.c     ****     for(uint8 n=0;n<NUMBUTTONS;n++) {
+  58              		.loc 1 31 0
+  59 0018 0023     		movs	r3, #0
+  60 001a 7FE0     		b	.L2
+  61              	.LVL5:
+  62              	.L11:
+  32:buttons.c     ****         bButton = byAllButtons & (0x01 << n); // bit mapped to single bool
+  63              		.loc 1 32 0
+  64 001c 0121     		movs	r1, #1
+  65 001e 9940     		lsls	r1, r1, r3
+  66 0020 0D00     		movs	r5, r1
+  67 0022 2540     		ands	r5, r4
+  68              	.LVL6:
+  33:buttons.c     ****     	switch(byButtonState[n]) {
+  69              		.loc 1 33 0
+  70 0024 4148     		ldr	r0, .L12
+  71 0026 C05C     		ldrb	r0, [r0, r3]
+  72 0028 0228     		cmp	r0, #2
+  73 002a 44D0     		beq	.L4
+  74 002c 0528     		cmp	r0, #5
+  75 002e 63D0     		beq	.L5
+  76 0030 0128     		cmp	r0, #1
+  77 0032 1BD0     		beq	.L6
+  34:buttons.c     ****             default:
+  35:buttons.c     ****     		case e_NOBUTTON: { // nothing last was happening to this button
+  36:buttons.c     ****                 if(!uiButtonTimer[n]) {  // see if we had a prior down, may be jittery so we wait i
+  78              		.loc 1 36 0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 3
+
+
+  79 0034 5800     		lsls	r0, r3, #1
+  80 0036 3E4E     		ldr	r6, .L12+4
+  81 0038 805B     		ldrh	r0, [r0, r6]
+  82 003a 80B2     		uxth	r0, r0
+  83 003c 0028     		cmp	r0, #0
+  84 003e 6BD1     		bne	.L7
+  37:buttons.c     ****         			if(bButton) { // anything happening?
+  85              		.loc 1 37 0
+  86 0040 002D     		cmp	r5, #0
+  87 0042 06D0     		beq	.L8
+  38:buttons.c     ****         				uiButtonTimer[n] = BUTTONDOWNTIME; // start the down timer
+  88              		.loc 1 38 0
+  89 0044 5800     		lsls	r0, r3, #1
+  90 0046 3225     		movs	r5, #50
+  91              	.LVL7:
+  92 0048 8553     		strh	r5, [r0, r6]
+  39:buttons.c     ****         				byButtonState[n] = e_WAITDOWNBUTTON; // next state
+  93              		.loc 1 39 0
+  94 004a 0120     		movs	r0, #1
+  95 004c 3749     		ldr	r1, .L12
+  96              	.LVL8:
+  97 004e C854     		strb	r0, [r1, r3]
+  98 0050 62E0     		b	.L7
+  99              	.LVL9:
+ 100              	.L8:
+  40:buttons.c     ****         			} else {
+  41:buttons.c     ****                         // gonna have to check the multiple presses here                           
+  42:buttons.c     ****                         
+  43:buttons.c     ****                         ButtonState.byButtonDown &= ~(0x01 << n);
+ 101              		.loc 1 43 0
+ 102 0052 384A     		ldr	r2, .L12+8
+ 103 0054 1078     		ldrb	r0, [r2]
+ 104 0056 C943     		mvns	r1, r1
+ 105 0058 49B2     		sxtb	r1, r1
+ 106 005a 0840     		ands	r0, r1
+ 107 005c 1070     		strb	r0, [r2]
+  44:buttons.c     ****                         ButtonState.byButtonLong &= ~(0x01 << n);
+ 108              		.loc 1 44 0
+ 109 005e 5078     		ldrb	r0, [r2, #1]
+ 110 0060 0840     		ands	r0, r1
+ 111 0062 5070     		strb	r0, [r2, #1]
+  45:buttons.c     ****                         ButtonState.byButtonHold &= ~(0x01 << n);
+ 112              		.loc 1 45 0
+ 113 0064 9078     		ldrb	r0, [r2, #2]
+ 114 0066 0140     		ands	r1, r0
+ 115 0068 9170     		strb	r1, [r2, #2]
+ 116 006a 55E0     		b	.L7
+ 117              	.L6:
+  46:buttons.c     ****                     }
+  47:buttons.c     ****                 }
+  48:buttons.c     ****     		} break;
+  49:buttons.c     ****     	
+  50:buttons.c     ****     		// we are in the process of trapping a downed key
+  51:buttons.c     ****     		case e_WAITDOWNBUTTON: {
+  52:buttons.c     ****                 if(bButton) { // make sure we are still down
+ 118              		.loc 1 52 0
+ 119 006c 002D     		cmp	r5, #0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 4
+
+
+ 120 006e 12D0     		beq	.L9
+  53:buttons.c     ****                     if(!uiButtonTimer[n]) { // did we elapse the down time?
+ 121              		.loc 1 53 0
+ 122 0070 5800     		lsls	r0, r3, #1
+ 123 0072 2F4D     		ldr	r5, .L12+4
+ 124              	.LVL10:
+ 125 0074 405B     		ldrh	r0, [r0, r5]
+ 126 0076 80B2     		uxth	r0, r0
+ 127 0078 0028     		cmp	r0, #0
+ 128 007a 4DD1     		bne	.L7
+  54:buttons.c     ****                         uiButtonTimer[n] = BUTTONLONGPRESSTIME; // time to see if we are long press
+ 129              		.loc 1 54 0
+ 130 007c 5D00     		lsls	r5, r3, #1
+ 131 007e FA26     		movs	r6, #250
+ 132 0080 2B48     		ldr	r0, .L12+4
+ 133 0082 2E52     		strh	r6, [r5, r0]
+  55:buttons.c     ****            				byButtonState[n] = e_DOWNBUTTON; // next state
+ 134              		.loc 1 55 0
+ 135 0084 0225     		movs	r5, #2
+ 136 0086 2948     		ldr	r0, .L12
+ 137 0088 C554     		strb	r5, [r0, r3]
+  56:buttons.c     ****                         
+  57:buttons.c     ****                         ButtonState.byButtonDown |= (0x01 << n);
+ 138              		.loc 1 57 0
+ 139 008a 2A48     		ldr	r0, .L12+8
+ 140 008c 0278     		ldrb	r2, [r0]
+ 141 008e 1143     		orrs	r1, r2
+ 142              	.LVL11:
+ 143 0090 C9B2     		uxtb	r1, r1
+ 144 0092 0170     		strb	r1, [r0]
+ 145 0094 40E0     		b	.L7
+ 146              	.LVL12:
+ 147              	.L9:
+  58:buttons.c     ****                     }
+  59:buttons.c     ****                } else { // something is bouncing
+  60:buttons.c     ****        				byButtonState[n] = e_NOBUTTON; // home state
+ 148              		.loc 1 60 0
+ 149 0096 0025     		movs	r5, #0
+ 150              	.LVL13:
+ 151 0098 2448     		ldr	r0, .L12
+ 152 009a C554     		strb	r5, [r0, r3]
+  61:buttons.c     ****                     ButtonState.byButtonDown &= ~(0x01 << n);
+ 153              		.loc 1 61 0
+ 154 009c 254A     		ldr	r2, .L12+8
+ 155 009e 1078     		ldrb	r0, [r2]
+ 156 00a0 C943     		mvns	r1, r1
+ 157              	.LVL14:
+ 158 00a2 49B2     		sxtb	r1, r1
+ 159              	.LVL15:
+ 160 00a4 0840     		ands	r0, r1
+ 161 00a6 1070     		strb	r0, [r2]
+  62:buttons.c     ****                     ButtonState.byButtonLong &= ~(0x01 << n);
+ 162              		.loc 1 62 0
+ 163 00a8 5078     		ldrb	r0, [r2, #1]
+ 164 00aa 0840     		ands	r0, r1
+ 165 00ac 5070     		strb	r0, [r2, #1]
+  63:buttons.c     ****                     ButtonState.byButtonHold &= ~(0x01 << n);
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 5
+
+
+ 166              		.loc 1 63 0
+ 167 00ae 9078     		ldrb	r0, [r2, #2]
+ 168 00b0 0140     		ands	r1, r0
+ 169 00b2 9170     		strb	r1, [r2, #2]
+ 170 00b4 30E0     		b	.L7
+ 171              	.LVL16:
+ 172              	.L4:
+  64:buttons.c     ****                 }
+  65:buttons.c     ****             } break;
+  66:buttons.c     ****                     
+  67:buttons.c     ****     		case e_DOWNBUTTON: { // now hold here to see if this is a long press
+  68:buttons.c     ****                 if(bButton) { // make sure we are still down
+ 173              		.loc 1 68 0
+ 174 00b6 002D     		cmp	r5, #0
+ 175 00b8 0ED0     		beq	.L10
+  69:buttons.c     ****                     if(!uiButtonTimer[n]) { // did we elapse the long press down time?
+ 176              		.loc 1 69 0
+ 177 00ba 5800     		lsls	r0, r3, #1
+ 178 00bc 1C4D     		ldr	r5, .L12+4
+ 179              	.LVL17:
+ 180 00be 405B     		ldrh	r0, [r0, r5]
+ 181 00c0 80B2     		uxth	r0, r0
+ 182 00c2 0028     		cmp	r0, #0
+ 183 00c4 28D1     		bne	.L7
+  70:buttons.c     **** //               				byButtonState[n] = e_LONGPRESSBUTTON; // next state
+  71:buttons.c     **** //                            uiButtonTimer[n] = BUTTONLONGERPRESSTIME; // time to see if we are lo
+  72:buttons.c     ****                         
+  73:buttons.c     ****                         byButtonState[n] = e_HOLDPRESS; // next state
+ 184              		.loc 1 73 0
+ 185 00c6 0525     		movs	r5, #5
+ 186 00c8 1848     		ldr	r0, .L12
+ 187 00ca C554     		strb	r5, [r0, r3]
+  74:buttons.c     ****                         ButtonState.byButtonLong |= 0x01 << n;
+ 188              		.loc 1 74 0
+ 189 00cc 1948     		ldr	r0, .L12+8
+ 190 00ce 4278     		ldrb	r2, [r0, #1]
+ 191 00d0 1143     		orrs	r1, r2
+ 192              	.LVL18:
+ 193 00d2 C9B2     		uxtb	r1, r1
+ 194 00d4 4170     		strb	r1, [r0, #1]
+ 195 00d6 1FE0     		b	.L7
+ 196              	.LVL19:
+ 197              	.L10:
+  75:buttons.c     ****                     }
+  76:buttons.c     ****                 } else { // let go?
+  77:buttons.c     ****        				byButtonState[n] = e_NOBUTTON; // home state
+ 198              		.loc 1 77 0
+ 199 00d8 0025     		movs	r5, #0
+ 200              	.LVL20:
+ 201 00da 1448     		ldr	r0, .L12
+ 202 00dc C554     		strb	r5, [r0, r3]
+  78:buttons.c     ****                     ButtonState.byButtonDown &= ~(0x01 << n);
+ 203              		.loc 1 78 0
+ 204 00de 154A     		ldr	r2, .L12+8
+ 205 00e0 1078     		ldrb	r0, [r2]
+ 206 00e2 C943     		mvns	r1, r1
+ 207              	.LVL21:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 6
+
+
+ 208 00e4 49B2     		sxtb	r1, r1
+ 209              	.LVL22:
+ 210 00e6 0840     		ands	r0, r1
+ 211 00e8 1070     		strb	r0, [r2]
+  79:buttons.c     ****                     ButtonState.byButtonLong &= ~(0x01 << n);
+ 212              		.loc 1 79 0
+ 213 00ea 5078     		ldrb	r0, [r2, #1]
+ 214 00ec 0840     		ands	r0, r1
+ 215 00ee 5070     		strb	r0, [r2, #1]
+  80:buttons.c     ****                     ButtonState.byButtonHold &= ~(0x01 << n);
+ 216              		.loc 1 80 0
+ 217 00f0 9078     		ldrb	r0, [r2, #2]
+ 218 00f2 0140     		ands	r1, r0
+ 219 00f4 9170     		strb	r1, [r2, #2]
+ 220 00f6 0FE0     		b	.L7
+ 221              	.LVL23:
+ 222              	.L5:
+  81:buttons.c     ****                 }
+  82:buttons.c     ****             } break;
+  83:buttons.c     ****                     
+  84:buttons.c     **** //                case e_LONGPRESSBUTTON: {
+  85:buttons.c     **** //                    if(bButton) { // make sure we are still down
+  86:buttons.c     **** //                        if(!uiButtonTimer[n]) { // did we elapse the long press down time?
+  87:buttons.c     **** //               				byButtonState[n] = e_HOLDPRESS; // next state
+  88:buttons.c     **** //                            
+  89:buttons.c     **** //                            ButtonState.byButtonHold |= 0x01 << n;
+  90:buttons.c     **** //                        }
+  91:buttons.c     **** //                    } else { // let go?
+  92:buttons.c     **** //           				byButtonState[n] = e_NOBUTTON; // home state
+  93:buttons.c     **** //                        ButtonState.byButtonDown &= ~(0x01 << n);
+  94:buttons.c     **** //                        ButtonState.byButtonLong &= ~(0x01 << n);
+  95:buttons.c     **** //                        ButtonState.byButtonHold &= ~(0x01 << n);
+  96:buttons.c     **** //                    }                           
+  97:buttons.c     **** //                } break;
+  98:buttons.c     ****             
+  99:buttons.c     ****             case e_HOLDPRESS: {
+ 100:buttons.c     ****                 if(bButton) { // make sure we are still down
+ 223              		.loc 1 100 0
+ 224 00f8 002D     		cmp	r5, #0
+ 225 00fa 0DD1     		bne	.L7
+ 101:buttons.c     ****                 
+ 102:buttons.c     ****                 } else {
+ 103:buttons.c     ****        				byButtonState[n] = e_NOBUTTON; // home state                        
+ 226              		.loc 1 103 0
+ 227 00fc 0B48     		ldr	r0, .L12
+ 228 00fe C554     		strb	r5, [r0, r3]
+ 104:buttons.c     ****                     ButtonState.byButtonDown &= ~(0x01 << n);
+ 229              		.loc 1 104 0
+ 230 0100 0C4A     		ldr	r2, .L12+8
+ 231 0102 1078     		ldrb	r0, [r2]
+ 232 0104 C943     		mvns	r1, r1
+ 233 0106 49B2     		sxtb	r1, r1
+ 234 0108 0840     		ands	r0, r1
+ 235 010a 1070     		strb	r0, [r2]
+ 105:buttons.c     ****                     ButtonState.byButtonLong &= ~(0x01 << n);
+ 236              		.loc 1 105 0
+ 237 010c 5078     		ldrb	r0, [r2, #1]
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 7
+
+
+ 238 010e 0840     		ands	r0, r1
+ 239 0110 5070     		strb	r0, [r2, #1]
+ 106:buttons.c     ****                     ButtonState.byButtonHold &= ~(0x01 << n);
+ 240              		.loc 1 106 0
+ 241 0112 9078     		ldrb	r0, [r2, #2]
+ 242 0114 0140     		ands	r1, r0
+ 243 0116 9170     		strb	r1, [r2, #2]
+ 244              	.LVL24:
+ 245              	.L7:
+  31:buttons.c     ****         bButton = byAllButtons & (0x01 << n); // bit mapped to single bool
+ 246              		.loc 1 31 0 discriminator 2
+ 247 0118 0133     		adds	r3, r3, #1
+ 248              	.LVL25:
+ 249 011a DBB2     		uxtb	r3, r3
+ 250              	.LVL26:
+ 251              	.L2:
+  31:buttons.c     ****         bButton = byAllButtons & (0x01 << n); // bit mapped to single bool
+ 252              		.loc 1 31 0 is_stmt 0 discriminator 1
+ 253 011c 022B     		cmp	r3, #2
+ 254 011e 00D8     		bhi	.LCB242
+ 255 0120 7CE7     		b	.L11	@long jump
+ 256              	.LCB242:
+ 257              	.LBE2:
+ 107:buttons.c     ****                 }
+ 108:buttons.c     ****             } break;
+ 109:buttons.c     ****         }
+ 110:buttons.c     **** 	}
+ 111:buttons.c     ****         
+ 112:buttons.c     ****     return(ButtonState.byButtonDown);
+ 258              		.loc 1 112 0 is_stmt 1
+ 259 0122 044B     		ldr	r3, .L12+8
+ 260              	.LVL27:
+ 261 0124 1878     		ldrb	r0, [r3]
+ 262 0126 C0B2     		uxtb	r0, r0
+ 113:buttons.c     **** 	
+ 114:buttons.c     **** } // End of ReadButtonsOnChange( )
+ 263              		.loc 1 114 0
+ 264 0128 02B0     		add	sp, sp, #8
+ 265              		@ sp needed
+ 266              	.LVL28:
+ 267 012a 70BD     		pop	{r4, r5, r6, pc}
+ 268              	.L13:
+ 269              		.align	2
+ 270              	.L12:
+ 271 012c 00000000 		.word	.LANCHOR0
+ 272 0130 00000000 		.word	uiButtonTimer
+ 273 0134 00000000 		.word	ButtonState
+ 274              		.cfi_endproc
+ 275              	.LFE33:
+ 276              		.size	ReadButtonsOnChange, .-ReadButtonsOnChange
+ 277              		.comm	SWPRESSES,1,1
+ 278              		.bss
+ 279              		.align	2
+ 280              		.set	.LANCHOR0,. + 0
+ 281              		.type	byButtonState.8088, %object
+ 282              		.size	byButtonState.8088, 3
+ 283              	byButtonState.8088:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 8
+
+
+ 284 0000 000000   		.space	3
+ 285              		.text
+ 286              	.Letext0:
+ 287              		.file 2 "Generated_Source\\PSoC4/cytypes.h"
+ 288              		.file 3 "buttons.h"
+ 289              		.file 4 "main.h"
+ 290              		.section	.debug_info,"",%progbits
+ 291              	.Ldebug_info0:
+ 292 0000 60020000 		.4byte	0x260
+ 293 0004 0400     		.2byte	0x4
+ 294 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 295 000a 04       		.byte	0x4
+ 296 000b 01       		.uleb128 0x1
+ 297 000c B4010000 		.4byte	.LASF43
+ 298 0010 0C       		.byte	0xc
+ 299 0011 AD020000 		.4byte	.LASF44
+ 300 0015 62000000 		.4byte	.LASF45
+ 301 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 302 001d 00000000 		.4byte	0
+ 303 0021 00000000 		.4byte	.Ldebug_line0
+ 304 0025 02       		.uleb128 0x2
+ 305 0026 01       		.byte	0x1
+ 306 0027 06       		.byte	0x6
+ 307 0028 E4020000 		.4byte	.LASF0
+ 308 002c 02       		.uleb128 0x2
+ 309 002d 01       		.byte	0x1
+ 310 002e 08       		.byte	0x8
+ 311 002f DC000000 		.4byte	.LASF1
+ 312 0033 02       		.uleb128 0x2
+ 313 0034 02       		.byte	0x2
+ 314 0035 05       		.byte	0x5
+ 315 0036 9D020000 		.4byte	.LASF2
+ 316 003a 02       		.uleb128 0x2
+ 317 003b 02       		.byte	0x2
+ 318 003c 07       		.byte	0x7
+ 319 003d 10010000 		.4byte	.LASF3
+ 320 0041 02       		.uleb128 0x2
+ 321 0042 04       		.byte	0x4
+ 322 0043 05       		.byte	0x5
+ 323 0044 C5020000 		.4byte	.LASF4
+ 324 0048 02       		.uleb128 0x2
+ 325 0049 04       		.byte	0x4
+ 326 004a 07       		.byte	0x7
+ 327 004b FE000000 		.4byte	.LASF5
+ 328 004f 02       		.uleb128 0x2
+ 329 0050 08       		.byte	0x8
+ 330 0051 05       		.byte	0x5
+ 331 0052 5C020000 		.4byte	.LASF6
+ 332 0056 02       		.uleb128 0x2
+ 333 0057 08       		.byte	0x8
+ 334 0058 07       		.byte	0x7
+ 335 0059 91010000 		.4byte	.LASF7
+ 336 005d 03       		.uleb128 0x3
+ 337 005e 04       		.byte	0x4
+ 338 005f 05       		.byte	0x5
+ 339 0060 696E7400 		.ascii	"int\000"
+ 340 0064 02       		.uleb128 0x2
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 9
+
+
+ 341 0065 04       		.byte	0x4
+ 342 0066 07       		.byte	0x7
+ 343 0067 84010000 		.4byte	.LASF8
+ 344 006b 04       		.uleb128 0x4
+ 345 006c A7020000 		.4byte	.LASF9
+ 346 0070 02       		.byte	0x2
+ 347 0071 FC01     		.2byte	0x1fc
+ 348 0073 2C000000 		.4byte	0x2c
+ 349 0077 04       		.uleb128 0x4
+ 350 0078 63010000 		.4byte	.LASF10
+ 351 007c 02       		.byte	0x2
+ 352 007d FD01     		.2byte	0x1fd
+ 353 007f 3A000000 		.4byte	0x3a
+ 354 0083 02       		.uleb128 0x2
+ 355 0084 04       		.byte	0x4
+ 356 0085 04       		.byte	0x4
+ 357 0086 D6000000 		.4byte	.LASF11
+ 358 008a 02       		.uleb128 0x2
+ 359 008b 08       		.byte	0x8
+ 360 008c 04       		.byte	0x4
+ 361 008d 50010000 		.4byte	.LASF12
+ 362 0091 02       		.uleb128 0x2
+ 363 0092 01       		.byte	0x1
+ 364 0093 08       		.byte	0x8
+ 365 0094 74020000 		.4byte	.LASF13
+ 366 0098 05       		.uleb128 0x5
+ 367 0099 77000000 		.4byte	0x77
+ 368 009d 02       		.uleb128 0x2
+ 369 009e 08       		.byte	0x8
+ 370 009f 04       		.byte	0x4
+ 371 00a0 D8020000 		.4byte	.LASF14
+ 372 00a4 02       		.uleb128 0x2
+ 373 00a5 04       		.byte	0x4
+ 374 00a6 07       		.byte	0x7
+ 375 00a7 53020000 		.4byte	.LASF15
+ 376 00ab 02       		.uleb128 0x2
+ 377 00ac 01       		.byte	0x1
+ 378 00ad 02       		.byte	0x2
+ 379 00ae FD020000 		.4byte	.LASF16
+ 380 00b2 06       		.uleb128 0x6
+ 381 00b3 01       		.byte	0x1
+ 382 00b4 2C000000 		.4byte	0x2c
+ 383 00b8 03       		.byte	0x3
+ 384 00b9 18       		.byte	0x18
+ 385 00ba E3000000 		.4byte	0xe3
+ 386 00be 07       		.uleb128 0x7
+ 387 00bf 45010000 		.4byte	.LASF17
+ 388 00c3 00       		.byte	0
+ 389 00c4 07       		.uleb128 0x7
+ 390 00c5 42020000 		.4byte	.LASF18
+ 391 00c9 01       		.byte	0x1
+ 392 00ca 07       		.uleb128 0x7
+ 393 00cb BC000000 		.4byte	.LASF19
+ 394 00cf 02       		.byte	0x2
+ 395 00d0 07       		.uleb128 0x7
+ 396 00d1 72010000 		.4byte	.LASF20
+ 397 00d5 03       		.byte	0x3
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 10
+
+
+ 398 00d6 07       		.uleb128 0x7
+ 399 00d7 4E000000 		.4byte	.LASF21
+ 400 00db 04       		.byte	0x4
+ 401 00dc 07       		.uleb128 0x7
+ 402 00dd 57010000 		.4byte	.LASF22
+ 403 00e1 05       		.byte	0x5
+ 404 00e2 00       		.byte	0
+ 405 00e3 08       		.uleb128 0x8
+ 406 00e4 05       		.byte	0x5
+ 407 00e5 03       		.byte	0x3
+ 408 00e6 23       		.byte	0x23
+ 409 00e7 28010000 		.4byte	0x128
+ 410 00eb 09       		.uleb128 0x9
+ 411 00ec C9000000 		.4byte	.LASF23
+ 412 00f0 03       		.byte	0x3
+ 413 00f1 24       		.byte	0x24
+ 414 00f2 6B000000 		.4byte	0x6b
+ 415 00f6 00       		.byte	0
+ 416 00f7 09       		.uleb128 0x9
+ 417 00f8 35000000 		.4byte	.LASF24
+ 418 00fc 03       		.byte	0x3
+ 419 00fd 25       		.byte	0x25
+ 420 00fe 6B000000 		.4byte	0x6b
+ 421 0102 01       		.byte	0x1
+ 422 0103 09       		.uleb128 0x9
+ 423 0104 AF000000 		.4byte	.LASF25
+ 424 0108 03       		.byte	0x3
+ 425 0109 26       		.byte	0x26
+ 426 010a 6B000000 		.4byte	0x6b
+ 427 010e 02       		.byte	0x2
+ 428 010f 09       		.uleb128 0x9
+ 429 0110 8B020000 		.4byte	.LASF26
+ 430 0114 03       		.byte	0x3
+ 431 0115 27       		.byte	0x27
+ 432 0116 6B000000 		.4byte	0x6b
+ 433 011a 03       		.byte	0x3
+ 434 011b 09       		.uleb128 0x9
+ 435 011c 79020000 		.4byte	.LASF27
+ 436 0120 03       		.byte	0x3
+ 437 0121 28       		.byte	0x28
+ 438 0122 6B000000 		.4byte	0x6b
+ 439 0126 04       		.byte	0x4
+ 440 0127 00       		.byte	0
+ 441 0128 0A       		.uleb128 0xa
+ 442 0129 23000000 		.4byte	.LASF28
+ 443 012d 03       		.byte	0x3
+ 444 012e 29       		.byte	0x29
+ 445 012f E3000000 		.4byte	0xe3
+ 446 0133 06       		.uleb128 0x6
+ 447 0134 01       		.byte	0x1
+ 448 0135 2C000000 		.4byte	0x2c
+ 449 0139 03       		.byte	0x3
+ 450 013a 37       		.byte	0x37
+ 451 013b 6A010000 		.4byte	0x16a
+ 452 013f 07       		.uleb128 0x7
+ 453 0140 1A000000 		.4byte	.LASF29
+ 454 0144 00       		.byte	0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 11
+
+
+ 455 0145 07       		.uleb128 0x7
+ 456 0146 EA000000 		.4byte	.LASF30
+ 457 014a 01       		.byte	0x1
+ 458 014b 07       		.uleb128 0x7
+ 459 014c A5000000 		.4byte	.LASF31
+ 460 0150 02       		.byte	0x2
+ 461 0151 07       		.uleb128 0x7
+ 462 0152 42000000 		.4byte	.LASF32
+ 463 0156 03       		.byte	0x3
+ 464 0157 07       		.uleb128 0x7
+ 465 0158 B7020000 		.4byte	.LASF33
+ 466 015c 04       		.byte	0x4
+ 467 015d 07       		.uleb128 0x7
+ 468 015e 0E000000 		.4byte	.LASF34
+ 469 0162 05       		.byte	0x5
+ 470 0163 07       		.uleb128 0x7
+ 471 0164 03030000 		.4byte	.LASF35
+ 472 0168 06       		.byte	0x6
+ 473 0169 00       		.byte	0
+ 474 016a 0B       		.uleb128 0xb
+ 475 016b 31010000 		.4byte	.LASF46
+ 476 016f 01       		.byte	0x1
+ 477 0170 15       		.byte	0x15
+ 478 0171 6B000000 		.4byte	0x6b
+ 479 0175 00000000 		.4byte	.LFB33
+ 480 0179 38010000 		.4byte	.LFE33-.LFB33
+ 481 017d 01       		.uleb128 0x1
+ 482 017e 9C       		.byte	0x9c
+ 483 017f F7010000 		.4byte	0x1f7
+ 484 0183 0C       		.uleb128 0xc
+ 485 0184 00000000 		.4byte	.LASF36
+ 486 0188 01       		.byte	0x1
+ 487 0189 16       		.byte	0x16
+ 488 018a F7010000 		.4byte	0x1f7
+ 489 018e 05       		.uleb128 0x5
+ 490 018f 03       		.byte	0x3
+ 491 0190 00000000 		.4byte	byButtonState.8088
+ 492 0194 0D       		.uleb128 0xd
+ 493 0195 6A010000 		.4byte	.LASF37
+ 494 0199 01       		.byte	0x1
+ 495 019a 17       		.byte	0x17
+ 496 019b AB000000 		.4byte	0xab
+ 497 019f 00000000 		.4byte	.LLST0
+ 498 01a3 0C       		.uleb128 0xc
+ 499 01a4 F5000000 		.4byte	.LASF38
+ 500 01a8 01       		.byte	0x1
+ 501 01a9 19       		.byte	0x19
+ 502 01aa 07020000 		.4byte	0x207
+ 503 01ae 02       		.uleb128 0x2
+ 504 01af 91       		.byte	0x91
+ 505 01b0 6C       		.sleb128 -20
+ 506 01b1 0D       		.uleb128 0xd
+ 507 01b2 F0020000 		.4byte	.LASF39
+ 508 01b6 01       		.byte	0x1
+ 509 01b7 1B       		.byte	0x1b
+ 510 01b8 6B000000 		.4byte	0x6b
+ 511 01bc 7B010000 		.4byte	.LLST1
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 12
+
+
+ 512 01c0 0E       		.uleb128 0xe
+ 513 01c1 18000000 		.4byte	.LBB2
+ 514 01c5 0A010000 		.4byte	.LBE2-.LBB2
+ 515 01c9 DB010000 		.4byte	0x1db
+ 516 01cd 0F       		.uleb128 0xf
+ 517 01ce 6E00     		.ascii	"n\000"
+ 518 01d0 01       		.byte	0x1
+ 519 01d1 1F       		.byte	0x1f
+ 520 01d2 6B000000 		.4byte	0x6b
+ 521 01d6 BC010000 		.4byte	.LLST2
+ 522 01da 00       		.byte	0
+ 523 01db 10       		.uleb128 0x10
+ 524 01dc 12000000 		.4byte	.LVL1
+ 525 01e0 58020000 		.4byte	0x258
+ 526 01e4 11       		.uleb128 0x11
+ 527 01e5 01       		.uleb128 0x1
+ 528 01e6 50       		.byte	0x50
+ 529 01e7 02       		.uleb128 0x2
+ 530 01e8 08       		.byte	0x8
+ 531 01e9 70       		.byte	0x70
+ 532 01ea 11       		.uleb128 0x11
+ 533 01eb 01       		.uleb128 0x1
+ 534 01ec 51       		.byte	0x51
+ 535 01ed 01       		.uleb128 0x1
+ 536 01ee 30       		.byte	0x30
+ 537 01ef 11       		.uleb128 0x11
+ 538 01f0 01       		.uleb128 0x1
+ 539 01f1 52       		.byte	0x52
+ 540 01f2 02       		.uleb128 0x2
+ 541 01f3 74       		.byte	0x74
+ 542 01f4 00       		.sleb128 0
+ 543 01f5 00       		.byte	0
+ 544 01f6 00       		.byte	0
+ 545 01f7 12       		.uleb128 0x12
+ 546 01f8 6B000000 		.4byte	0x6b
+ 547 01fc 07020000 		.4byte	0x207
+ 548 0200 13       		.uleb128 0x13
+ 549 0201 A4000000 		.4byte	0xa4
+ 550 0205 02       		.byte	0x2
+ 551 0206 00       		.byte	0
+ 552 0207 12       		.uleb128 0x12
+ 553 0208 6B000000 		.4byte	0x6b
+ 554 020c 17020000 		.4byte	0x217
+ 555 0210 13       		.uleb128 0x13
+ 556 0211 A4000000 		.4byte	0xa4
+ 557 0215 01       		.byte	0x1
+ 558 0216 00       		.byte	0
+ 559 0217 14       		.uleb128 0x14
+ 560 0218 CE020000 		.4byte	.LASF40
+ 561 021c 03       		.byte	0x3
+ 562 021d 3F       		.byte	0x3f
+ 563 021e 33010000 		.4byte	0x133
+ 564 0222 05       		.uleb128 0x5
+ 565 0223 03       		.byte	0x3
+ 566 0224 00000000 		.4byte	SWPRESSES
+ 567 0228 15       		.uleb128 0x15
+ 568 0229 A8010000 		.4byte	.LASF41
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 13
+
+
+ 569 022d 01       		.byte	0x1
+ 570 022e 12       		.byte	0x12
+ 571 022f 33020000 		.4byte	0x233
+ 572 0233 05       		.uleb128 0x5
+ 573 0234 28010000 		.4byte	0x128
+ 574 0238 12       		.uleb128 0x12
+ 575 0239 98000000 		.4byte	0x98
+ 576 023d 48020000 		.4byte	0x248
+ 577 0241 13       		.uleb128 0x13
+ 578 0242 A4000000 		.4byte	0xa4
+ 579 0246 02       		.byte	0x2
+ 580 0247 00       		.byte	0
+ 581 0248 15       		.uleb128 0x15
+ 582 0249 23010000 		.4byte	.LASF42
+ 583 024d 01       		.byte	0x1
+ 584 024e 13       		.byte	0x13
+ 585 024f 53020000 		.4byte	0x253
+ 586 0253 05       		.uleb128 0x5
+ 587 0254 38020000 		.4byte	0x238
+ 588 0258 16       		.uleb128 0x16
+ 589 0259 6A020000 		.4byte	.LASF47
+ 590 025d 6A020000 		.4byte	.LASF47
+ 591 0261 04       		.byte	0x4
+ 592 0262 1D       		.byte	0x1d
+ 593 0263 00       		.byte	0
+ 594              		.section	.debug_abbrev,"",%progbits
+ 595              	.Ldebug_abbrev0:
+ 596 0000 01       		.uleb128 0x1
+ 597 0001 11       		.uleb128 0x11
+ 598 0002 01       		.byte	0x1
+ 599 0003 25       		.uleb128 0x25
+ 600 0004 0E       		.uleb128 0xe
+ 601 0005 13       		.uleb128 0x13
+ 602 0006 0B       		.uleb128 0xb
+ 603 0007 03       		.uleb128 0x3
+ 604 0008 0E       		.uleb128 0xe
+ 605 0009 1B       		.uleb128 0x1b
+ 606 000a 0E       		.uleb128 0xe
+ 607 000b 55       		.uleb128 0x55
+ 608 000c 17       		.uleb128 0x17
+ 609 000d 11       		.uleb128 0x11
+ 610 000e 01       		.uleb128 0x1
+ 611 000f 10       		.uleb128 0x10
+ 612 0010 17       		.uleb128 0x17
+ 613 0011 00       		.byte	0
+ 614 0012 00       		.byte	0
+ 615 0013 02       		.uleb128 0x2
+ 616 0014 24       		.uleb128 0x24
+ 617 0015 00       		.byte	0
+ 618 0016 0B       		.uleb128 0xb
+ 619 0017 0B       		.uleb128 0xb
+ 620 0018 3E       		.uleb128 0x3e
+ 621 0019 0B       		.uleb128 0xb
+ 622 001a 03       		.uleb128 0x3
+ 623 001b 0E       		.uleb128 0xe
+ 624 001c 00       		.byte	0
+ 625 001d 00       		.byte	0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 14
+
+
+ 626 001e 03       		.uleb128 0x3
+ 627 001f 24       		.uleb128 0x24
+ 628 0020 00       		.byte	0
+ 629 0021 0B       		.uleb128 0xb
+ 630 0022 0B       		.uleb128 0xb
+ 631 0023 3E       		.uleb128 0x3e
+ 632 0024 0B       		.uleb128 0xb
+ 633 0025 03       		.uleb128 0x3
+ 634 0026 08       		.uleb128 0x8
+ 635 0027 00       		.byte	0
+ 636 0028 00       		.byte	0
+ 637 0029 04       		.uleb128 0x4
+ 638 002a 16       		.uleb128 0x16
+ 639 002b 00       		.byte	0
+ 640 002c 03       		.uleb128 0x3
+ 641 002d 0E       		.uleb128 0xe
+ 642 002e 3A       		.uleb128 0x3a
+ 643 002f 0B       		.uleb128 0xb
+ 644 0030 3B       		.uleb128 0x3b
+ 645 0031 05       		.uleb128 0x5
+ 646 0032 49       		.uleb128 0x49
+ 647 0033 13       		.uleb128 0x13
+ 648 0034 00       		.byte	0
+ 649 0035 00       		.byte	0
+ 650 0036 05       		.uleb128 0x5
+ 651 0037 35       		.uleb128 0x35
+ 652 0038 00       		.byte	0
+ 653 0039 49       		.uleb128 0x49
+ 654 003a 13       		.uleb128 0x13
+ 655 003b 00       		.byte	0
+ 656 003c 00       		.byte	0
+ 657 003d 06       		.uleb128 0x6
+ 658 003e 04       		.uleb128 0x4
+ 659 003f 01       		.byte	0x1
+ 660 0040 0B       		.uleb128 0xb
+ 661 0041 0B       		.uleb128 0xb
+ 662 0042 49       		.uleb128 0x49
+ 663 0043 13       		.uleb128 0x13
+ 664 0044 3A       		.uleb128 0x3a
+ 665 0045 0B       		.uleb128 0xb
+ 666 0046 3B       		.uleb128 0x3b
+ 667 0047 0B       		.uleb128 0xb
+ 668 0048 01       		.uleb128 0x1
+ 669 0049 13       		.uleb128 0x13
+ 670 004a 00       		.byte	0
+ 671 004b 00       		.byte	0
+ 672 004c 07       		.uleb128 0x7
+ 673 004d 28       		.uleb128 0x28
+ 674 004e 00       		.byte	0
+ 675 004f 03       		.uleb128 0x3
+ 676 0050 0E       		.uleb128 0xe
+ 677 0051 1C       		.uleb128 0x1c
+ 678 0052 0B       		.uleb128 0xb
+ 679 0053 00       		.byte	0
+ 680 0054 00       		.byte	0
+ 681 0055 08       		.uleb128 0x8
+ 682 0056 13       		.uleb128 0x13
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 15
+
+
+ 683 0057 01       		.byte	0x1
+ 684 0058 0B       		.uleb128 0xb
+ 685 0059 0B       		.uleb128 0xb
+ 686 005a 3A       		.uleb128 0x3a
+ 687 005b 0B       		.uleb128 0xb
+ 688 005c 3B       		.uleb128 0x3b
+ 689 005d 0B       		.uleb128 0xb
+ 690 005e 01       		.uleb128 0x1
+ 691 005f 13       		.uleb128 0x13
+ 692 0060 00       		.byte	0
+ 693 0061 00       		.byte	0
+ 694 0062 09       		.uleb128 0x9
+ 695 0063 0D       		.uleb128 0xd
+ 696 0064 00       		.byte	0
+ 697 0065 03       		.uleb128 0x3
+ 698 0066 0E       		.uleb128 0xe
+ 699 0067 3A       		.uleb128 0x3a
+ 700 0068 0B       		.uleb128 0xb
+ 701 0069 3B       		.uleb128 0x3b
+ 702 006a 0B       		.uleb128 0xb
+ 703 006b 49       		.uleb128 0x49
+ 704 006c 13       		.uleb128 0x13
+ 705 006d 38       		.uleb128 0x38
+ 706 006e 0B       		.uleb128 0xb
+ 707 006f 00       		.byte	0
+ 708 0070 00       		.byte	0
+ 709 0071 0A       		.uleb128 0xa
+ 710 0072 16       		.uleb128 0x16
+ 711 0073 00       		.byte	0
+ 712 0074 03       		.uleb128 0x3
+ 713 0075 0E       		.uleb128 0xe
+ 714 0076 3A       		.uleb128 0x3a
+ 715 0077 0B       		.uleb128 0xb
+ 716 0078 3B       		.uleb128 0x3b
+ 717 0079 0B       		.uleb128 0xb
+ 718 007a 49       		.uleb128 0x49
+ 719 007b 13       		.uleb128 0x13
+ 720 007c 00       		.byte	0
+ 721 007d 00       		.byte	0
+ 722 007e 0B       		.uleb128 0xb
+ 723 007f 2E       		.uleb128 0x2e
+ 724 0080 01       		.byte	0x1
+ 725 0081 3F       		.uleb128 0x3f
+ 726 0082 19       		.uleb128 0x19
+ 727 0083 03       		.uleb128 0x3
+ 728 0084 0E       		.uleb128 0xe
+ 729 0085 3A       		.uleb128 0x3a
+ 730 0086 0B       		.uleb128 0xb
+ 731 0087 3B       		.uleb128 0x3b
+ 732 0088 0B       		.uleb128 0xb
+ 733 0089 27       		.uleb128 0x27
+ 734 008a 19       		.uleb128 0x19
+ 735 008b 49       		.uleb128 0x49
+ 736 008c 13       		.uleb128 0x13
+ 737 008d 11       		.uleb128 0x11
+ 738 008e 01       		.uleb128 0x1
+ 739 008f 12       		.uleb128 0x12
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 16
+
+
+ 740 0090 06       		.uleb128 0x6
+ 741 0091 40       		.uleb128 0x40
+ 742 0092 18       		.uleb128 0x18
+ 743 0093 9742     		.uleb128 0x2117
+ 744 0095 19       		.uleb128 0x19
+ 745 0096 01       		.uleb128 0x1
+ 746 0097 13       		.uleb128 0x13
+ 747 0098 00       		.byte	0
+ 748 0099 00       		.byte	0
+ 749 009a 0C       		.uleb128 0xc
+ 750 009b 34       		.uleb128 0x34
+ 751 009c 00       		.byte	0
+ 752 009d 03       		.uleb128 0x3
+ 753 009e 0E       		.uleb128 0xe
+ 754 009f 3A       		.uleb128 0x3a
+ 755 00a0 0B       		.uleb128 0xb
+ 756 00a1 3B       		.uleb128 0x3b
+ 757 00a2 0B       		.uleb128 0xb
+ 758 00a3 49       		.uleb128 0x49
+ 759 00a4 13       		.uleb128 0x13
+ 760 00a5 02       		.uleb128 0x2
+ 761 00a6 18       		.uleb128 0x18
+ 762 00a7 00       		.byte	0
+ 763 00a8 00       		.byte	0
+ 764 00a9 0D       		.uleb128 0xd
+ 765 00aa 34       		.uleb128 0x34
+ 766 00ab 00       		.byte	0
+ 767 00ac 03       		.uleb128 0x3
+ 768 00ad 0E       		.uleb128 0xe
+ 769 00ae 3A       		.uleb128 0x3a
+ 770 00af 0B       		.uleb128 0xb
+ 771 00b0 3B       		.uleb128 0x3b
+ 772 00b1 0B       		.uleb128 0xb
+ 773 00b2 49       		.uleb128 0x49
+ 774 00b3 13       		.uleb128 0x13
+ 775 00b4 02       		.uleb128 0x2
+ 776 00b5 17       		.uleb128 0x17
+ 777 00b6 00       		.byte	0
+ 778 00b7 00       		.byte	0
+ 779 00b8 0E       		.uleb128 0xe
+ 780 00b9 0B       		.uleb128 0xb
+ 781 00ba 01       		.byte	0x1
+ 782 00bb 11       		.uleb128 0x11
+ 783 00bc 01       		.uleb128 0x1
+ 784 00bd 12       		.uleb128 0x12
+ 785 00be 06       		.uleb128 0x6
+ 786 00bf 01       		.uleb128 0x1
+ 787 00c0 13       		.uleb128 0x13
+ 788 00c1 00       		.byte	0
+ 789 00c2 00       		.byte	0
+ 790 00c3 0F       		.uleb128 0xf
+ 791 00c4 34       		.uleb128 0x34
+ 792 00c5 00       		.byte	0
+ 793 00c6 03       		.uleb128 0x3
+ 794 00c7 08       		.uleb128 0x8
+ 795 00c8 3A       		.uleb128 0x3a
+ 796 00c9 0B       		.uleb128 0xb
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 17
+
+
+ 797 00ca 3B       		.uleb128 0x3b
+ 798 00cb 0B       		.uleb128 0xb
+ 799 00cc 49       		.uleb128 0x49
+ 800 00cd 13       		.uleb128 0x13
+ 801 00ce 02       		.uleb128 0x2
+ 802 00cf 17       		.uleb128 0x17
+ 803 00d0 00       		.byte	0
+ 804 00d1 00       		.byte	0
+ 805 00d2 10       		.uleb128 0x10
+ 806 00d3 898201   		.uleb128 0x4109
+ 807 00d6 01       		.byte	0x1
+ 808 00d7 11       		.uleb128 0x11
+ 809 00d8 01       		.uleb128 0x1
+ 810 00d9 31       		.uleb128 0x31
+ 811 00da 13       		.uleb128 0x13
+ 812 00db 00       		.byte	0
+ 813 00dc 00       		.byte	0
+ 814 00dd 11       		.uleb128 0x11
+ 815 00de 8A8201   		.uleb128 0x410a
+ 816 00e1 00       		.byte	0
+ 817 00e2 02       		.uleb128 0x2
+ 818 00e3 18       		.uleb128 0x18
+ 819 00e4 9142     		.uleb128 0x2111
+ 820 00e6 18       		.uleb128 0x18
+ 821 00e7 00       		.byte	0
+ 822 00e8 00       		.byte	0
+ 823 00e9 12       		.uleb128 0x12
+ 824 00ea 01       		.uleb128 0x1
+ 825 00eb 01       		.byte	0x1
+ 826 00ec 49       		.uleb128 0x49
+ 827 00ed 13       		.uleb128 0x13
+ 828 00ee 01       		.uleb128 0x1
+ 829 00ef 13       		.uleb128 0x13
+ 830 00f0 00       		.byte	0
+ 831 00f1 00       		.byte	0
+ 832 00f2 13       		.uleb128 0x13
+ 833 00f3 21       		.uleb128 0x21
+ 834 00f4 00       		.byte	0
+ 835 00f5 49       		.uleb128 0x49
+ 836 00f6 13       		.uleb128 0x13
+ 837 00f7 2F       		.uleb128 0x2f
+ 838 00f8 0B       		.uleb128 0xb
+ 839 00f9 00       		.byte	0
+ 840 00fa 00       		.byte	0
+ 841 00fb 14       		.uleb128 0x14
+ 842 00fc 34       		.uleb128 0x34
+ 843 00fd 00       		.byte	0
+ 844 00fe 03       		.uleb128 0x3
+ 845 00ff 0E       		.uleb128 0xe
+ 846 0100 3A       		.uleb128 0x3a
+ 847 0101 0B       		.uleb128 0xb
+ 848 0102 3B       		.uleb128 0x3b
+ 849 0103 0B       		.uleb128 0xb
+ 850 0104 49       		.uleb128 0x49
+ 851 0105 13       		.uleb128 0x13
+ 852 0106 3F       		.uleb128 0x3f
+ 853 0107 19       		.uleb128 0x19
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 18
+
+
+ 854 0108 02       		.uleb128 0x2
+ 855 0109 18       		.uleb128 0x18
+ 856 010a 00       		.byte	0
+ 857 010b 00       		.byte	0
+ 858 010c 15       		.uleb128 0x15
+ 859 010d 34       		.uleb128 0x34
+ 860 010e 00       		.byte	0
+ 861 010f 03       		.uleb128 0x3
+ 862 0110 0E       		.uleb128 0xe
+ 863 0111 3A       		.uleb128 0x3a
+ 864 0112 0B       		.uleb128 0xb
+ 865 0113 3B       		.uleb128 0x3b
+ 866 0114 0B       		.uleb128 0xb
+ 867 0115 49       		.uleb128 0x49
+ 868 0116 13       		.uleb128 0x13
+ 869 0117 3F       		.uleb128 0x3f
+ 870 0118 19       		.uleb128 0x19
+ 871 0119 3C       		.uleb128 0x3c
+ 872 011a 19       		.uleb128 0x19
+ 873 011b 00       		.byte	0
+ 874 011c 00       		.byte	0
+ 875 011d 16       		.uleb128 0x16
+ 876 011e 2E       		.uleb128 0x2e
+ 877 011f 00       		.byte	0
+ 878 0120 3F       		.uleb128 0x3f
+ 879 0121 19       		.uleb128 0x19
+ 880 0122 3C       		.uleb128 0x3c
+ 881 0123 19       		.uleb128 0x19
+ 882 0124 6E       		.uleb128 0x6e
+ 883 0125 0E       		.uleb128 0xe
+ 884 0126 03       		.uleb128 0x3
+ 885 0127 0E       		.uleb128 0xe
+ 886 0128 3A       		.uleb128 0x3a
+ 887 0129 0B       		.uleb128 0xb
+ 888 012a 3B       		.uleb128 0x3b
+ 889 012b 0B       		.uleb128 0xb
+ 890 012c 00       		.byte	0
+ 891 012d 00       		.byte	0
+ 892 012e 00       		.byte	0
+ 893              		.section	.debug_loc,"",%progbits
+ 894              	.Ldebug_loc0:
+ 895              	.LLST0:
+ 896 0000 04000000 		.4byte	.LVL0
+ 897 0004 1C000000 		.4byte	.LVL5
+ 898 0008 0200     		.2byte	0x2
+ 899 000a 30       		.byte	0x30
+ 900 000b 9F       		.byte	0x9f
+ 901 000c 24000000 		.4byte	.LVL6
+ 902 0010 48000000 		.4byte	.LVL7
+ 903 0014 0500     		.2byte	0x5
+ 904 0016 75       		.byte	0x75
+ 905 0017 00       		.sleb128 0
+ 906 0018 30       		.byte	0x30
+ 907 0019 2E       		.byte	0x2e
+ 908 001a 9F       		.byte	0x9f
+ 909 001b 48000000 		.4byte	.LVL7
+ 910 001f 4E000000 		.4byte	.LVL8
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 19
+
+
+ 911 0023 0800     		.2byte	0x8
+ 912 0025 71       		.byte	0x71
+ 913 0026 00       		.sleb128 0
+ 914 0027 74       		.byte	0x74
+ 915 0028 00       		.sleb128 0
+ 916 0029 1A       		.byte	0x1a
+ 917 002a 30       		.byte	0x30
+ 918 002b 2E       		.byte	0x2e
+ 919 002c 9F       		.byte	0x9f
+ 920 002d 4E000000 		.4byte	.LVL8
+ 921 0031 52000000 		.4byte	.LVL9
+ 922 0035 0B00     		.2byte	0xb
+ 923 0037 70       		.byte	0x70
+ 924 0038 00       		.sleb128 0
+ 925 0039 73       		.byte	0x73
+ 926 003a 00       		.sleb128 0
+ 927 003b 24       		.byte	0x24
+ 928 003c 74       		.byte	0x74
+ 929 003d 00       		.sleb128 0
+ 930 003e 1A       		.byte	0x1a
+ 931 003f 30       		.byte	0x30
+ 932 0040 2E       		.byte	0x2e
+ 933 0041 9F       		.byte	0x9f
+ 934 0042 52000000 		.4byte	.LVL9
+ 935 0046 74000000 		.4byte	.LVL10
+ 936 004a 0500     		.2byte	0x5
+ 937 004c 75       		.byte	0x75
+ 938 004d 00       		.sleb128 0
+ 939 004e 30       		.byte	0x30
+ 940 004f 2E       		.byte	0x2e
+ 941 0050 9F       		.byte	0x9f
+ 942 0051 74000000 		.4byte	.LVL10
+ 943 0055 90000000 		.4byte	.LVL11
+ 944 0059 0800     		.2byte	0x8
+ 945 005b 71       		.byte	0x71
+ 946 005c 00       		.sleb128 0
+ 947 005d 74       		.byte	0x74
+ 948 005e 00       		.sleb128 0
+ 949 005f 1A       		.byte	0x1a
+ 950 0060 30       		.byte	0x30
+ 951 0061 2E       		.byte	0x2e
+ 952 0062 9F       		.byte	0x9f
+ 953 0063 90000000 		.4byte	.LVL11
+ 954 0067 96000000 		.4byte	.LVL12
+ 955 006b 0A00     		.2byte	0xa
+ 956 006d 31       		.byte	0x31
+ 957 006e 73       		.byte	0x73
+ 958 006f 00       		.sleb128 0
+ 959 0070 24       		.byte	0x24
+ 960 0071 74       		.byte	0x74
+ 961 0072 00       		.sleb128 0
+ 962 0073 1A       		.byte	0x1a
+ 963 0074 30       		.byte	0x30
+ 964 0075 2E       		.byte	0x2e
+ 965 0076 9F       		.byte	0x9f
+ 966 0077 96000000 		.4byte	.LVL12
+ 967 007b 98000000 		.4byte	.LVL13
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 20
+
+
+ 968 007f 0500     		.2byte	0x5
+ 969 0081 75       		.byte	0x75
+ 970 0082 00       		.sleb128 0
+ 971 0083 30       		.byte	0x30
+ 972 0084 2E       		.byte	0x2e
+ 973 0085 9F       		.byte	0x9f
+ 974 0086 98000000 		.4byte	.LVL13
+ 975 008a A2000000 		.4byte	.LVL14
+ 976 008e 0800     		.2byte	0x8
+ 977 0090 71       		.byte	0x71
+ 978 0091 00       		.sleb128 0
+ 979 0092 74       		.byte	0x74
+ 980 0093 00       		.sleb128 0
+ 981 0094 1A       		.byte	0x1a
+ 982 0095 30       		.byte	0x30
+ 983 0096 2E       		.byte	0x2e
+ 984 0097 9F       		.byte	0x9f
+ 985 0098 A2000000 		.4byte	.LVL14
+ 986 009c A4000000 		.4byte	.LVL15
+ 987 00a0 0900     		.2byte	0x9
+ 988 00a2 71       		.byte	0x71
+ 989 00a3 00       		.sleb128 0
+ 990 00a4 20       		.byte	0x20
+ 991 00a5 74       		.byte	0x74
+ 992 00a6 00       		.sleb128 0
+ 993 00a7 1A       		.byte	0x1a
+ 994 00a8 30       		.byte	0x30
+ 995 00a9 2E       		.byte	0x2e
+ 996 00aa 9F       		.byte	0x9f
+ 997 00ab A4000000 		.4byte	.LVL15
+ 998 00af B6000000 		.4byte	.LVL16
+ 999 00b3 0A00     		.2byte	0xa
+ 1000 00b5 31       		.byte	0x31
+ 1001 00b6 73       		.byte	0x73
+ 1002 00b7 00       		.sleb128 0
+ 1003 00b8 24       		.byte	0x24
+ 1004 00b9 74       		.byte	0x74
+ 1005 00ba 00       		.sleb128 0
+ 1006 00bb 1A       		.byte	0x1a
+ 1007 00bc 30       		.byte	0x30
+ 1008 00bd 2E       		.byte	0x2e
+ 1009 00be 9F       		.byte	0x9f
+ 1010 00bf B6000000 		.4byte	.LVL16
+ 1011 00c3 BE000000 		.4byte	.LVL17
+ 1012 00c7 0500     		.2byte	0x5
+ 1013 00c9 75       		.byte	0x75
+ 1014 00ca 00       		.sleb128 0
+ 1015 00cb 30       		.byte	0x30
+ 1016 00cc 2E       		.byte	0x2e
+ 1017 00cd 9F       		.byte	0x9f
+ 1018 00ce BE000000 		.4byte	.LVL17
+ 1019 00d2 D2000000 		.4byte	.LVL18
+ 1020 00d6 0800     		.2byte	0x8
+ 1021 00d8 71       		.byte	0x71
+ 1022 00d9 00       		.sleb128 0
+ 1023 00da 74       		.byte	0x74
+ 1024 00db 00       		.sleb128 0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 21
+
+
+ 1025 00dc 1A       		.byte	0x1a
+ 1026 00dd 30       		.byte	0x30
+ 1027 00de 2E       		.byte	0x2e
+ 1028 00df 9F       		.byte	0x9f
+ 1029 00e0 D2000000 		.4byte	.LVL18
+ 1030 00e4 D8000000 		.4byte	.LVL19
+ 1031 00e8 0A00     		.2byte	0xa
+ 1032 00ea 31       		.byte	0x31
+ 1033 00eb 73       		.byte	0x73
+ 1034 00ec 00       		.sleb128 0
+ 1035 00ed 24       		.byte	0x24
+ 1036 00ee 74       		.byte	0x74
+ 1037 00ef 00       		.sleb128 0
+ 1038 00f0 1A       		.byte	0x1a
+ 1039 00f1 30       		.byte	0x30
+ 1040 00f2 2E       		.byte	0x2e
+ 1041 00f3 9F       		.byte	0x9f
+ 1042 00f4 D8000000 		.4byte	.LVL19
+ 1043 00f8 DA000000 		.4byte	.LVL20
+ 1044 00fc 0500     		.2byte	0x5
+ 1045 00fe 75       		.byte	0x75
+ 1046 00ff 00       		.sleb128 0
+ 1047 0100 30       		.byte	0x30
+ 1048 0101 2E       		.byte	0x2e
+ 1049 0102 9F       		.byte	0x9f
+ 1050 0103 DA000000 		.4byte	.LVL20
+ 1051 0107 E4000000 		.4byte	.LVL21
+ 1052 010b 0800     		.2byte	0x8
+ 1053 010d 71       		.byte	0x71
+ 1054 010e 00       		.sleb128 0
+ 1055 010f 74       		.byte	0x74
+ 1056 0110 00       		.sleb128 0
+ 1057 0111 1A       		.byte	0x1a
+ 1058 0112 30       		.byte	0x30
+ 1059 0113 2E       		.byte	0x2e
+ 1060 0114 9F       		.byte	0x9f
+ 1061 0115 E4000000 		.4byte	.LVL21
+ 1062 0119 E6000000 		.4byte	.LVL22
+ 1063 011d 0900     		.2byte	0x9
+ 1064 011f 71       		.byte	0x71
+ 1065 0120 00       		.sleb128 0
+ 1066 0121 20       		.byte	0x20
+ 1067 0122 74       		.byte	0x74
+ 1068 0123 00       		.sleb128 0
+ 1069 0124 1A       		.byte	0x1a
+ 1070 0125 30       		.byte	0x30
+ 1071 0126 2E       		.byte	0x2e
+ 1072 0127 9F       		.byte	0x9f
+ 1073 0128 E6000000 		.4byte	.LVL22
+ 1074 012c F8000000 		.4byte	.LVL23
+ 1075 0130 0A00     		.2byte	0xa
+ 1076 0132 31       		.byte	0x31
+ 1077 0133 73       		.byte	0x73
+ 1078 0134 00       		.sleb128 0
+ 1079 0135 24       		.byte	0x24
+ 1080 0136 74       		.byte	0x74
+ 1081 0137 00       		.sleb128 0
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 22
+
+
+ 1082 0138 1A       		.byte	0x1a
+ 1083 0139 30       		.byte	0x30
+ 1084 013a 2E       		.byte	0x2e
+ 1085 013b 9F       		.byte	0x9f
+ 1086 013c F8000000 		.4byte	.LVL23
+ 1087 0140 18010000 		.4byte	.LVL24
+ 1088 0144 0500     		.2byte	0x5
+ 1089 0146 75       		.byte	0x75
+ 1090 0147 00       		.sleb128 0
+ 1091 0148 30       		.byte	0x30
+ 1092 0149 2E       		.byte	0x2e
+ 1093 014a 9F       		.byte	0x9f
+ 1094 014b 18010000 		.4byte	.LVL24
+ 1095 014f 1A010000 		.4byte	.LVL25
+ 1096 0153 0A00     		.2byte	0xa
+ 1097 0155 31       		.byte	0x31
+ 1098 0156 73       		.byte	0x73
+ 1099 0157 00       		.sleb128 0
+ 1100 0158 24       		.byte	0x24
+ 1101 0159 74       		.byte	0x74
+ 1102 015a 00       		.sleb128 0
+ 1103 015b 1A       		.byte	0x1a
+ 1104 015c 30       		.byte	0x30
+ 1105 015d 2E       		.byte	0x2e
+ 1106 015e 9F       		.byte	0x9f
+ 1107 015f 1A010000 		.4byte	.LVL25
+ 1108 0163 1C010000 		.4byte	.LVL26
+ 1109 0167 0A00     		.2byte	0xa
+ 1110 0169 31       		.byte	0x31
+ 1111 016a 73       		.byte	0x73
+ 1112 016b 7F       		.sleb128 -1
+ 1113 016c 24       		.byte	0x24
+ 1114 016d 74       		.byte	0x74
+ 1115 016e 00       		.sleb128 0
+ 1116 016f 1A       		.byte	0x1a
+ 1117 0170 30       		.byte	0x30
+ 1118 0171 2E       		.byte	0x2e
+ 1119 0172 9F       		.byte	0x9f
+ 1120 0173 00000000 		.4byte	0
+ 1121 0177 00000000 		.4byte	0
+ 1122              	.LLST1:
+ 1123 017b 12000000 		.4byte	.LVL1
+ 1124 017f 16000000 		.4byte	.LVL3
+ 1125 0183 0100     		.2byte	0x1
+ 1126 0185 54       		.byte	0x54
+ 1127 0186 16000000 		.4byte	.LVL3
+ 1128 018a 18000000 		.4byte	.LVL4
+ 1129 018e 0400     		.2byte	0x4
+ 1130 0190 74       		.byte	0x74
+ 1131 0191 00       		.sleb128 0
+ 1132 0192 20       		.byte	0x20
+ 1133 0193 9F       		.byte	0x9f
+ 1134 0194 18000000 		.4byte	.LVL4
+ 1135 0198 2A010000 		.4byte	.LVL28
+ 1136 019c 0100     		.2byte	0x1
+ 1137 019e 54       		.byte	0x54
+ 1138 019f 2A010000 		.4byte	.LVL28
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 23
+
+
+ 1139 01a3 38010000 		.4byte	.LFE33
+ 1140 01a7 0B00     		.2byte	0xb
+ 1141 01a9 91       		.byte	0x91
+ 1142 01aa 6C       		.sleb128 -20
+ 1143 01ab 94       		.byte	0x94
+ 1144 01ac 01       		.byte	0x1
+ 1145 01ad 08       		.byte	0x8
+ 1146 01ae FF       		.byte	0xff
+ 1147 01af 1A       		.byte	0x1a
+ 1148 01b0 34       		.byte	0x34
+ 1149 01b1 25       		.byte	0x25
+ 1150 01b2 20       		.byte	0x20
+ 1151 01b3 9F       		.byte	0x9f
+ 1152 01b4 00000000 		.4byte	0
+ 1153 01b8 00000000 		.4byte	0
+ 1154              	.LLST2:
+ 1155 01bc 18000000 		.4byte	.LVL4
+ 1156 01c0 1C000000 		.4byte	.LVL5
+ 1157 01c4 0200     		.2byte	0x2
+ 1158 01c6 30       		.byte	0x30
+ 1159 01c7 9F       		.byte	0x9f
+ 1160 01c8 1C000000 		.4byte	.LVL5
+ 1161 01cc 1A010000 		.4byte	.LVL25
+ 1162 01d0 0100     		.2byte	0x1
+ 1163 01d2 53       		.byte	0x53
+ 1164 01d3 1C010000 		.4byte	.LVL26
+ 1165 01d7 24010000 		.4byte	.LVL27
+ 1166 01db 0100     		.2byte	0x1
+ 1167 01dd 53       		.byte	0x53
+ 1168 01de 00000000 		.4byte	0
+ 1169 01e2 00000000 		.4byte	0
+ 1170              		.section	.debug_aranges,"",%progbits
+ 1171 0000 1C000000 		.4byte	0x1c
+ 1172 0004 0200     		.2byte	0x2
+ 1173 0006 00000000 		.4byte	.Ldebug_info0
+ 1174 000a 04       		.byte	0x4
+ 1175 000b 00       		.byte	0
+ 1176 000c 0000     		.2byte	0
+ 1177 000e 0000     		.2byte	0
+ 1178 0010 00000000 		.4byte	.LFB33
+ 1179 0014 38010000 		.4byte	.LFE33-.LFB33
+ 1180 0018 00000000 		.4byte	0
+ 1181 001c 00000000 		.4byte	0
+ 1182              		.section	.debug_ranges,"",%progbits
+ 1183              	.Ldebug_ranges0:
+ 1184 0000 00000000 		.4byte	.LFB33
+ 1185 0004 38010000 		.4byte	.LFE33
+ 1186 0008 00000000 		.4byte	0
+ 1187 000c 00000000 		.4byte	0
+ 1188              		.section	.debug_line,"",%progbits
+ 1189              	.Ldebug_line0:
+ 1190 0000 A9000000 		.section	.debug_str,"MS",%progbits,1
+ 1190      02005B00 
+ 1190      00000201 
+ 1190      FB0E0D00 
+ 1190      01010101 
+ 1191              	.LASF36:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 24
+
+
+ 1192 0000 62794275 		.ascii	"byButtonState\000"
+ 1192      74746F6E 
+ 1192      53746174 
+ 1192      6500
+ 1193              	.LASF34:
+ 1194 000e 655F444F 		.ascii	"e_DOUBLETAP\000"
+ 1194      55424C45 
+ 1194      54415000 
+ 1195              	.LASF29:
+ 1196 001a 655F5357 		.ascii	"e_SWIDLE\000"
+ 1196      49444C45 
+ 1196      00
+ 1197              	.LASF28:
+ 1198 0023 73747275 		.ascii	"structButtonState\000"
+ 1198      63744275 
+ 1198      74746F6E 
+ 1198      53746174 
+ 1198      6500
+ 1199              	.LASF24:
+ 1200 0035 62794275 		.ascii	"byButtonLong\000"
+ 1200      74746F6E 
+ 1200      4C6F6E67 
+ 1200      00
+ 1201              	.LASF32:
+ 1202 0042 655F4C4F 		.ascii	"e_LONGPRESS\000"
+ 1202      4E475052 
+ 1202      45535300 
+ 1203              	.LASF21:
+ 1204 004e 655F4C4F 		.ascii	"e_LONGERPRESSBUTTON\000"
+ 1204      4E474552 
+ 1204      50524553 
+ 1204      53425554 
+ 1204      544F4E00 
+ 1205              	.LASF45:
+ 1206 0062 433A5C55 		.ascii	"C:\\Users\\jimvr\\WarpWorking\\Revelite_Batt\\Revel"
+ 1206      73657273 
+ 1206      5C6A696D 
+ 1206      76725C57 
+ 1206      61727057 
+ 1207 0090 6974655F 		.ascii	"ite_Batt_PSoC4.cydsn\000"
+ 1207      42617474 
+ 1207      5F50536F 
+ 1207      43342E63 
+ 1207      7964736E 
+ 1208              	.LASF31:
+ 1209 00a5 655F5052 		.ascii	"e_PRESSED\000"
+ 1209      45535345 
+ 1209      4400
+ 1210              	.LASF25:
+ 1211 00af 62794275 		.ascii	"byButtonHold\000"
+ 1211      74746F6E 
+ 1211      486F6C64 
+ 1211      00
+ 1212              	.LASF19:
+ 1213 00bc 655F444F 		.ascii	"e_DOWNBUTTON\000"
+ 1213      574E4255 
+ 1213      54544F4E 
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 25
+
+
+ 1213      00
+ 1214              	.LASF23:
+ 1215 00c9 62794275 		.ascii	"byButtonDown\000"
+ 1215      74746F6E 
+ 1215      446F776E 
+ 1215      00
+ 1216              	.LASF11:
+ 1217 00d6 666C6F61 		.ascii	"float\000"
+ 1217      7400
+ 1218              	.LASF1:
+ 1219 00dc 756E7369 		.ascii	"unsigned char\000"
+ 1219      676E6564 
+ 1219      20636861 
+ 1219      7200
+ 1220              	.LASF30:
+ 1221 00ea 655F5245 		.ascii	"e_RELEASED\000"
+ 1221      4C454153 
+ 1221      454400
+ 1222              	.LASF38:
+ 1223 00f5 62794275 		.ascii	"byBuffer\000"
+ 1223      66666572 
+ 1223      00
+ 1224              	.LASF5:
+ 1225 00fe 6C6F6E67 		.ascii	"long unsigned int\000"
+ 1225      20756E73 
+ 1225      69676E65 
+ 1225      6420696E 
+ 1225      7400
+ 1226              	.LASF3:
+ 1227 0110 73686F72 		.ascii	"short unsigned int\000"
+ 1227      7420756E 
+ 1227      7369676E 
+ 1227      65642069 
+ 1227      6E7400
+ 1228              	.LASF42:
+ 1229 0123 75694275 		.ascii	"uiButtonTimer\000"
+ 1229      74746F6E 
+ 1229      54696D65 
+ 1229      7200
+ 1230              	.LASF46:
+ 1231 0131 52656164 		.ascii	"ReadButtonsOnChange\000"
+ 1231      42757474 
+ 1231      6F6E734F 
+ 1231      6E436861 
+ 1231      6E676500 
+ 1232              	.LASF17:
+ 1233 0145 655F4E4F 		.ascii	"e_NOBUTTON\000"
+ 1233      42555454 
+ 1233      4F4E00
+ 1234              	.LASF12:
+ 1235 0150 646F7562 		.ascii	"double\000"
+ 1235      6C6500
+ 1236              	.LASF22:
+ 1237 0157 655F484F 		.ascii	"e_HOLDPRESS\000"
+ 1237      4C445052 
+ 1237      45535300 
+ 1238              	.LASF10:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 26
+
+
+ 1239 0163 75696E74 		.ascii	"uint16\000"
+ 1239      313600
+ 1240              	.LASF37:
+ 1241 016a 62427574 		.ascii	"bButton\000"
+ 1241      746F6E00 
+ 1242              	.LASF20:
+ 1243 0172 655F4C4F 		.ascii	"e_LONGPRESSBUTTON\000"
+ 1243      4E475052 
+ 1243      45535342 
+ 1243      5554544F 
+ 1243      4E00
+ 1244              	.LASF8:
+ 1245 0184 756E7369 		.ascii	"unsigned int\000"
+ 1245      676E6564 
+ 1245      20696E74 
+ 1245      00
+ 1246              	.LASF7:
+ 1247 0191 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 1247      206C6F6E 
+ 1247      6720756E 
+ 1247      7369676E 
+ 1247      65642069 
+ 1248              	.LASF41:
+ 1249 01a8 42757474 		.ascii	"ButtonState\000"
+ 1249      6F6E5374 
+ 1249      61746500 
+ 1250              	.LASF43:
+ 1251 01b4 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 1251      43313120 
+ 1251      352E342E 
+ 1251      31203230 
+ 1251      31363036 
+ 1252 01e7 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m0 -mthumb -g -O"
+ 1252      20726576 
+ 1252      6973696F 
+ 1252      6E203233 
+ 1252      37373135 
+ 1253 021a 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 1253      66756E63 
+ 1253      74696F6E 
+ 1253      2D736563 
+ 1253      74696F6E 
+ 1254              	.LASF18:
+ 1255 0242 655F5741 		.ascii	"e_WAITDOWNBUTTON\000"
+ 1255      4954444F 
+ 1255      574E4255 
+ 1255      54544F4E 
+ 1255      00
+ 1256              	.LASF15:
+ 1257 0253 73697A65 		.ascii	"sizetype\000"
+ 1257      74797065 
+ 1257      00
+ 1258              	.LASF6:
+ 1259 025c 6C6F6E67 		.ascii	"long long int\000"
+ 1259      206C6F6E 
+ 1259      6720696E 
+ 1259      7400
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 27
+
+
+ 1260              	.LASF47:
+ 1261 026a 4C617463 		.ascii	"LatchRead\000"
+ 1261      68526561 
+ 1261      6400
+ 1262              	.LASF13:
+ 1263 0274 63686172 		.ascii	"char\000"
+ 1263      00
+ 1264              	.LASF27:
+ 1265 0279 62794275 		.ascii	"byButtonTripleTap\000"
+ 1265      74746F6E 
+ 1265      54726970 
+ 1265      6C655461 
+ 1265      7000
+ 1266              	.LASF26:
+ 1267 028b 62794275 		.ascii	"byButtonDoubleTap\000"
+ 1267      74746F6E 
+ 1267      446F7562 
+ 1267      6C655461 
+ 1267      7000
+ 1268              	.LASF2:
+ 1269 029d 73686F72 		.ascii	"short int\000"
+ 1269      7420696E 
+ 1269      7400
+ 1270              	.LASF9:
+ 1271 02a7 75696E74 		.ascii	"uint8\000"
+ 1271      3800
+ 1272              	.LASF44:
+ 1273 02ad 62757474 		.ascii	"buttons.c\000"
+ 1273      6F6E732E 
+ 1273      6300
+ 1274              	.LASF33:
+ 1275 02b7 655F4C4F 		.ascii	"e_LONGERPRESS\000"
+ 1275      4E474552 
+ 1275      50524553 
+ 1275      5300
+ 1276              	.LASF4:
+ 1277 02c5 6C6F6E67 		.ascii	"long int\000"
+ 1277      20696E74 
+ 1277      00
+ 1278              	.LASF40:
+ 1279 02ce 53575052 		.ascii	"SWPRESSES\000"
+ 1279      45535345 
+ 1279      5300
+ 1280              	.LASF14:
+ 1281 02d8 6C6F6E67 		.ascii	"long double\000"
+ 1281      20646F75 
+ 1281      626C6500 
+ 1282              	.LASF0:
+ 1283 02e4 7369676E 		.ascii	"signed char\000"
+ 1283      65642063 
+ 1283      68617200 
+ 1284              	.LASF39:
+ 1285 02f0 6279416C 		.ascii	"byAllButtons\000"
+ 1285      6C427574 
+ 1285      746F6E73 
+ 1285      00
+ 1286              	.LASF16:
+ARM GAS  C:\Users\jimvr\AppData\Local\Temp\ccXBBPTb.s 			page 28
+
+
+ 1287 02fd 5F426F6F 		.ascii	"_Bool\000"
+ 1287      6C00
+ 1288              	.LASF35:
+ 1289 0303 655F5452 		.ascii	"e_TRIPLETAP\000"
+ 1289      49504C45 
+ 1289      54415000 
+ 1290              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
