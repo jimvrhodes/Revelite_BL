@@ -208,13 +208,6 @@ int main(void) {
         if(!uiBlinkTimer) {
             ACTLED_Write(~ACTLED_Read());
             uiBlinkTimer = BLINKTIME;
-            
-            if(ACTLED_Read()) {
-                byLatch1 |= LED1;
-            } else {
-                byLatch1 &= ~LED1;
-            }
-            // Don't write here - write after all LED updates below
         }
         
         byButtons = ReadButtonsOnChange(); // get button status
@@ -223,52 +216,54 @@ int main(void) {
         else
             ERRLED_Write(0);
 
+        // TODO: Battery monitoring disabled until charger/fuel gauge verified
         // Update battery status every 500ms
-        if(!battery_update_timer) {
-            battery_update_timer = 500;
-            
-            // Read fuel gauge
-            FuelGauge_t fg_status = LTC2944_GetStatus();
-            battery_soc = fg_status.state_of_charge;
-            battery_voltage_mv = (uint16_t)fg_status.voltage_mv;
-            
-            // Check for low battery condition
-            if(battery_voltage_mv < BATTERY_LOW_CUTOFF_MV) {
-                battery_low_warning = true;
-            } else if(battery_voltage_mv > (BATTERY_LOW_CUTOFF_MV + 200)) {  // 200mV hysteresis
-                battery_low_warning = false;
-            }
-            
-            // Read charger status
-            uiChargerStatus = BQ25730_Read(BQ25730_CHARGER_STATUS);
-        }
-        if(battery_update_timer) battery_update_timer--;
+        //if(!battery_update_timer) {
+        //    battery_update_timer = 500;
+        //    
+        //    // Read fuel gauge
+        //    FuelGauge_t fg_status = LTC2944_GetStatus();
+        //    battery_soc = fg_status.state_of_charge;
+        //    battery_voltage_mv = (uint16_t)fg_status.voltage_mv;
+        //    
+        //    // Check for low battery condition
+        //    if(battery_voltage_mv < BATTERY_LOW_CUTOFF_MV) {
+        //        battery_low_warning = true;
+        //    } else if(battery_voltage_mv > (BATTERY_LOW_CUTOFF_MV + 200)) {  // 200mV hysteresis
+        //        battery_low_warning = false;
+        //    }
+        //    
+        //    // Read charger status
+        //    uiChargerStatus = BQ25730_Read(BQ25730_CHARGER_STATUS);
+        //}
+        //if(battery_update_timer) battery_update_timer--;
 
+        // TODO: Battery charge indicator - disabled until battery monitoring working
         // Battery charge indicator using four LEDs on LATCH1
         // Display when BUTTON1 is pressed
-        if(byButtons & BUTTON1) {
-            // Clear all battery LEDs first
-            byLatch1 &= ~(LED1 | LED2 | LED3 | LED4);
-            
-            if(battery_low_warning) {
-                // Flash single LED for critically low battery
-                if(uiBlinkTimer < (BLINKTIME/2)) {
-                    byLatch1 |= LED1;
-                }
-            } else if(battery_soc < 25.0f) {
-                // One LED - less than 25%
-                byLatch1 |= LED1;
-            } else if(battery_soc < 50.0f) {
-                // Two LEDs - 25-50%
-                byLatch1 |= (LED1 | LED2);
-            } else if(battery_soc < 75.0f) {
-                // Three LEDs - 50-75%
-                byLatch1 |= (LED1 | LED2 | LED3);
-            } else {
-                // Four LEDs - 75-100%
-                byLatch1 |= (LED1 | LED2 | LED3 | LED4);
-            }
-        }
+        //if(byButtons & BUTTON1) {
+        //    // Clear all battery LEDs first
+        //    byLatch1 &= ~(LED1 | LED2 | LED3 | LED4);
+        //    
+        //    if(battery_low_warning) {
+        //        // Flash single LED for critically low battery
+        //        if(uiBlinkTimer < (BLINKTIME/2)) {
+        //            byLatch1 |= LED1;
+        //        }
+        //    } else if(battery_soc < 25.0f) {
+        //        // One LED - less than 25%
+        //        byLatch1 |= LED1;
+        //    } else if(battery_soc < 50.0f) {
+        //        // Two LEDs - 25-50%
+        //        byLatch1 |= (LED1 | LED2);
+        //    } else if(battery_soc < 75.0f) {
+        //        // Three LEDs - 50-75%
+        //        byLatch1 |= (LED1 | LED2 | LED3);
+        //    } else {
+        //        // Four LEDs - 75-100%
+        //        byLatch1 |= (LED1 | LED2 | LED3 | LED4);
+        //    }
+        //}
         
         // Timer indicator - cycle through timer states with BUTTON2
         // LED1 - no timer, just run until battery is exhausted
@@ -381,16 +376,25 @@ int main(void) {
         }
 
 #ifdef DEBUGOUT
-        // Heartbeat every 2 seconds with battery status
+        // Heartbeat every 2 seconds - test charger and fuel gauge
         static uint16_t heartbeat = 0;
         if (!heartbeat) {
             heartbeat = 2000;
+            
+            // Test BQ25730 charger
+            uint16_t chg_status = BQ25730_Read(BQ25730_CHARGER_STATUS);
+            uint16_t chg_voltage = BQ25730_GetBatteryVoltage_mV();
+            int16_t chg_current = BQ25730_GetBatteryCurrent_mA();
+            
+            // Test LTC2944 fuel gauge
+            uint16_t fg_voltage_raw = LTC2944_Read16(LTC2944_REG_VOLTAGE_MSB);
+            uint16_t fg_charge_raw = LTC2944_Read16(LTC2944_REG_ACC_CHARGE_MSB);
+            uint8_t fg_status = LTC2944_Read(LTC2944_REG_STATUS);
+            
             int16_t pos = QuadDec_GetPosition();
-            uint16_t soc_int = (uint16_t)battery_soc;  // Convert to integer to avoid float printf
-            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d V:%umV SoC:%u%% Chg:0x%04X\n\r", 
-                                    pos, battery_voltage_mv, soc_int, uiChargerStatus);
+            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d ChgSt:0x%04X V:%umV I:%dmA FgV:0x%04X FgQ:0x%04X FgSt:0x%02X\n\r", 
+                                    pos, chg_status, chg_voltage, chg_current, fg_voltage_raw, fg_charge_raw, fg_status);
             UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-            // Don't wait for TX to complete
         }
         if (heartbeat) heartbeat--;
 #endif

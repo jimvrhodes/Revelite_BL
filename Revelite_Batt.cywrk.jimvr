@@ -198,6 +198,68 @@
 <VisibleNodeIds>
 <v>Revelite_Batt</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\A.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\A_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ACTLED.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ACTLED_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ADC.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ADC_INT.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ADC_intClock.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ADC_IRQ.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ADC_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\B.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\B_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\BATT_NTC.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\BATT_NTC_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\battery.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\buttons.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CHRG_OK.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CHRG_OK_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CLI.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\Clock_1.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\Clock_2.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\Cm0Start.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CMP_OUT.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CMP_OUT_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\cy_em_eeprom.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CyBootAsmGnu.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\cyfitter_cfg.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CyFlash.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CyLFClk.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\CyLib.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\cymetadata.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\cyPm.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\cyutils.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\DIM_isr.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\Encoder_isr.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ERRLED.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\ERRLED_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_BOOT.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_I2C.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_I2C_BOOT.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_I2C_INT.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_I2C_MASTER.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_SCB_IRQ.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_SCBCLK.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_scl.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_scl_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_sda.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\I2CM_sda_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\isr.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\LATCH_INT.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\LATCH_INT_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\LATCH_isr.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\LTC2944.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\main.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\OC_FLAG.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\OC_FLAG_PM.lst</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\OTG_VAP.lst</v>
 </VisibleNodeIds>
 </CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
 </TreeStates>
