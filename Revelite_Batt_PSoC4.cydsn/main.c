@@ -56,8 +56,22 @@
 #include <buttons.h>
 #include <battery.h>
 #include <LTC2944.h>
-#include <RT9478M.h>
+//#include <RT9478M.h>  // Not compiled yet - using inline functions below
 #include <CLI.h>
+
+// Temporary RT9478M read function until RT9478M.c is added to project
+uint8_t RT9478M_Read_Inline(uint8_t reg) {
+    uint8_t value = 0;
+    I2CM_I2CMasterClearStatus();
+    if (I2CM_I2CMasterSendStart(0x22, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterWriteByte(reg, 25);
+    }
+    if (I2CM_I2CMasterSendRestart(0x22, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (uint8*)&value, 25);
+    }
+    I2CM_I2CMasterSendStop(25);
+    return value;
+}
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -413,14 +427,14 @@ int main(void) {
             CyDelay(500);
             
             // Read device ID
-            uint8_t dev_id = RT9478M_GetDeviceID();
+            uint8_t dev_id = RT9478M_Read_Inline(0x00);
             uint16_t count = sprintf((char*)byUARTBuffer,"Device ID: 0x%02X\r\n", dev_id);
             UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
             
             // Dump all registers 0x00-0x0F
             UART_SpiUartPutArray((uint8*)"Registers 0x00-0x0F:\r\n", 23);
             for(uint8_t reg = 0x00; reg <= 0x0F; reg++) {
-                uint8_t val = RT9478M_Read(reg);
+                uint8_t val = RT9478M_Read_Inline(reg);
                 count = sprintf((char*)byUARTBuffer,"  [0x%02X] = 0x%02X\r\n", reg, val);
                 UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
                 CyDelay(50);

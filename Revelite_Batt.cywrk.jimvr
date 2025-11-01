@@ -13,7 +13,7 @@
 <v>Output</v>
 </TreeKeys>
 <TreeStates>
-<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="Revelite_Batt\Revelite_Batt_PSoC4\Source Files\main.c">
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="Revelite_Batt\Revelite_Batt_PSoC4\Source Files">
 <ExpandedNodeIds>
 <v>Revelite_Batt</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4</v>
@@ -40,6 +40,7 @@
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\isr.c</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\LTC2944.c</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\main.c</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\RT9478M.c</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\subs.c</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Generated_Source\PSoC4</v>
 </ExpandedNodeIds>
@@ -69,6 +70,7 @@
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\isr.c</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\LTC2944.c</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\main.c</v>
+<v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\RT9478M.c</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Source Files\subs.c</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\Generated_Source</v>
 </VisibleNodeIds>
@@ -259,7 +261,6 @@
 <v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\main.lst</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\OC_FLAG.lst</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\OC_FLAG_PM.lst</v>
-<v>Revelite_Batt\Revelite_Batt_PSoC4\CortexM0\ARM_GCC_541\Debug\Listing Files\OTG_VAP.lst</v>
 </VisibleNodeIds>
 </CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237>
 </TreeStates>
