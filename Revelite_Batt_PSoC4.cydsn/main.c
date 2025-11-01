@@ -378,22 +378,43 @@ int main(void) {
 #ifdef DEBUGOUT
         // Heartbeat every 2 seconds - test charger and fuel gauge
         static uint16_t heartbeat = 0;
+        static bool did_i2c_scan = false;
+        
+        // Do I2C scan once on startup
+        if(!did_i2c_scan) {
+            did_i2c_scan = true;
+            uint16_t count = sprintf((char*)byUARTBuffer,"I2C Scan: ");
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+            
+            for(uint8_t addr = 0x08; addr < 0x78; addr++) {
+                I2CM_I2CMasterClearStatus();
+                uint32_t status = I2CM_I2CMasterSendStart(addr, I2CM_I2C_WRITE_XFER_MODE, 100);
+                I2CM_I2CMasterSendStop(25);
+                if(status == I2CM_I2C_MSTR_NO_ERROR) {
+                    count = sprintf((char*)byUARTBuffer,"0x%02X ", addr);
+                    UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+                }
+            }
+            count = sprintf((char*)byUARTBuffer,"\n\r");
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+        }
+        
         if (!heartbeat) {
             heartbeat = 2000;
             
             // Test BQ25730 charger
             uint16_t chg_status = BQ25730_Read(BQ25730_CHARGER_STATUS);
             uint16_t chg_voltage = BQ25730_GetBatteryVoltage_mV();
-            int16_t chg_current = BQ25730_GetBatteryCurrent_mA();
             
-            // Test LTC2944 fuel gauge
+            // Test LTC2944 fuel gauge - calculate voltage properly
             uint16_t fg_voltage_raw = LTC2944_Read16(LTC2944_REG_VOLTAGE_MSB);
+            uint16_t fg_voltage_mv = (uint16_t)((float)fg_voltage_raw * 1.44f);  // 1.44mV per LSB
             uint16_t fg_charge_raw = LTC2944_Read16(LTC2944_REG_ACC_CHARGE_MSB);
-            uint8_t fg_status = LTC2944_Read(LTC2944_REG_STATUS);
+            uint8_t fg_control = LTC2944_Read(LTC2944_REG_CONTROL);
             
             int16_t pos = QuadDec_GetPosition();
-            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d ChgSt:0x%04X V:%umV I:%dmA FgV:0x%04X FgQ:0x%04X FgSt:0x%02X\n\r", 
-                                    pos, chg_status, chg_voltage, chg_current, fg_voltage_raw, fg_charge_raw, fg_status);
+            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d Chg:0x%04X ChgV:%umV FgV:%umV(0x%04X) FgQ:0x%04X FgCtrl:0x%02X\n\r", 
+                                    pos, chg_status, chg_voltage, fg_voltage_mv, fg_voltage_raw, fg_charge_raw, fg_control);
             UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
         }
         if (heartbeat) heartbeat--;
