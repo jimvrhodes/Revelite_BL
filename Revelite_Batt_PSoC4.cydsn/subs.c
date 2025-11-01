@@ -43,15 +43,6 @@ uint16 GetAverageTEMP(void) {
 }
 //
 
-// this is the write to the connector board PCLA9538 latch
-void LatchWrite(uint8 byAddress, uint8 byReg, uint8 byData) {
-    
-    uint8 buffer[2];
-    buffer[0] = byReg;
-    buffer[1] = byData;
-        
-    uint8 error = I2CM_SyncWrite(byAddress, (uint8*)buffer, 2);
-}
 
 //
 // Quadrature Decoder functions
@@ -59,7 +50,7 @@ void LatchWrite(uint8 byAddress, uint8 byReg, uint8 byData) {
 static int16_t iQuadPosition = 0;  // Start at 0% brightness
 static int32_t iLastRawCount = 0;   // Last raw counter value
 #define QUAD_MIN 0
-#define QUAD_MAX 100
+#define QUAD_MAX 1000  // 0.1% resolution (1000 steps)
 
 void InitQuadDec(void) {
     QuadDec_Start();
@@ -89,22 +80,24 @@ float QuadDec_GetBrightnessScalar(void) {
     // Store current as last
     iLastRawCount = rawCount;
     
-    // Convert 0-100 to 0.0-1.0
-    float brightness = (float)iQuadPosition / 100.0f;
+    // Convert 0-1000 to 0.0-1.0 (0.1% resolution)
+    float brightness = (float)iQuadPosition / 1000.0f;
     
     // Final bounds check
-    if (brightness < 0.0f) brightness = 0.0f;
-    if (brightness > 1.0f) brightness = 1.0f;
+    if (brightness < 0.0f)
+        brightness = 0.0f;
+    if (brightness > 1.0f)
+        brightness = 1.0f;
     
     return brightness;
 }
 
-// Get raw counter value (0-100)
+// Get raw counter value (0-1000, 0.1% resolution)
 int16_t QuadDec_GetPosition(void) {
     return iQuadPosition;
 }
 
-// Set position (0-100)
+// Set position (0-1000, 0.1% resolution)
 void QuadDec_SetPosition(int16_t position) {
     if (position < QUAD_MIN) position = QUAD_MIN;
     if (position > QUAD_MAX) position = QUAD_MAX;
@@ -112,7 +105,18 @@ void QuadDec_SetPosition(int16_t position) {
     iQuadPosition = position;
     QuadDec_WriteCounter(position);
 }
-
+//
+// *** I2C routines ***
+//
+// this is the write to the connector board PCLA9538 latch
+void LatchWrite(uint8 byAddress, uint8 byReg, uint8 byData) {
+    
+    uint8 buffer[2];
+    buffer[0] = byReg;
+    buffer[1] = byData;
+        
+    uint8 error = I2CM_SyncWrite(byAddress, (uint8*)buffer, 2);
+}
 //
 bool I2CM_SyncWrite(uint8 bySlaveAddr, uint8 *buffer, uint8 length) {
     
