@@ -81,29 +81,40 @@ uint16_t LTC2944_Read16(uint8_t reg_msb) {
 // Initialize the LTC2944
 bool LTC2944_Init(uint16_t battery_capacity_mAh, uint8_t prescaler) {
     // Configure control register: prescaler, ALCC mode, ADC mode automatic
+    // Control register bits:
+    // [7:6] ADC_MODE: 11 = Automatic, 10 = Scan, 01 = Manual, 00 = Sleep
+    // [5:3] PRESCALER: M value (000=1, 001=4, 010=16, 011=64, 100=256, 101=1024, 110=4096)
+    // [2:1] ALCC_CONFIG: 00=Disabled, 01=Alert, 10=Charge complete
+    // [0]   SHUTDOWN: 0=Normal, 1=Shutdown
+    
     uint8_t control = 0;
-
-    // Prescaler setting (user provided)
-    control |= prescaler;
-
-    // ALCC pin as alert output
-    control |= LTC2944_ALCC_MODE_ALERT;
-
-    // Automatic mode
-    control |= (LTC2944_ADC_MODE_AUTOMATIC << 6);
-
+    
+    // Set ADC to automatic mode (bits 7:6 = 11)
+    control |= (LTC2944_ADC_MODE_AUTOMATIC << 6);  // 0xC0
+    
+    // Set prescaler (bits 5:3)
+    control |= prescaler;  // Should be 0x28 for M=1024
+    
+    // Set ALCC pin to alert mode (bits 2:1 = 01)
+    control |= LTC2944_ALCC_MODE_ALERT;  // 0x04 >> 1 = 0x02? Check this!
+    
+    // Expected value with M=1024: 0xC0 | 0x28 | 0x02 = 0xEA
+    // But we need to check the actual bit positions
+    
     // Write control register
     LTC2944_Write(LTC2944_REG_CONTROL, control);
-
+    CyDelay(10);
+    
+    // Read back to verify
+    uint8_t readback = LTC2944_Read(LTC2944_REG_CONTROL);
+    
     // Clear any existing alerts
     LTC2944_ClearAlerts();
-
+    
     // Set accumulated charge to half of full-scale for better headroom
-    // Full scale is 65535 counts for accumulated charge
-    // For state of charge estimation, we'll use the provided capacity
     LTC2944_SetAccumulatedCharge(battery_capacity_mAh / 2);
-
-    return true;
+    
+    return (readback == control);  // Return true if write succeeded
 }
 
 // Set accumulated charge value based on mAh

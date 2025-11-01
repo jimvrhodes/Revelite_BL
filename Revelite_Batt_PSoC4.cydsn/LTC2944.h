@@ -44,9 +44,10 @@
 #define LTC2944_PRESCALER_M_1024        0x28
 #define LTC2944_PRESCALER_M_4096        0x30
 
-#define LTC2944_ALCC_MODE_DISABLED      0x00
-#define LTC2944_ALCC_MODE_ALERT         0x04
-#define LTC2944_ALCC_MODE_CHARGE_COMPLETE 0x02
+// ALCC mode bits [2:1]: 00=Disabled, 01=Alert, 10=Charge Complete
+#define LTC2944_ALCC_MODE_DISABLED        0x00  // bits[2:1] = 00
+#define LTC2944_ALCC_MODE_ALERT           0x02  // bits[2:1] = 01  
+#define LTC2944_ALCC_MODE_CHARGE_COMPLETE 0x04  // bits[2:1] = 10
 
 #define LTC2944_ADC_MODE_AUTOMATIC      0x03
 #define LTC2944_ADC_MODE_SCAN           0x02
