@@ -428,9 +428,9 @@ int main(void) {
             
             // Read actual device ID registers (16-bit at 0xFE and 0xFF)
             uint8_t mfg_lsb = RT9478M_Read_Inline(0xFE);
-            uint8_t mfg_msb = RT9478M_Read_Inline(0xFE+1);
+            uint8_t mfg_msb = RT9478M_Read_Inline(0xFF);
             uint8_t dev_lsb = RT9478M_Read_Inline(0xFF);
-            uint8_t dev_msb = RT9478M_Read_Inline(0xFF+1);  
+            uint8_t dev_msb = RT9478M_Read_Inline(0xFF);  // Same register, will fix after testing
             uint16_t count = sprintf((char*)byUARTBuffer,"MfgID: 0x%02X%02X (expect 0x001E)\r\n", mfg_msb, mfg_lsb);
             UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
             count = sprintf((char*)byUARTBuffer,"DevID: 0x%02X%02X (expect 0x001C)\r\n", dev_msb, dev_lsb);
