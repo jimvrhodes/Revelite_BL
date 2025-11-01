@@ -1,0 +1,1876 @@
+Register Map
+Table 9-9. Charger Command Summary
+SMBus
+ADDR REGISTER NAME TYPE DESCRIPTION LINKS
+12h ChargeOption0() R/W Charge Option 0 Go
+14h ChargeCurrent() R/W 7-bit charge current setting
+LSB 64 mA, Range 0 mA - 8128 mA
+Go
+15h ChargeVoltage() R/W 12-bit charge voltage setting
+LSB 8 mV, Default: 1S-4200mV, 2S-8400mV,
+3S-12600mV, 4S-16800mV,
+Go
+20h ChargerStatus() R with R/W
+bits
+Charger Status Go
+21h ProchotStatus() R with R/W
+bits
+Prochot Status Go
+22h IIN_DPM() R 7-bit input current limit in use
+LSB: 50 mA, Range: 50 mA - 6350 mA
+Go
+23h ADCVBUS/PSYS() R 8-bit digital output of input voltage,
+VBUS: Full range: 0 V - 24.48 V, LSB 96 mV
+8-bit digital output of system power
+PSYS: Full range: 3.06 V, LSB: 12 mV
+Go
+24h ADCIBAT() R 7-bit digital output of battery charge current,
+7-bit digital output of battery discharge current
+ICHG: Full range 8.128 A, LSB 64 mA
+IDCHG: Full range: 32.512 A, LSB: 256 mA
+Go
+25h ADCIINCMPIN() R 8-bit digital output of input current,
+8-bit digital output of CMPIN voltage
+POR State - IIN: Full range: 12.75 A, LSB 50 mA
+CMPIN: Full range 3.06 V, LSB: 12 mV
+Go
+26h ADCVSYSVBAT() R 8-bit digital output of system voltage,
+8-bit digital output of battery voltage
+VSYS: Full range: 2.88 V - 19.2 V, LSB: 64 mV
+(1S-4S)
+VBAT: Full range : 2.88 V - 19.2 V, LSB 64 mV
+(1S-4S)
+Go
+30h ChargeOption1() R/W Charge Option 1 Go
+31h ChargeOption2() R/W Charge Option 2 Go
+32h ChargeOption3() R/W Charge Option 3 Go
+33h ProchotOption0() R/W PROCHOT Option 0 Go
+34h ProchotOption1() R/W PROCHOT Option 1 Go
+35h ADCOption() R/W ADC Option Go
+36h ChargeOption4() R/W Charge Option 4 Go
+37h Vmin Active Protection() R/W Vmin Active Protection Go
+3Bh OTGVoltage() R/W 12-bit OTG voltage setting
+LSB 8 mV, Range: 3000 mV – 24000 mV
+Go
+3Ch OTGCurrent() R/W 7-bit OTG output current setting
+LSB 50 mA, Range: 0 A – 6350 mA
+Go
+3Dh InputVoltage() R/W 8-bit input voltage setting
+LSB 64 mV, Range: 3200 mV – 19520 mV
+Go
+3Eh VSYS_MIN() R/W 8-Bit minimum system voltage setting
+LSB: 100 mV, Range: 1000 mV - 23000 mV
+Default: 1S-3.6V, 2S-6.6V, 3S-9.2V, 4S-12.3V,
+Go
+3Fh IIN_HOST() R/W 7-bit Input current limit set by host
+LSB: 50 mA, Range: 50 mA - 6350 mA
+Go
+FEh ManufacturerID() R Manufacturer ID - 0x0040H Go
+FFh DeviceID() R Device ID Go
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 41
+Product Folder Links: BQ25720
+9.6.1 ChargeOption0 Register (SMBus address = 12h) [reset = E70Eh]
+Figure 9-6. ChargeOption0 Register (SMBus address = 12h) [reset = E70Eh]
+15 14 13 12 11 10 9 8
+EN_LWPWR WDTMR_ADJ IIN_DPM_AUT
+O_DISABLE
+OTG_ON_CH
+RGOK
+EN_OOA PWM_FREQ DIS_STRGRV
+R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+EN_CMP_LAT
+CH
+VSYS_UVP_E
+NZ
+EN_LEARN IADPT_GAIN IBAT_GAIN EN_LDO EN_IIN_DPM CHRG_INHIBIT
+R/W R/W R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-10. ChargeOption0 Register (SMBus address = 12h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 EN_LWPWR R/W 1b Low Power Mode Enable, under low power mode lowest quiescent current is
+achieved when only battery exist. It is not recommended to enable low power
+mode when adapter present.
+0b: Disable Low Power Mode. Device in performance mode with battery only.
+The PROCHOT, current/power monitor buffer and comparator follow register
+setting.
+1b: Enable Low Power Mode. Device in low power mode with battery only
+for lowest quiescent current. The REGN is off. The PROCHOT, discharge
+current monitor buffer, power monitor buffer and independent comparator are
+disabled. ADC is not available in Low Power Mode. Independent comparator
+and its low power mode PROCHOT profile can be enabled by setting
+EN_PROCHOT_LPWR bit to 1b. <default at POR>
+14-13 WDTMR_ADJ R/W 11b WATCHDOG Timer Adjust
+Set maximum delay between consecutive SMBus write of charge voltage or
+charge current command.
+If device does not receive a write on the REG0x15() or the REG0x14()
+within the watchdog time period, the charger will be suspended by setting
+the REG0x14() to 0 mA .
+After expiration, the timer will resume upon the write of REG0x14(),
+REG0x15() or REG0x12[14:13].
+00b: Disable Watchdog Timer
+01b: Enabled, 5 sec
+10b: Enabled, 88 sec
+11b: Enable Watchdog Timer, 175 sec <default at POR>
+12 IIN_DPM_AUTO_DISAB
+LE
+R/W 0b IIN_DPM Auto Disable
+When CELL_BATPRESZ pin is LOW, the charger automatically disables the
+IIN_DPM function by setting EN_IIN_DPM (REG0x12[1]) to 0. The host can
+enable IIN_DPM function later by writing EN_IIN_DPM bit (REG0x12[1]) to 1.
+0b: Disable this function. IIN_DPM is not disabled when CELL_BATPRESZ
+goes LOW. <default at POR>
+1b: Enable this function. IIN_DPM is disabled when CELL_BATPRESZ goes
+LOW.
+11 OTG_ON_CHRGOK R/W 0b Add OTG to CHRG_OK
+Drive CHRG_OK to HIGH when the device is in OTG mode.
+0b: Disable <default at POR>
+1b: Enable
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+42 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-10. ChargeOption0 Register (SMBus address = 12h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+10 EN_OOA R/W 1b Out-of-Audio Enable
+In both forward mode and OTG mode, switching frequency reduces with
+diminishing load, under extreme light load condition the switching frequency
+could be lower than 25kHz which is already in audible frequency range. By
+configuring EN_OOA=1b, the minimum PFM burst frequency is clamped at
+around 25kHz to avoid any audible noise.
+0b: No limit of PFM burst frequency
+1b: Set minimum PFM burst frequency to above 25 kHz to avoid audio noise
+<default at POR>
+9 PWM_FREQ R/W 1b Switching Frequency Selection: Recommend 1200kHz with 1uH, 800 kHz with
+2.2 μH.
+0b: 1200kHz
+1b: 800kHz<default at POR>
+8 DIS_STRGRV R/W 1b Switching HS MOSFET turn on gate drive strength.
+0b: Enable HS MOSFET strong turn on gate drive strength
+1b: Disable HS MOSFET strong turn on gate drive strength <default at POR>
+Table 9-11. ChargeOption0 Register (SMBus address = 12h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 EN_CMP_LATCH R/W 0b The EN_CMP_LATCH bit, will latch the independent comparator output after
+it is triggered at low state. If enabled in PROCHOT profile REG34H[6]=1 ,
+STAT_COMP bit REG0x21[6] keep 1b after triggered until read by host and
+clear
+0b: Independent comparator output will not latch when it is low<default at
+POR>
+1b: Independent comparator output will latch when it is low, host can clear
+CMPOUT pin by toggling this REG0x12[7] bit.
+6 VSYS_UVP_ENZ R/W 0b To disable system under voltage protection.
+0b: VSYS under voltage protection is enabled <default at POR>
+1b: VSYS under voltage protection is disabled
+5 EN_LEARN R/W 0b LEARN mode allows the battery to discharge and converter to shut off while
+the adapter is present . It calibrates the battery gas gauge over a complete
+discharge/charge cycle. When the host determines the battery voltage is
+below battery depletion threshold, the host switch the system back to adapter
+input by writing this bit back to 0b.
+0b: Disable LEARN Mode <default at POR>
+1b: Enable LEARN Mode
+4 IADPT_GAIN R/W 0b IADPT Amplifier Ratio
+The ratio of voltage on IADPT and voltage across ACP and ACN.
+0b: 20× <default at POR>
+1b: 40×
+3 IBAT_GAIN R/W 1b IBAT Amplifier Ratio
+The ratio of voltage on IBAT and voltage across SRP and SRN
+0b: 8×
+1b: 16× <default at POR>
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 43
+Product Folder Links: BQ25720
+Table 9-11. ChargeOption0 Register (SMBus address = 12h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+2 EN_LDO R/W 1b LDO Mode Enable
+When battery voltage is below minimum system voltage (REG0x3E()), the
+charger is in pre-charge with LDO mode enabled.
+0b: Disable LDO mode, BATFET fully ON. Precharge current is set by battery
+pack internal resistor. The system is regulated by the MaxChargeVoltage
+register.
+1b: Enable LDO mode, Precharge current is set by the ChargeCurrent
+register and clamped below 384 mA (2 cell – 4 cell, 1cell VBAT<3.0V) or 2A
+(1cell 3.0V<VBAT<3.6V). The system is regulated by the VSYS_MIN register.
+<default at POR>
+1 EN_IIN_DPM R/W 1b IIN_DPM Enable
+Host writes this bit to enable IIN_DPM regulation loop. When the IIN_DPM
+is disabled by the charger (refer to IIN_DPM_AUTO_DISABLE), this bit goes
+LOW.
+0b: IIN_DPM disabled
+1b: IIN_DPM enabled <default at POR>
+0 CHRG_INHIBIT R/W 0b Charge Inhibit
+When this bit is 0, battery charging will start with valid values in the
+ChargeVoltage() register and the ChargeCurrent register.
+0b: Enable Charge <default at POR>
+1b: Inhibit Charge
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+44 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.2 ChargeCurrent Register (SMBus address = 14h) [reset = 0000h]
+To set the charge current, write a 16-bit ChargeCurrent() command (REG0x14h()) using the data format listed in
+Figure 9-7, Table 9-12, and Table 9-13.
+With 10-mΩ sense resistor, the charger provides charge current range of 0 A to 8.128 A, with a 64-mA step
+resolution.
+Upon POR, ChargeCurrent() is 0 A. Below scenarios will also reset Charge current to zero:
+• CELL_BATPRESZ going LOW (battery removal).
+• STAT_AC is not valid (adapter removal).
+• RESET_REG is asserted and reset all registers.
+• Charge voltage is written to be 0 V.
+• Watch dog event is triggered.
+Charge current is not reset in force converter latch off fault (REG0x20[2]), and ACOC/TSHUT/SYSOVP/ACOV/
+VSYS_UVP/BATOVP/BATOC faults.
+The SRP and SRN pins are used to sense voltage drop across RSR with default value of 10 mΩ. However, the
+host can always set current sensing to 5 mΩ referring to Section 9.3.6. For a smaller sense resistor, a smaller
+sense voltage is given, and a lower regulation accuracy; but at the benefit of lower conduction loss.
+Figure 9-7. ChargeCurrent Register With 10-mΩ Sense Resistor (SMBus address = 14h) [reset = 0000h]
+15 14 13 12 11 10 9 8
+Reserved Charge Current,
+bit 6
+Charge Current,
+bit 5
+Charge Current,
+bit 4
+Charge Current,
+bit 3
+Charge Current,
+bit 2
+R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+Charge Current,
+bit 1
+Charge Current,
+bit 0
+Reserved Reserved
+R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-12. Charge Current Register With 10-mΩ Sense Resistor (SMBus address = 14h) Field
+Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15-13 Reserved R/W 000b Not used. 1 = invalid write.
+12 Charge Current, bit 6 R/W 0b 0 = Adds 0 mA of charger current.
+1 = Adds 4096 mA of charger current.
+11 Charge Current, bit 5 R/W 0b 0 = Adds 0 mA of charger current.
+1 = Adds 2048 mA of charger current.
+10 Charge Current, bit 4 R/W 0b 0 = Adds 0 mA of charger current.
+1 = Adds 1024 mA of charger current.
+9 Charge Current, bit 3 R/W 0b 0 = Adds 0 mA of charger current.
+1 = Adds 512 mA of charger current.
+8 Charge Current, bit 2 R/W 0b 0 = Adds 0 mA of charger current.
+1 = Adds 256 mA of charger current.
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 45
+Product Folder Links: BQ25720
+Table 9-13. Charge Current Register With 10-mΩ Sense Resistor (SMBus address = 14h) Field
+Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 Charge Current, bit 1 R/W 0b 0 = Adds 0 mA of charger current.
+1 = Adds 128 mA of charger current.
+6 Charge Current, bit 0 R/W 0b 0 = Adds 0 mA of charger current.
+1 = Adds 64 mA of charger current.
+5-0 Reserved R/W 000000b Not used. Value Ignored.
+9.6.2.1 Battery Pre-Charge Current Clamp
+During pre-charge, BATFET works in linear mode (LDO mode) (default EN_LDO= 1b). For 2-4 cell battery, the
+system is regulated at VSYS_MIN register and the pre-charge current is clamped at 384 mA. For 1 cell battery,
+the pre-charge to fast charge threshold is 3 V, and the pre-charge current is clamped at 384 mA. However, the
+BATFET stays in LDO mode operation untill battery voltage is above minimum system voltage (~3.6 V). During
+battery voltage from 3 V to 3.6 V, the fast charge current is clamped at 2 A.
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+46 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.3 ChargeVoltage Register (SMBus address = 15h) [reset value based on CELL_BATPRESZ pin
+setting]
+To set the output charge voltage, write a 16-bit ChargeVoltage register command (REG0x15()) using the data
+format listed in Figure 9-8, Table 9-14, and Table 9-15. The charger provides charge voltage range from 1.024 V
+to 19.200 V, with 8-mV step resolution. Any write below 1.024 V or above19.200 V is ignored
+Upon POR, REG0x15() is by default set as 4200 mV for 1 s, 8400 mV for 2 s, 12600 mV for 3 s or 16800 mV
+for 4 s. After CHRG_OK goes high, the charge will start when the host writes the charging current to REG0x14(),
+the default charging voltage is used if REG0x15() is not programmed. If the battery is different from 4.2 V/cell,
+the host has to write to REG0x15() before REG0x14() for correct battery voltage setting. Writing REG0x15() to 0
+should keep REG0x15() value unchanged, and force REG0x14() to zero to disable charge.
+The SRN pin senses the battery voltage for voltage regulation and should be connected as close to the battery
+as possible.
+Figure 9-8. ChargeVoltage Register (SMBus address = 15h) [reset value based on CELL_BATPRESZ pin
+setting]
+15 14 13 12 11 10 9 8
+Reserved Charge Voltage,
+bit 11
+Charge Voltage,
+bit 10
+Charge Voltage,
+bit 9
+Charge Voltage,
+bit 8
+Charge Voltage,
+bit 7
+Charge Voltage,
+bit 6
+Charge Voltage,
+bit 5
+R/W R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+Charge Voltage,
+bit 4
+Charge Voltage,
+bit 3
+Charge Voltage,
+bit 2
+Charge Voltage,
+bit 1
+Charge Voltage,
+bit 0
+Reserved
+R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-14. ChargeVoltage Register (SMBus address = 15h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 Reserved R/W 0b Not used. 1 = invalid write.
+14 Charge Voltage, bit 11 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 16384 mV of charger voltage.
+13 Charge Voltage, bit 10 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 8192 mV of charger voltage
+12 Charge Voltage, bit 9 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 4096 mV of charger voltage.
+11 Charge Voltage, bit 8 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 2048 mV of charger voltage.
+10 Charge Voltage, bit 7 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 1024 mV of charger voltage.
+9 Charge Voltage, bit 6 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 512 mV of charger voltage.
+8 Charge Voltage, bit 5 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 256 mV of charger voltage.
+Table 9-15. ChargeVoltage Register (SMBus address = 15h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 Charge Voltage, bit 4 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 128 mV of charger voltage.
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 47
+Product Folder Links: BQ25720
+Table 9-15. ChargeVoltage Register (SMBus address = 15h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+6 Charge Voltage, bit 3 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 64 mV of charger voltage.
+5 Charge Voltage, bit 2 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 32 mV of charger voltage.
+4 Charge Voltage, bit 1 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 16 mV of charger voltage.
+3 Charge Voltage, bit 0 R/W 0b 0 = Adds 0 mV of charger voltage.
+1 = Adds 8 mV of charger voltage.
+2-0 Reserved R/W 000b Not used. Value Ignored.
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+48 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.4 ChargerStatus Register (SMBus address = 20h) [reset = 0000h]
+Figure 9-9. ChargerStatus Register (SMBus address = 20h) [reset = 0000h]
+15 14 13 12 11 10 9 8
+STAT_AC ICO_DONE IN_VAP IN_VINDPM IN_IIN_DPM IN_FCHRG IN_PCHRG IN_OTG
+R R R R R R R R
+7 6 5 4 3 2 1 0
+Fault ACOV Fault BATOC Fault ACOC FAULT
+SYSOVP
+Fault VSYS
+_UVP
+Fault
+Force_Converte
+r_Off
+Fault_OTG
+_OVP
+Fault_OTG
+_UVP
+R R R R/W R/W R R R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-16. ChargerStatus Register (SMBus address = 20h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 STAT_AC R 0b Input source status. STAT_AC is valid as long as VBUS go
+within 3.5V ~26V range. It is different from CHRG_OK bit, When
+CHRG_OK is valid, STAT_AC must be valid, but if STAT_AC is valid,
+it is not necessary CHRG_OK is valid. There are Force converter
+off, ACOC, TSHUT , SYSOVP, VSYS_UVP, BATOVP can pull low
+CHRG_OK.
+0b: Input not present
+1b: Input is present
+14 ICO_DONE R 0b After the ICO routine is successfully executed, the bit goes 1.
+0b: ICO is not complete
+1b: ICO is complete
+13 IN_VAP R 0b 0b: Charger is not operated in VAP mode
+1b: Charger is operated in VAP mode
+Digital status bit indicates VAP has enabled(1) or disabled(0). The
+enable of VAP mode only follows the host command, which is not
+blocked by any status of /PROCHOT. The exit of VAP mode also
+follows the host command, except that any faults will exit VAP mode
+automatically. STAT_EXIT_VAP (REG0x21[8]) becomes 1 which will
+pull low /PROCHOT until host clear.
+The host can enable VAP by setting OTG/VAP/FRS pin high and
+0x32[5]=0, disable VAP by setting either OTG/VAP/FRS pin low
+or 0x32[5]=1. Any faults in VAP When IN_VAP bit goes 0->1,
+charger should disable VINDPM, IIN_DPM, ICRIT, ILIM pin, disable
+PP_ACOK if it is enabled, enable PP_VSYS if it is disabled. When
+IN_VAP bit goes 1->0, charger should enable VINDPM, IIN_DPM,
+ICRIT, ILIM pin function.
+12 IN_VINDPM R 0b 0b: Charger is not in VINDPM during forward mode, or voltage
+regulation during OTG mode
+1b: Charger is in VINDPM during forward mode, or voltage
+regulation during OTG mode
+11 IN_IIN_DPM R 0b 0b: Charger is not in IIN_DPM during forward mode.
+1b: Charger is not in IIN_DPM during forward mode.
+10 IN_FCHRG R 0b 0b: Charger is not in fast charge
+1b: Charger is in fast charger
+9 IN_PCHRG R 0b 0b: Charger is not in pre-charge
+1b: Charger is in pre-charge
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 49
+Product Folder Links: BQ25720
+Table 9-16. ChargerStatus Register (SMBus address = 20h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+8 IN_OTG R 0b 0b: Charger is not in OTG
+1b: Charge is in OTG
+Table 9-17. ChargerStatus Register (SMBus address = 20h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 Fault ACOV R 0b The status are latched if triggered until a read from host.
+0b: No fault
+1b: ACOV
+6 Fault BATOC R 0b The status is latched if triggered until a read from host. Fault
+indicator for BATOC only during normal operation. However in PTM
+mode when EN_BATOC=1b, this status bit is fault indicator for both
+BATOVP and BATOC; when EN_BATOC=0b, this status bit is not
+effective.
+0b: No fault
+1b: BATOC is triggered
+5 Fault ACOC R 0b The status is latched if triggered until a read from host.
+0b: No fault
+1b: ACOC
+4 Fault SYSOVP R/W 0b SYSOVP Status and Clear. SYSOVP fault is latched until a clear
+from host by writing this bit to 0.
+When the SYSOVP occurs, this bit is HIGH. During the SYSOVP, the
+converter is disabled.
+After the SYSOVP is removed, the user must write a 0 to this bit
+or unplug the adapter to clear the SYSOVP condition to enable the
+converter again.
+0b: Not in SYSOVP <default at POR>
+1b: In SYSOVP. When SYSOVP is removed, write 0 to clear the
+SYSOVP latch.
+3 Fault VSYS_UVP R/W 0b VSYS_UVP fault status and clear. VSYS_UVP fault is latched until a
+clear from host by writing this bit to 0.
+0b: No fault <default at POR>
+1b: When system voltage is lower than VSYS_UVP, then 7 times
+restart tries are failed.
+2 Fault Force_Converter_Off R 0b The status is latched if triggered until a read from host.
+0b: No fault
+1b: Force converter off triggered (when FORCE_CONV_OFF
+(REG0x30[3]=1b)
+1 Fault_OTG_OVP R 0b The status is latched if triggered until a read from host.
+0b: No fault
+1b: OTG OVP fault is triggered
+0 Fault_OTG_UVP R 0b The status is latched if triggered until a read from host.
+0b: No fault
+1b: OTG UVP fault is triggered
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+50 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.5 ProchotStatus Register (SMBus address = 21h) [reset = B800h]
+All the status bits in REG0x21[15,10,6:0] will be cleared after host read.
+Figure 9-10. ProchotStatus Register (SMBus address = 21h) [reset = B800h]
+15 14 13 12 11 10 9 8
+Reserved EN_PROCHOT
+_EXT
+PROCHOT_WIDTH PROCHOT_CL
+EAR
+TSHUT STAT_VAP_FAI
+L
+STAT_EXIT_VA
+P
+R R/W R/W R/W R R/W R/W
+7 6 5 4 3 2 1 0
+STAT_VINDPM STAT_COMP STAT_ICRIT STAT_INOM STAT_IDCHG1 STAT_VSYS STAT_BAT_Re
+moval
+STAT_ADPT_R
+emoval
+R/W R R R R R R R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-18. ProchotStatus Register (SMBus address = 21h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 Reserved R 1b Reserved
+14 EN_PROCHOT _EXT R/W 0b PROCHOT Pulse Extension Enable. When pulse extension is
+enabled, keep the PROCHOT pin voltage LOW until host writes
+REG0x21[11] = 0.
+0b: Disable pulse extension <default at POR>
+1b: Enable pulse extension
+13-12 PROCHOT _WIDTH R/W 11b PROCHOT Pulse Width Minimum PROCHOT pulse width when
+REG0x21[14] = 0
+00b: 100 us
+01b: 1 ms
+10b: 5 ms
+11b: 10 ms <default at POR>
+11 PROCHOT _CLEAR R/W 1b PROCHOT Pulse Clear.
+Clear PROCHOT pulse when 0x21[14] = 1.
+0b: Clear PROCHOT pulse and drive PROCHOT pin HIGH
+1b: Idle <default at POR>
+10 TSHUT R 0b TSHUT trigger:
+0b: TSHUT is not triggered
+1b: TSHUT is triggered
+9 STAT_VAP_FAIL R/W 0b This status bit reports a failure to load VBUS 7 consecutive times
+in VAP mode, which indicates the battery voltage might be not
+high enough to enter VAP mode, or the VAP loading current
+settings are too high.
+0b: Not is VAP failure <default at POR>
+1b: In VAP failure, the charger exits VAP mode, and latches off
+until the host writes this bit to 0.
+8 STAT_EXIT_VAP R/W 0b When the charger is operated in VAP mode, it can exit VAP
+by either being disabled through host, or there are ACOV/ACOC/
+SYSOVP/BATOVP/VSYS_UVP faults.
+0b: PROCHOT_EXIT_VAP is not active <default at POR>
+1b: PROCHOT_EXIT_VAP is active, PROCHOT pin is low until
+host writes this status bit to 0.
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 51
+Product Folder Links: BQ25720
+Table 9-19. ProchotStatus Register (SMBus address = 21h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 STAT_VINDPM R/W 0b PROCHOT Profile VINDPM status bit
+0b: Not triggered
+1b: Triggered,PROCHOT pin is low until host writes this status bit
+to 0 when PP_VINDPM = 1b
+6 STAT_COMP R 0b PROCHOT Profile CMPOUT status bit. The status is latched until
+a read from host.
+0b: Not triggered
+1b: Triggered
+5 STAT_ICRIT R 0b PROCHOT Profile ICRIT status bit. The status is latched until a
+read from host.
+0b: Not triggered
+1b: Triggered
+4 STAT_INOM R 0b PROCHOT Profile INOM status bit. The status is latched until a
+read from host.
+0b: Not triggered
+1b: Triggered
+3 STAT_IDCHG1 R 0b PROCHOT Profile IDCHG1 status bit. The status is latched until a
+read from host.
+0b: Not triggered
+1b: Triggered
+2 STAT_VSYS R 0b PROCHOT Profile VSYS status bit. The status is latched until a
+read from host.
+0b: Not triggered
+1b: Triggered
+1 STAT_Battery_Removal R 0b PROCHOT Profile Battery Removal status bit. The status is
+latched until a read from host.
+0b: Not triggered
+1b: Triggered
+0 STAT_Adapter_Removal R 0b PROCHOT Profile Adapter Removal status bit. The status is
+latched until a read from host.
+0b: Not triggered
+1b: Triggered
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+52 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.6 IIN_DPM Register With 10-mΩ Sense Resistor (SMBus address = 22h) [reset = 4100h]
+IIN_DPM register reflects the actual input current limit programmed in the register, either from IIN_HOST register
+or from ICO.
+After ICO, the current limit used by DPM regulation may differ from the IIN_HOST register settings. The actual
+DPM limit is reported in IIN_DPM register.
+To read the nominal or typical input current limit:
+• When using a 10-mΩ sense resistor(RSNS_RAC=0b). There is 50mA offset at code 0. Note this offset is only
+applied to code 0, not applied to other codes.
+• When using a 5-mΩ sense resistor(RSNS_RAC=1b). There is 100mA offset at code 0. Note this offset is only
+applied to code 0, not applied to other codes.
+To read the maximum input current limit, need to add 100mA/200mA offset based on above nominal input
+current limit reading approach:
+• When using a 10-mΩ sense resistor(RSNS_RAC=0b). There is 150mA offset at code 0 and this 150mA offset
+is only applied to code 0, 100mA offset should be added for all other non-zero codes.
+• When using a 5-mΩ sense resistor(RSNS_RAC=1b). There is 300mA offset at code 0 and this 300mA offset
+is only applied to code 0, 200mA offset should be added for all other non-zero codes
+Figure 9-11. IIN_DPM Register With 10-mΩ Sense Resistor (SMBus address = 22h) [reset = 4100h]
+15 14 13 12 11 10 9 8
+Reserved Input Current in
+DPM, bit 6
+Input Current in
+DPM, bit 5
+Input Current in
+DPM, bit 4
+Input Current in
+DPM, bit 3
+Input Current in
+DPM, bit 2
+Input Current in
+DPM, bit 1
+Input Current in
+DPM, bit 0
+R R R R R R R R
+7 6 5 4 3 2 1 0
+Reserved
+R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-20. IIN_DPM Register With 10-mΩ Sense Resistor (SMBus address = 22h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 Reserved R 0b Not used. 1 = invalid write.
+14 Input Current in DPM, bit 6 R 0b 0 = Adds 0 mA of input current.
+1 = Adds 3200 mA of input current.
+13 Input Current in DPM, bit 5 R 0b 0 = Adds 0 mA of input current.
+1 = Adds 1600 mA of input current.
+12 Input Current in DPM, bit 4 R 0b 0 = Adds 0 mA of input current.
+1 = Adds 800mA of input current
+11 Input Current in DPM, bit 3 R 0b 0 = Adds 0 mA of input current.
+1 = Adds 400 mA of input current.
+10 Input Current in DPM, bit 2 R 0b 0 = Adds 0 mA of input current.
+1 = Adds 200 mA of input current.
+9 Input Current in DPM, bit 1 R 0b 0 = Adds 0 mA of input current.
+1 = Adds 100 mA of input current.
+8 Input Current in DPM, bit 0 R 0b 0 = Adds 0 mA of input current.
+1 = Adds 50 mA of input current.
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 53
+Product Folder Links: BQ25720
+Table 9-21. IIN_DPM Register With 10-mΩ Sense Resistor (SMBus address = 22h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7-0 Reserved R 00000000b Not used. Value Ignored.
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+54 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.7 ADCVBUS/PSYS Register (SMBus address = 23h)
+• VBUS: Full range: 0 mV to 24480 mV, LSB: 96 mV
+• PSYS: Full range: 3.06 V, LSB: 12 mV(ADC_FULLSCALE=1b)
+• PSYS: Full range: 2.04 V, LSB: 8 mV(ADC_FULLSCALE=0b)
+Figure 9-12. ADCVBUS/PSYS Register (SMBus address = 23h)
+15 14 13 12 11 10 9 8
+R R R R R R R R
+7 6 5 4 3 2 1 0
+R R R R R R R R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-22. ADCVBUS/PSYS Register (SMBus address = 23h) Field Descriptions
+BIT FIELD TYPE RESET DESCRIPTION
+15-8 R 8-bit Digital Output of Input Voltage
+7-0 R 8-bit Digital Output of System Power
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 55
+Product Folder Links: BQ25720
+9.6.8 ADCIBAT Register (SMBus address = 24h)
+• ICHG: Full range when using a 10-mΩ sense resistor(RSNS_RSR=0b):8.128 A, LSB: 64 mA.
+• ICHG: Full range when using a 5-mΩ sense resistor(RSNS_RSR=1b):16.256A,LSB: 128mA.
+• IDCHG: Full range when using a 10-mΩ sense resistor(RSNS_RSR=0b):32.512 A, LSB: 256 mA. Note when
+discharge current is higher than 32.512A, the ADC will report 32.512A
+• IDCHG: Full range when using a 5-mΩ sense resistor(RSNS_RSR=1b):65.024A,LSB: 512mA. Note when
+discharge current is higher than 65.024A, the ADC will report 65.024A
+Figure 9-13. ADCIBAT Register (SMBus address = 24h)
+15 14 13 12 11 10 9 8
+Reserved R R R R R R R
+7 6 5 4 3 2 1 0
+Reserved R R R R R R R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-23. ADCIBAT Register (SMBus address = 24h) Field Descriptions
+BIT FIELD TYPE RESET DESCRIPTION
+15 Reserved R Not used. Value ignored.
+14-8 R 7-bit Digital Output of Battery Charge Current
+7 Reserved R Not used. Value ignored.
+6-0 R 7-bit Digital Output of Battery Discharge Current
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+56 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.9 ADCIINCMPIN Register (SMBus address = 25h)
+• IIN Full range: When using a 10-mΩ sense resistor(RSNS_RAC=0b): 12.75 A, LSB: 50 mA.
+• IIN Full range: When using a 5-mΩ sense resistor(RSNS_RAC=1b): 25.5A, LSB:100mA.
+• CMPIN Full range: 3.06 V, LSB: 12 mV (ADC_FULLSCALE=1b)
+• CMPIN Full range: 2.04 V, LSB: 8 mV (ADC_FULLSCALE=0b)
+Figure 9-14. ADCIINCMPIN Register (SMBus address = 25h)
+15 14 13 12 11 10 9 8
+R R R R R R R R
+7 6 5 4 3 2 1 0
+R R R R R R R R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-24. ADCIINCMPIN Register (SMBus address = 25h)Field Descriptions
+BIT FIELD TYPE RESET DESCRIPTION
+15-8 R 8-bit Digital Output of Input Current
+7-0 R 8-bit Digital Output of CMPIN voltage
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 57
+Product Folder Links: BQ25720
+9.6.10 ADCVSYSVBAT Register (SMBus address = 26h)
+• VSYS: Full range: 2.88 V to 19.2 V, LSB: 64 mV (1S-4S)
+• VBAT: Full range: 2.88 V to 19.2 V, LSB: 64 mV (1S-4S)
+Figure 9-15. ADCVSYSVBAT Register (SMBus address = 26h)
+15 14 13 12 11 10 9 8
+R R R R R R R R
+7 6 5 4 3 2 1 0
+R R R R R R R R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-25. ADCVSYSVBAT Register (SMBus address = 26h) Field Descriptions
+BIT FIELD TYPE RESET DESCRIPTION
+15-8 R 8-bit Digital Output of System Voltage
+7-0 R 8-bit Digital Output of Battery Voltage
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+58 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.11 ChargeOption1 Register (SMBus address = 30h) [reset = 3300h]
+Figure 9-16. ChargeOption1 Register (SMBus address = 30h) [reset = 3300h]
+15 14 13 12 11 10 9 8
+EN_IBAT EN_PROCHOT
+_LPWR
+PSYS_CONFIG RSNS_RAC RSNS_RSR PSYS_RATIO EN_FAST_5MO
+HM
+R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+CMP_REF CMP_POL CMP_DEG FORCE_CON
+V_OFF
+EN_PTM EN_SHIP_DCH
+G
+AUTO_WAKEU
+P_EN
+R/W R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-26. ChargeOption1 Register (SMBus address = 30h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 EN_IBAT R/W 0b IBAT Enable
+Enable the IBAT output buffer. In low power mode (REG0x12[15] = 1), IBAT
+buffer is always disabled regardless of this bit value.
+0b Turn off IBAT buffer to minimize Iq <default at POR>
+1b: Turn on IBAT buffer
+14 EN_PROCHOT_LPWR R/W 0b Enable PROCHOT during battery only low power mode
+With battery only, enable VSYS in PROCHOT with low power consumption. Do
+not enable this function with adapter present. Refer to Section 9.3.21.1 for more
+details.
+0b: Disable Independent Comparator low power PROCHOT <default at POR>
+1b: Enable Independent Comparator low power PROCHOT
+13-12 PSYS_CONFIG R/W 11b PSYS Enable and Definition Register
+Enable PSYS sensing circuit and output buffer (whole PSYS circuit). In low
+power mode (REG0x12[15] = 1), PSYS sensing and buffer are always disabled
+regardless of this bit value.
+00b: PSYS=PBUS+PBAT
+01b: PSYS=PBUS
+10b: Reserved
+11b: Turn off PSYS buffer to minimize Iq<default at POR>
+11 RSNS_RAC R/W 0b Input sense resistor RAC
+0b: 10 mΩ <default at POR>
+1b: 5 mΩ
+10 RSNS_RSR R/W 0b Charge sense resistor RSR
+0b: 10 mΩ <default at POR>
+1b: 5 mΩ
+9 PSYS_RATIO R/W 1b PSYS Gain
+Ratio of PSYS output current vs total system power
+0b: 0.25 μA/W
+1b: 1 μA/W <default at POR>
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 59
+Product Folder Links: BQ25720
+Table 9-26. ChargeOption1 Register (SMBus address = 30h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+8 EN_FAST_5MOHM R/W 1b Enable fast compensation to increase bandwidth under 5mΩ RAC
+(RSNS_RAC=1b) for input current up to 6.4A application (The fast
+compensation will only work when IADPT pin is configured less than 160kΩ)
+0b: Turn off bandwidth promotion under RSNS_RAC=1b
+(Note when this bit configured as 0b, IIN_HOST DAC can be extended up
+to 10A, writing IIN_HOST value higher than 10A will be neglected, the ICHG
+regulation loop will be slower to guarantee stability under 6.4A~10A input current
+range)
+1b: Turn on bandwidth promotion under RSNS_RAC=1b <default at POR>
+(Note when this bit configured as 1b, IIN_HOST DAC is clamped at 6.4A, writing
+IIN_HOST value higher than 6.4A will be neglected, the ICHG regulation loop
+will be faster within 6.4A input current range)
+Table 9-27. ChargeOption1 Register (SMBus address = 30h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 CMP_REF R/W 0b Independent Comparator internal Reference
+0b: 2.3 V <default at POR>
+1b: 1.2 V
+6 CMP_POL R/W 0b Independent Comparator output Polarity
+0b: When CMPIN is above internal threshold, CMPOUT is LOW (internal
+hysteresis) <default at POR>
+1b: When CMPIN is below internal threshold, CMPOUT is LOW (external
+hysteresis)
+5-4 CMP_DEG R/W 00b Independent comparator deglitch time, only applied to the falling edge of
+CMPOUT (HIGH → LOW).
+00b: Independent comparator is enabled with output deglitch time 5 μs <default
+at POR>
+01b: Independent comparator is enabled with output deglitch time of 2 ms
+10b: Independent comparator is enabled with output deglitch time of 20 ms
+11b: Independent comparator is enabled with output deglitch time of 5 sec
+3 FORCE_CONV_OFF R/W 0b Force Converter Off function
+When independent comparator triggers, (CMPOUT pin pulled down) charger
+latches off into HIZ mode, at the same time, CHRG_OK signal goes LOW to
+notify the system. Charge current is also set to zero internally, but charge current
+register setting keeps the same. To get out of HIZ, firstly the CMPOUT should be
+released to high and secondly FORCE_CONV_OFF bit should be cleared(=0b).
+0b: Disable this function <default at POR>
+1b: Enable this function
+2 EN_PTM R/W 0b PTM enable register bit, it will automatically reset to zero
+0b: disable PTM. <default at POR>
+1b: enable PTM.
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+60 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-27. ChargeOption1 Register (SMBus address = 30h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+1 EN_SHIP_DCHG R/W 0b Discharge SRN for Shipping Mode. Used to discharge VBAT pin capacitor
+voltage which is necessary for battery gauge device shipping mode.
+When this bit is 1, discharge SRN pin down in 140 ms with around 10mA current
+flowing through both SRN and SRP pin, totally 20mA. When 140 ms is over, this
+bit is reset to 0 automatically. If this bit is written to 0b by host before 140ms
+expires, VSYS should stop discharging immediately. After SRN is discharged
+to 0V the discharge current will shut off automatically in order to get rid of any
+negative voltage on SRN pin. Note if after 140ms SRN voltage is still not low
+enough for battery gauge device entering ship mode, the host may need to write
+this bit to 1b again to start a new 140ms discharge cycle.
+0b: Disable shipping mode <default at POR>
+1b: Enable shipping mode
+0 AUTO_WAKEUP_EN R/W 0b Auto Wakeup Enable
+When this bit is HIGH, if the battery is below VSYS_MIN , the device should
+automatically enable 128 mA charging current for 30 mins. When the battery is
+charged up above minimum system voltage, charge will terminate and the bit is
+reset to LOW. The charger will also exit auto wake up if host write a new charge
+current value to charge current register Reg0x14().
+0b: Disable <default at POR>
+1b: Enable
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 61
+Product Folder Links: BQ25720
+9.6.12 ChargeOption2 Register (SMBus address = 31h) [reset = 00B7]
+Figure 9-17. ChargeOption2 Register (SMBus address = 31h) [reset = 00B7]
+15 14 13 12 11 10 9 8
+PKPWR_TOVLD_DEG EN_PKPWR_II
+N_DPM
+EN_PKPWR_V
+SYS
+PKPWR_OVLD
+_STAT
+PKPWR_RELA
+X_STAT
+PKPWR_TMAX[1:0]
+R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+EN_EXTILIM EN_ICHG_IDC
+HG
+Q2_OCP ACX_OCP EN_ACOC ACOC_VTH EN_BATOC BATOC_VTH
+R/W R/W R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-28. ChargeOption2 Register (SMBus address = 31h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15-14 PKPWR_TOVLD_DEG R/W 00b Input Overload time in Peak Power Mode
+00b: 1 ms <default at POR>
+01b: 2 ms
+10b: 5 ms
+11b: 10 ms
+13 EN_PKPWR_IIN_DPM R/W 0b Enable Peak Power Mode triggered by input current overshoot
+If REG0x31[13:12] are 00b, peak power mode is disabled. Upon adapter
+removal, the bits are reset to 00b.
+0b: Disable peak power mode triggered by input current overshoot
+<default at POR>
+1b: Enable peak power mode triggered by input current overshoot.
+12 EN_PKPWR_VSYS R/W 0b Enable Peak Power Mode triggered by system voltage under-shoot
+If REG0x31[13:12] are 00b, peak power mode is disabled. Upon adapter
+removal, the bits are reset to 00b.
+0b: Disable peak power mode triggered by system voltage under-shoot
+<default at POR>
+1b: Enable peak power mode triggered by system voltage under-shoot.
+11 STAT_PKPWR_OVLD R/W 0b Indicator that the device is in overloading cycle. Write 0 to get out of
+overloading cycle.
+0b: Not in peak power mode. <default at POR>
+1b: In peak power mode.
+10 STAT_PKPWR_RELAX R/W 0b Indicator that the device is in relaxation cycle. Write 0 to get out of
+relaxation cycle.
+0b: Not in relaxation cycle. <default at POR>
+1b: In relaxation mode.
+9-8 PKPWR_TMAX[1:0] R/W 00b Peak power mode overload and relax cycle time.
+00b: 20 ms <default at POR>
+01b: 40 ms
+10b: 80 ms
+11b: 1 sec
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+62 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-29. ChargeOption2 Register (SMBus address = 31h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 EN_EXTILIM R/W 1b Enable ILIM_HIZ pin to set input current limit
+0b: Input current limit is set by IIN_DPM register..
+1b: Input current limit is set by the lower value of ILIM_HIZ pin and
+IIN_DPM register.. <default at POR>
+6 EN_ICHG_IDCHG R/W 0b 0b: IBAT pin as discharge current. <default at POR>
+1b: IBAT pin as charge current.
+5 Q2_OCP R/W 1b Q2 OCP threshold by sensing Q2 VDS
+0b: 210 mV
+1b: 150 mV <default at POR>
+4 ACX_OCP R/W 1b Fixed Input current OCP threshold by sensing ACP-ACN, converter
+is disabled immediately when triggered non latch protection resume
+switching automatically after ACX comparator release.
+0b: 280 mV(RSNS_RAC=0b)/200mV(RSNS_RAC=1b)
+1b: 150 mV(RSNS_RAC=0b)/100mV(RSNS_RAC=1b) <default at
+POR>
+3 EN_ACOC R/W 0b ACOC Enable
+Configurable Input overcurrent (ACOC) protection by sensing the
+voltage across ACP and ACN. Upon ACOC (after 250-μs blank-out
+time), converter is disabled. Non latch fault, after 250ms falling edge
+de-glitch time converter starts switching automatically.
+0b: Disable ACOC <default at POR>
+1b: ACOC threshold 133% or 200% ILIM2
+2 ACOC_VTH R/W 1b ACOC Limit
+Set MOSFET OCP threshold as percentage of IIN_DPM with current
+sensed from RAC.
+0b: 133% of ILIM2
+1b: 200% of ILIM2 <default at POR>
+1 EN_BATOC R/W 1b BATOC
+Battery discharge overcurrent (BATOC) protection by sensing the
+voltage across SRN and SRP. Upon BATOC, converter is disabled.
+0b: Disable BATOC
+1b: Enable BATOC threshold 133% or 200% PROCHOT IDCHG_TH2
+<default at POR>
+0 BATOC_VTH R/W 1b Set battery discharge overcurrent threshold as percentage of
+PROCHOT battery discharge current limit. Note when SRN and SRP
+common voltage is low for 1S application, the BATOC threshold could
+be derating.
+0b: 133% of PROCHOT IDCHG_TH2
+1b: 200% of PROCHOT IDCHG _TH2<default at POR>
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 63
+Product Folder Links: BQ25720
+9.6.13 ChargeOption3 Register (SMBus address = 32h) [reset = 0434h]
+Figure 9-18. ChargeOption3 Register (SMBus address = 32h) [reset = 0434h]
+15 14 13 12 11 10 9 8
+EN_HIZ RESET_REG RESET_VINDP
+M
+EN_OTG EN_ICO_MOD
+E
+EN_PORT_CT
+RL
+EN_VSYS_MIN
+_SOFT_SR
+EN_OTG_BIGC
+AP
+R/W R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+BATFET_ENZ EN_VBUS_VAP OTG_VAP_MO
+DE
+IL_AVG CMP_EN BATFETOFF_H
+IZ
+PSYS_OTG_ID
+CHG
+R/W R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-30. ChargeOption3 Register (SMBus address = 32h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 EN_HIZ R/W 0b Device HIZ Mode Enable
+When the charger is in HIZ mode, the device draws minimal quiescent
+current. With VBUS above UVLO. REGN LDO stays on, and system
+powers from battery.
+0b: Device not in HIZ mode <default at POR>
+1b: Device in HIZ mode
+14 RESET_REG R/W 0b Reset Registers
+All the registers are reset to POR default setting except the VINDPM
+register.
+0b: Idle <default at POR>
+1b: Reset all the registers to default values. After reset, this bit goes back
+to 0.
+13 RESET_VINDPM R/W 0b Reset VINDPM Threshold
+0b: Idle
+1b: Converter is disabled to measure VINDPM threshold. After VINDPM
+measurement is done, this bit goes back to 0 and converter starts.
+(When battery voltage is lower than VSYS_MIN this function is not
+recommended due to potential risk to crash system during VINDPM
+measurement .)
+12 EN_OTG R/W 0b OTG Mode Enable
+Enable device in OTG mode when OTG/VAP/FRS pin is HIGH.
+0b: Disable OTG <default at POR>
+1b: Enable OTG mode to supply VBUS from battery.
+11 EN_ICO_MODE R/W 0b Enable ICO Algorithm
+0b: Disable ICO algorithm. <default at POR>
+1b: Enable ICO algorithm.
+10 EN_PORT_CTRL R/W 1b Enable BATFET control
+0b: Disable BATFET control pin by HIZ BATDRV pin
+1b: Enable BATFET control pin by activate BATDRV pin
+9 EN_VSYS_MIN_SOFT_SR R/W 0b Enable VSYS_MIN soft slew rate transition
+0b: Disable VSYS_MIN soft slew rate transition <default at POR>
+1b:Enable VSYS_MIN soft slew rate transition (1LSB/8us=12.5mV/us)
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+64 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-30. ChargeOption3 Register (SMBus address = 32h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+8 EN_OTG_BIGCAP R/W 0b Enable OTG compensation for VBUS effective capacitance larger than
+33uF
+0b: Disable OTG large VBUS capacitance compensation(Recommended
+for VBUS effective capacitance smaller than 33uF) <default at POR>
+1b: Enable OTG large VBUS capacitance compensation(Recommended
+for VBUS effective capacitance larger than 33uF)
+Table 9-31. ChargeOption3 Register (SMBus address = 32h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 BATFET_ENZ R/W 0b Turn off BATFET under battery only mode. If charger is not in battery only
+mode this bit is not allowed to be written to 1. Under battery only OTG
+mode, this bit is forced to be 0b.
+0b: Not force turn off BATFET <default at POR>
+1b: Force turn off BATFET
+6 EN_VBUS_VAP R/W 0b Enable the VBUS VAP for VAP operation mode 2&3
+0b: Disabled <default at POR>
+1b: Enabled
+5 OTG_VAP_MODE R/W 1b The selection of the external OTG/VAP/FRS pin control. Don't
+recommend to change pin control after OTG/VAP/FRS pin is pulled high.
+0b: the external OTG/VAP/FRS pin controls the EN/DIS VAP mode
+1b: the external OTG/VAP/FRS pin controls the EN/DIS OTG mode
+<default at POR>
+4-3 IL_AVG R/W 10b Converter inductor average current clamp. It is recommended to choose
+the smallest option which is higher than maximum possible converter
+average inductor current.
+00b: 6A
+01b: 10A
+10b: 15A <default at POR>
+11b: Disabled
+2 CMP_EN R/W 1b Enable Independent Comparator with effective low.
+0b: Disabled
+1b: Enabled <default at POR>
+1 BATFETOFF_HIZ R/W 0b Control BATFET on/off during charger HIZ mode.
+0b: BATFET on during charger HIZ mode <default at POR>
+1b: BATFET off during charger HIZ mode
+0 PSYS_OTG_IDCHG R/W 0b PSYS function during OTG mode.
+0b: PSYS as battery discharge power minus OTG output power <default
+at POR>
+1b: PSYS as battery discharge power only
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 65
+Product Folder Links: BQ25720
+9.6.14 ProchotOption0 Register (SMBus address = 33h) [reset = 4A81h(2S~) 4A09(1S)]
+To set VSYS_TH1 threshold to trigger discharging VBUS in VAP mode, write a 6-bit Vmin Active Protection
+register command (REG0x33<7:2>()) using the data format listed in Figure 9-19, Table 9-32, and Table
+9-33. The charger Measure on VSYS with fixed 5-μs deglitch time. Trigger when SYS pin voltage is below
+the thresholds. The threshold range from 3.2V(000000b) to 9.5V(111111b) for 2s~ and 3.2V(000000b) to
+3.9V(000111b)for 1S, with 100-mV step resolution. There is a fixed DC offset which is 3.2V. Under 1S application
+writing beyond 3.9V will be ignored. For example 000111b and xxx111b result in same VSYS_TH1 setting 3.9V.
+Upon POR, the VSYS_TH1 threshold to trigger VBUS discharge in VAP mode is 3.4V(000010b) for 1S and
+6.400V(100000b) for 2s~
+Figure 9-19. ProchotOption0 Register (SMBus address = 33h) [reset = 4A81h(2S~) 4A09(1S)]
+15 14 13 12 11 10 9 8
+ILIM2_VTH ICRIT_DEG PROCHOT_VI
+NDPM_80_90
+R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+VSYS_TH1 INOM_DEG LOWER_PRO
+CHOT_VINDP
+M
+R/W R/W R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-32. ProchotOption0 Register (SMBus address = 33h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15-11 ILIM2_VTH R/W 01001b ILIM2 Threshold
+5 bits, percentage of IIN_DPM in 0x22H. Measure current between ACP and
+ACN.
+Trigger when the current is above this threshold:
+00001b - 11001b: 110% - 230%, step 5%
+11010b - 11110b: 250% - 450%, step 50%
+11111b: Out of Range (Ignored)
+Default 150%, or 01001
+10-9 ICRIT_DEG R/W 01b ICRIT Deglitch time
+ICRIT threshold is set to be 110% ofILIM2.
+Typical ICRIT deglitch time to trigger PROCHOT.
+00b: 15 μs
+01b: 100 μs <default at POR>
+10b: 400 μs
+11b: 800 μs
+8 PROCHOT_VINDPM_
+80_90
+R/W 0b Lower threshold of the PROCHOT_VINDPM comparator
+When REG0x33[0]=1, the threshold of the PROCHOT_VINDPM comparator is
+determined by this bit setting.
+0b: 83% of VinDPM threshold <default at POR>.
+1b: 91% of VinDPM threshold
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+66 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-33. ProchotOption0 Register (SMBus address = 33h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7-2 VSYS_TH1 R/W 100000b(
+2S~)
+000010b(
+1S)
+VSYS Threshold to trigger discharging VBUS in VAP mode.
+Measure on VSYS with fixed 5-μs deglitch time. Trigger when SYS pin voltage is
+below the thresholds. There is a fixed DC offset which is 3.2V.
+2S - battery(Default: 6.4V)
+000000b- 111111b: 3.2V - 9.5V with 100mV step size.
+1S battery(Default: 3.4V)
+XXX000b - XXX111b: 3.2 V - 3.9V with 100mV step size.
+1 INOM_DEG R/W 0b INOM Deglitch Time
+INOM is always 10% above IIN_DPM register setting. Measure current between
+ACP and ACN.
+Trigger when the current is above this threshold.
+0b: 1 ms(max) <default at POR>
+1b: 60 ms(max)
+0 LOWER_PROCHOT_
+VINDPM
+R/W 1b Enable the lower threshold of the PROCHOT_VINDPM comparator
+0b: the threshold of the PROCHOT_VINDPM comparator follows the same
+VINDPM REG0x3D() setting.
+1b: the threshold of the PROCHOT_VINDPM comparator is lower and determined
+by PROCHOT_VINDPM_80_90 bit setting. <default at POR>
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 67
+Product Folder Links: BQ25720
+9.6.15 ProchotOption1 Register (SMBus address = 34h) [reset = 41A0h]
+Figure 9-20. ProchotOption1 Register (SMBus address = 34h) [reset = 41A0h]
+15 14 13 12 11 10 9 8
+IDCHG_TH1 IDCHG_DEG1
+R/W R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+PP_VINDPM PP_COMP PP_ICRIT PP_INOM PP_IDCHG1 PP_VSYS PP_BATPRES PP_ACOK
+R/W R/W R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+When the REG0x34h[7:0] are set to be disabled, the PROCHOT event associated with that bit will not be
+reported in the PROCHOT status register REG0x21h[7:0] any more, and the PROCHOT pin will not be pulled
+low any more if the event happens.
+Table 9-34. ProchotOption1 Register (SMBus address = 34h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15-10 IDCHG_TH1 R/W 010000b IDCHG level 1 Threshold
+6 bit, range, range 0 A to 32256 mA, step 512 mA.
+Measure current between SRN and SRP.
+Trigger when the discharge current is above the threshold.
+If the value is programmed to 000000b PROCHOT is always triggered.
+Default: 8192 mA or 010000b
+9-8 IDCHG_DEG1 R/W 00b IDCHG level 1 Deglitch Time
+00b: 78ms
+01b: 1.25s<default at POR>
+10b: 5s
+11b: 20s
+Table 9-35. ProchotOption1 Register (SMBus address = 34h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 PP_VINDPM R/W 1b VINDPM PROCHOT Profile
+When all the REG0x34[7:0] bits are 0, PROCHOT function is disabled.
+0b: disable
+1b: enable<default at POR>
+6 PP_COMP R/W 0b Independent comparator PROCHOT Profile
+When not in low power mode(Battery only), use this bit to control independent
+comparator PROCHOT profiles.
+When in low power mode(Battery only), this bit will lose controllability
+to independent comparator PROCHOT profiles. Need to use
+EN_PROCHOT_LPWR to enable independent comparator and its PROCHOT
+profile.
+0b: disable <default at POR>
+1b: enable
+5 PP_ICRIT R/W 1b ICRIT PROCHOT Profile
+0b: disable
+1b: enable <default at POR>
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+68 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-35. ProchotOption1 Register (SMBus address = 34h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+4 PP_INOM R/W 0b INOM PROCHOT Profile
+0b: disable <default at POR>
+1b: enable
+3 PP_IDCHG1 R/W 0b IDCHG1 PROCHOT Profile
+0b: disable <default at POR>
+1b: enable
+2 PP_VSYS R/W 0b VSYS PROCHOT Profile
+0b: disable <default at POR>
+1b: enable
+1 PP_BATPRES R/W 0b Battery removal PROCHOT Profile
+0b: disable <default at POR>
+1b: enable (one-shot falling edge triggered)
+If BATPRES is enabled in PROCHOT after the battery is removed, it will
+immediately send out one-shot PROCHOT pulse.
+0 PP_ACOK R/W 0b Adapter removal PROCHOT Profile
+0b: disable <default at POR>
+1b: enable
+ChargeOption0[15] = 0 to assert PROCHOT pulse after adapter removal.
+If PP_ACOK is enabled in PROCHOT after the adapter is removed, it will be
+pulled low.
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 69
+Product Folder Links: BQ25720
+9.6.16 ADCOption Register (SMBus address = 35h) [reset = 2000h]
+Figure 9-21. ADCOption Register (SMBus address = 35h) [reset = 2000h]
+15 14 13 12 11 10 9 8
+ADC_CONV ADC_START ADC_FULLSCA
+LE
+PTM_EXIT_LIG
+HT_LOAD
+Reserved
+R/W R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+EN_ADC_CMPI
+N
+EN_ADC_VBU
+S
+EN_ADC_PSY
+S
+EN_ADC_IIN EN_ADC_IDCH
+G
+EN_ADC_ICHG EN_ADC_VSY
+S
+EN_ADC_VBAT
+R/W R/W R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+The ADC registers are read in the following order: VBAT, VSYS, ICHG, IDCHG, IIN, PSYS, VBUS, CMPIN. ADC
+is disabled in low power mode. Before enabling ADC, low power mode should be disabled first.
+Table 9-36. ADCOption Register (SMBus address = 35h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 ADC_CONV R/W 0b Typical each ADC channel conversion time is 25 ms maximum. Total ADC
+conversion time is the product of 25ms and enabled channel counts.
+0b: One-shot update. Do one set of conversion updates to registers
+REG0x23(), REG0x24(), REG0x25(), and REG0x26() after ADC_START =
+1.
+1b: Continuous update. Do a set of conversion updates to registers
+REG0x23(), REG0x24(), REG0x25(), and REG0x26() every 1 sec.
+14 ADC_START R/W 0b 0b: No ADC conversion
+1b: Start ADC conversion. After the one-shot update is complete, this bit
+automatically resets to zero
+13 ADC_FULLSCALE R/W 1b ADC input voltage range adjustment for PSYS and CMPIN ADC Channels.
+2.04V full scale holds 8mV/LSB resolution and 3.06V full scale holds
+12mV/LSB resolution
+0b: 2.04 V
+1b: 3.06 V <default at POR>(Not accurate for REGN<6V application (VBUS
+& VSYS< 6V)
+)
+12 PTM_EXIT_LIGHT_LOAD R/W 0b PTM Mode Auto Exit Enable
+When this bit is HIGH, under PTM mode operation when input current is
+lower than 150mA(10mΩ input sensing resistor)/300mA(5mΩ input sensing
+resistor) for more than 500us, charger should temporary exit PTM mode
+and return to buck-boost mode operation. When input current increase back
+to be higher than 200mA(10mΩ input sensing resistor)/400mA(5mΩ input
+sensing resistor) for more than 500us, the charger should automatically
+return to PTM operation.
+0b: Disable <default at POR>
+1b: Enable
+11-8 Reserved R/W 0000b Reserved
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+70 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-37. ADCOption Register (SMBus address = 35h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 EN_ADC_CMPIN R/W 0b 0b: Disable <default at POR>
+1b: Enable
+6 EN_ADC_VBUS R/W 0b 0b: Disable <default at POR>
+1b: Enable
+5 EN_ADC_PSYS R/W 0b 0b: Disable <default at POR>
+1b: Enable
+4 EN_ADC_IIN R/W 0b 0b: Disable <default at POR>
+1b: Enable
+3 EN_ADC_IDCHG R/W 0b 0b: Disable <default at POR>
+1b: Enable
+2 EN_ADC_ICHG R/W 0b 0b: Disable <default at POR>
+1b: Enable
+1 EN_ADC_VSYS R/W 0b 0b: Disable <default at POR>
+1b: Enable
+0 EN_ADC_VBAT R/W 0b 0b: Disable <default at POR>
+1b: Enable
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 71
+Product Folder Links: BQ25720
+9.6.17 ChargeOption4 Register (SMBus address = 36h) [reset = 0048h]
+Figure 9-22. ChargeOption4 Register (SMBus address = 36h) [reset = 0048h]
+15 14 13 12 11 10 9 8
+VSYS_UVP EN_Dither VSYS_UVP_N
+O_HICCUP
+PP_VBUS_VAP STAT_VBUS_V
+AP
+R/W R/W R/W R/W R
+7 6 5 4 3 2 1 0
+IDCHG_DEG2 IDCHG_TH2 PP_IDCHG2 STAT_IDCHG2 STAT_PTM
+R/W R/W R/W R R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-38. ChargeOption4 Register (SMBus address = 36h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15-13 VSYS_UVP R/W 000b VSYS Under Voltage Lock Out After UVP is triggered the charger enters
+hiccup mode, and then the charger is latched off if the restart fails 7
+times in 90s The hiccup mode during the UVP can be disabled by setting
+0x37[10]=1.
+VSYS_UVP 1s~ 4s VSYS_UVP 1s~ 4s
+000b 2.4V(Default) 100b 5.6V
+001b 3.2V 101b 6.4V
+010b 4.0V 110b 7.2V
+011b 4.8V 111b 8.0V
+12-11 EN_DITHER R/W 00b Frequency Dither configuration
+00b: Disable Dithering<default at POR>
+01b: Dither 1X (±2% Fs dithering range)
+10b: Dither 2X (±4% Fs dithering range)
+11b: Dither 3X (±6% Fs dithering range)
+10 VSYS_UVP_NO_HICCUP R/W 0b Disable VSYS_UVP Hiccup mode operation:
+0b: Enable VSYS_UVP Hiccup mode <default at POR>
+1b: Disable VSYS_UVP Hiccup mode
+9 PP_VBUS_VAP R/W 0b VBUS_VAP PROCHOT Profile
+0b: disable <default at POR>
+0b: enable
+8 STAT_VBUS_VAP R 0b PROCHOT profile VBUS_VAP status bit. The status is latched until a read
+from host.
+0b: Not triggered <default at POR>
+1b: Triggered
+Table 9-39. ChargeOption4 Register (SMBus address = 36h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7-6 IDCHG_DEG2 R/W 01b Battery discharge current limit 2 deglitch time(minimum value)
+00b: 100us
+01b: 1.6ms<default at POR>
+10b: 6ms
+11b: 12ms
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+72 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-39. ChargeOption4 Register (SMBus address = 36h) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+5-3 IDCHG_TH2 R/W 001b Battery discharge current limit2 based on percentage of IDCHG_TH1.
+Note IDCHG_TH2 setting higher than 32256mA should lose accuracy
+derating between target value and 32256mA. (Recommend not to set
+higher than 20A for 1S OTG boost operation)
+000b: 125% IDCHG_TH1
+001b: 150% IDCHG_TH1<default at POR>
+010b: 175% IDCHG_TH1
+011b: 200% IDCHG_TH1
+100b: 250% IDCHG_TH1
+101b: 300% IDCHG_TH1
+110b: 350% IDCHG_TH1
+111b: 400% IDCHG_TH1
+2 PP_IDCHG2 R/W 0b IDCHG2 PROCHOT Profile
+0b: disable <default at POR>
+1b: enable
+1 STAT_IDCHG2 R 0b The status is latched until a read from host.
+0b: Not triggered<default at POR>
+1b: Triggered
+0 STAT_PTM R 0b PTM operation status bit monitor
+0b: Not in PTM Operation<default at POR>
+1b: In PTM Operation
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 73
+Product Folder Links: BQ25720
+9.6.18 Vmin Active Protection Register (SMBus address = 37h) [reset = 006Ch(2s~4s)/0004h(1s)]
+To set the VAP VBUS PROCHOT trigger threshold, write a 7-bit Vmin Active Protection register command
+(REG0x[15:9])) using the data format listed in Figure 9-23 and Table 9-40. The charger provides VAP
+mode VBUS PROCHOT trigger threshold range from 3.2V(0000000b) to 15.9 V(1111111b), with 100-mV
+step resolution. There is a fixed offset of 3.2V. Upon POR, the VBUS PROCHOT trigger threshold is 3.2
+V(0000000b).
+To set VSYS_TH2 Threshold to assert STAT_VSYS, write a 6-bit Vmin Active Protection register command
+(REG0x[7:2])) using the data format listed in Figure 9-23 and Table 9-41. The charger Measure on VSYS
+with fixed 5-μs deglitch time. Trigger when SYS pin voltage is below the thresholds. The threshold range
+from 3.2V(000000b) to 9.5V(111111b) for 2s~ and 3.2V(000000b) to 3.9V(000111b)for 1S, with 100-mV step
+resolution. There is a fixed DC offset which is 3.2V. Under 1S application writing beyond 3.9V will be ignored. For
+example xxx111b and 000111b result in same VSYS_TH2 setting 3.9V. Upon POR, the VSYS PROCHOT trigger
+threshold is 3.2V(000000b) for 1S and 5.9V(011011b) for 2s~ .
+Figure 9-23. Vmin Active Protection Register (SMBus address = 37h) [reset = 0070h/0004h]
+15 14 13 12 11 10 9 8
+VBUS_VAP_TH
+Bit6
+VBUS_VAP_TH
+Bit5
+VBUS_VAP_TH
+Bit4
+VBUS_VAP_TH
+Bit3
+VBUS_VAP_T
+H Bit2
+VBUS_VAP_TH
+Bit1
+VBUS_VAP_TH
+Bit0
+Reserved
+R/W R/W
+7 6 5 4 3 2 1 0
+VSYS_TH2 Bit6 VSYS_TH2 Bit5 VSYS_TH2 Bit4 VSYS_TH2 Bit3 VSYS_TH2
+Bit2
+VSYS_TH2 Bit1 EN_TH2_FOLL
+OW_TH1
+EN_FRS
+R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-40. Vmin Active Protection Register (SMBus address = 37h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 VBUS_VAP_TH, Bit6 R/W 0b 0 = Adds 0 mV of VAP Mode VBUS PROCHOT trigger voltage threshold
+1 = Adds 6400 mV of VAP Mode VBUS PROCHOT trigger voltage
+threshold
+14 VBUS_VAP_TH, Bit5 R/W 0b 0 = Adds 0 mV of VAP Mode VBUS PROCHOT trigger voltage threshold
+1 = Adds 3200 mV of VAP Mode VBUS PROCHOT trigger voltage
+threshold
+13 VBUS_VAP_TH, Bit4 R/W 0b 0 = Adds 0 mV of VAP Mode VBUS PROCHOT trigger voltage threshold
+1 = Adds 1600 mV of VAP Mode VBUS PROCHOT trigger voltage
+threshold
+12 VBUS_VAP_TH, Bit3 R/W 0b 0 = Adds 0 mV of VAP Mode VBUS PROCHOT trigger voltage threshold
+1 = Adds 800 mV of VAP mode VBUS PROCHOT trigger voltage threshold
+11 VBUS_VAP_TH, Bit2 R/W 0b 0 = Adds 0 mV of VAP mode VBUS PROCHOT trigger voltage threshold
+1 = Adds 400 mV of VAP mode VBUS PROCHOT trigger voltage threshold
+10 VBUS_VAP_TH, Bit1 R/W 0b 0 = Adds 0 mV of VAP mode VBUS PROCHOT trigger voltage threshold
+1 = Adds 200 mV of VAP mode VBUS PROCHOT trigger voltage threshold
+9 VBUS_VAP_TH, Bit0 R/W 0b 0 = Adds 0 mV of VAP mode VBUS PROCHOT trigger voltage threshold
+1 = Adds 100 mV of VAP mode VBUS PROCHOT trigger voltage threshold
+8 Reserve R/W 0b Reserve
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+74 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-41. Vmin Active Protection Register (SMBus address = 37h) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 VSYS_TH2, Bit5 R/W 0b 0 = Adds 0 mV of VAP mode VSYS PROCHOT trigger voltage threshold
+1 = Adds 3200 mV of VAP mode VSYS PROCHOT trigger voltage
+threshold
+6 VSYS_TH2, Bit4 R/W 1b(2S~)
+0b(1S)
+0 = Adds 0 mV of VAP mode VSYS PROCHOT trigger voltage threshold
+1 = Adds 1600 mV of VAP mode VSYS PROCHOT trigger voltage
+threshold
+5 VSYS_TH2, Bit3 R/W 1b(2S~)
+0b(1S)
+0 = Adds 0 mV of VAP mode VSYS PROCHOT trigger voltage threshold
+1 = Adds 800 mV of VAP mode VSYS PROCHOT trigger voltage
+threshold
+4 VSYS_TH2, Bit2 R/W 0b 0 = Adds 0 mV of VAP mode VSYS PROCHOT trigger voltage threshold
+1 = Adds 400 mV of VAP mode VSYS PROCHOT trigger voltage
+threshold
+3 VSYS_TH2, Bit1 R/W 0b(1S)
+1b(2S~)
+0 = Adds 0 mV of VAP mode VSYS PROCHOT trigger voltage threshold
+1 = Adds 200 mV of VAP mode VSYS PROCHOT trigger voltage
+threshold
+2 VSYS_TH2, Bit0 R/W 1b 0 = Adds 0 mV of VAP mode VSYS PROCHOT trigger voltage threshold
+1 = Adds 100 mV of VAP mode VSYS PROCHOT trigger voltage
+threshold
+1 EN_VSYSTH2_FOLLOW_VS
+YSTH1
+R/W 0b Enable internal VSYS_TH2 follow VSYS_TH1 setting neglecting register
+REG37[7:2] setting
+0b: disable <default at POR>
+1b: enable
+0 EN_FRS R/W 0b Fast Role Swap feature enable (note not recommend to change EN_FRS
+during OTG operation, the FRS bit from 0 to 1 change will disable power
+stage for about 50us (Fs=800kHz). HIZ mode holds higher priority, If
+EN_HIZ=1b, this EN_FRS bit should be forced to 0b.
+0b: disable <default at POR>
+1b: enable
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 75
+Product Folder Links: BQ25720
+9.6.19 OTGVoltage Register (SMBus address = 3Bh) [reset = 09C4h]
+To set the OTG output voltage limit, write to REG0x3B() using the data format listed in Figure 9-24, Table 9-42,
+and Table 9-43.
+The DAC is clamped in digital core at minimal 3V and maximum 24.0V during normal OTG operation. Any
+register writing lower than the minimal or higher than the maximum will be ignored.
+Figure 9-24. OTGVoltage Register (SMBus address = 3Bh) [reset = 09C4h]
+15 14 13 12 11 10 9 8
+Reserved OTG Voltage,
+bit 11
+OTG Voltage,
+bit 10
+OTG Voltage,
+bit 9
+OTG Voltage,
+bit 8
+OTG Voltage,
+bit 7
+OTG Voltage,
+bit 6
+R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+OTG Voltage,
+bit 5
+OTG Voltage,
+bit 4
+OTG Voltage,
+bit 3
+OTG Voltage,
+bit 2
+OTG Voltage,
+bit 1
+OTG Voltage,
+bit 0
+Reserved
+R/W R/W R/W R/W R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-42. OTGVoltage Register (SMBus address = 3Bh) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15-14 Reserved R/W 00b Not used. 1 = invalid write.
+13 OTG Voltage, bit 11 R/W 0b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 16384 mV of OTG voltage.
+12 OTG Voltage, bit 10 R/W 0b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 8192 mV of OTG voltage.
+11 OTG Voltage, bit 9 R/W 1b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 4096 mV of OTG voltage.
+10 OTG Voltage, bit 8 R/W 0b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 2048 mV of OTG voltage.
+9 OTG Voltage, bit 7 R/W 0b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 1024 mV of OTG voltage.
+8 OTG Voltage, bit 6 R/W 1b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 512 mV of OTG voltage.
+Table 9-43. OTGVoltage Register (SMBus address = 3Bh) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 OTG Voltage, bit 5 R/W 1b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 256 mV of OTG voltage.
+6 OTG Voltage, bit 4 R/W 1b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 128 mV of OTG voltage.
+5 OTG Voltage, bit 3 R/W 0b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 64 mV of OTG voltage.
+4 OTG Voltage, bit 2 R/W 0b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 32 mV of OTG voltage.
+3 OTG Voltage, bit 1 R/W 0b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 16 mV of OTG voltage.
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+76 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+Table 9-43. OTGVoltage Register (SMBus address = 3Bh) Field Descriptions (continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+2 OTG Voltage, bit 0 R/W 1b 0 = Adds 0 mV of OTG voltage.
+1 = Adds 8 mV of OTG voltage.
+1-0 Reserved R/W 00b Not used. Value Ignored.
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 77
+Product Folder Links: BQ25720
+9.6.20 OTGCurrent Register (SMBus address = 3Ch) [reset = 3C00h]
+To set the OTG output current limit, write to REG0x3C() using the data format listed in Figure 9-25, Table 9-44,
+and Table 9-45.
+Figure 9-25. OTGCurrent Register (SMBus address = 3Ch) [reset = 3C00h]
+15 14 13 12 11 10 9 8
+Reserved OTG Current
+set by host, bit
+6
+OTG Current
+set by host, bit
+5
+OTG Current
+set by host, bit
+4
+OTG Current
+set by host, bit
+3
+OTG Current
+set by host, bit
+2
+OTG Current
+set by host, bit
+1
+OTG Current
+set by host, bit
+0
+R/W R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+Reserved
+R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-44. OTGCurrent Register (SMBus address = 3Ch) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 Reserved R/W 0b Not used. 1 = invalid write.
+14 OTG Current set by host, bit 6 R/W 0b 0 = Adds 0 mA of OTG current.
+1 = Adds 3200 mA of OTG current.
+13 OTG Current set by host, bit 5 R/W 1b 0 = Adds 0 mA of OTG current.
+1 = Adds 1600mA of OTG current.
+12 OTG Current set by host, bit 4 R/W 1b 0 = Adds 0 mA of OTG current.
+1 = Adds 800 mA of OTG current.
+11 OTG Current set by host, bit 3 R/W 1b 0 = Adds 0 mA of OTG current.
+1 = Adds 400 mA of OTG current.
+10 OTG Current set by host, bit 2 R/W 1b 0 = Adds 0 mA of OTG current.
+1 = Adds 200 mA of OTG current.
+9 OTG Current set by host, bit 1 R/W 0b 0 = Adds 0 mA of OTG current.
+1 = Adds 100 mA of OTG current.
+8 OTG Current set by host, bit 0 R/W 0b 0 = Adds 0 mA of OTG current.
+1 = Adds 50 mA of OTG current.
+Table 9-45. OTGCurrent Register (SMBus address = 3Ch) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7-0 Reserved R/W 00000000b Not used. Value Ignored.
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+78 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.21 InputVoltage (VINDPM) Register (SMBus address = 3Dh) [reset = VBUS-1.28V]
+To set the input voltage limit, write a 16-bit InputVoltage register command (REG0x()) using the data format listed
+in Figure 9-26, Table 9-46, and Table 9-47.
+If the input voltage drops more than the InputVoltage register allows, the device enters VINDPM and reduces the
+charge current. The default setting is 1.28 V below the no-load VBUS voltage. There is fixed offset voltage 3.2V
+for all codes.
+Figure 9-26. InputVoltage Register (SMBus address = 3Dh) [reset = VBUS-1.28V]
+15 14 13 12 11 10 9 8
+Reserved Input Voltage,
+bit 7
+Input Voltage,
+bit 6
+Input Voltage,
+bit 5
+Input Voltage,
+bit 4
+Input Voltage,
+bit 3
+Input Voltage,
+bit 2
+R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+Input Voltage,
+bit 1
+Input Voltage,
+bit 0
+Reserved
+R/W R/W R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-46. InputVoltage Register (SMBus address = 3Dh) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15-14 Reserved R/W 00b Not used. 1 = invalid write.
+13 Input Voltage, bit 7 R/W 0b 0 = Adds 0 mV of input voltage.
+1 = Adds 8192 mV of input voltage.
+12 Input Voltage, bit 6 R/W 0b 0 = Adds 0 mV of input voltage.
+1 = Adds 4096mV of input voltage.
+11 Input Voltage, bit 5 R/W 0b 0 = Adds 0 mV of input voltage.
+1 = Adds 2048 mV of input voltage.
+10 Input Voltage, bit 4 R/W 0b 0 = Adds 0 mV of input voltage.
+1 = Adds 1024 mV of input voltage.
+9 Input Voltage, bit 3 R/W 0b 0 = Adds 0 mV of input voltage.
+1 = Adds 512 mV of input voltage.
+8 Input Voltage, bit 2 R/W 0b 0 = Adds 0 mV of input voltage.
+1 = Adds 256 mV of input voltage.
+Table 9-47. InputVoltage Register (SMBus address = 3Dh) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7 Input Voltage, bit 1 R/W 0b 0 = Adds 0 mV of input voltage.
+1 = Adds 128 mV of input voltage.
+6 Input Voltage, bit 0 R/W 0b 0 = Adds 0 mV of input voltage.
+1 = Adds 64 mV of input voltage
+5-0 Reserved R/W 000000b Not used. Value Ignored.
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 79
+Product Folder Links: BQ25720
+9.6.22 VSYS_MIN Register (SMBus address = 3Eh) [reset value based on CELL_BATPRESZ pin setting]
+To set the minimum system voltage, write a 16-bit VSYS_MIN register command (REG0x3E()) using the data
+format listed in Figure 9-27, Table 9-48, and Table 9-49. The charger provides minimum system voltage range
+from 1.0V to 19.2 V, with 100-mV step resolution. Any write below 1.0V or above 19.2 V is ignored. Upon POR,
+the VSYS_MIN register is 3.6 V for 1 S, 6.6V for 2 S and 9.2 V for 3 S, and 12.3 V for 4 S. Writing VSYS_MIN to
+0 will set it to the default value based on CELL_BATPRESZ pin.
+Figure 9-27. VSYS_MIN Register (SMBus address = 3Eh) [reset value based on CELL_BATPRESZ pin
+setting]
+15 14 13 12 11 10 9 8
+VSYS_MIN, bit
+7
+VSYS_MIN, bit
+6
+VSYS_MIN, bit
+5
+VSYS_MIN, bit
+4
+VSYS_MIN, bit
+3
+VSYS_MIN, bit
+2
+VSYS_MIN, bit
+1
+VSYS_MIN, bit
+0
+R/W R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+Reserved
+R/W
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-48. VSYS_MIN Register (SMBus address = 3Eh) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 Min System Voltage, bit 7 R/W 0b 0 = Adds 0 mV of system voltage.
+1 = Adds 12800 mV of system voltage.
+14 Min System Voltage, bit 6 R/W 0b 0 = Adds 0 mV of system voltage.
+1 = Adds 6400mV of system voltage.
+13 Min System Voltage, bit 5 R/W 0b 0 = Adds 0 mV of system voltage.
+1 = Adds 3200 mV of system voltage.
+12 Min System Voltage, bit 4 R/W 0b 0 = Adds 0 mV of system voltage.
+1 = Adds 1600 mV of system voltage.
+11 Min System Voltage, bit 3 R/W 0b 0 = Adds 0 mV of system voltage.
+1 = Adds 800 mV of system voltage.
+10 Min System Voltage, bit 2 R/W 0b 0 = Adds 0 mV of system voltage.
+1 = Adds 400 mV of system voltage.
+9 Min System Voltage, bit 1 R/W 0b 0 = Adds 0 mV of system voltage.
+1 = Adds 200 mV of system voltage.
+8 Min System Voltage, bit 0 R/W 0b 0 = Adds 0 mV of system voltage.
+1 = Adds 100 mV of system voltage.
+Table 9-49. VSYS_MIN Register (SMBus address = 3Eh) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7-0 Reserved R/W 00000000
+b
+Not used. Value Ignored.
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+80 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.23 IIN_HOST Register (SMBus address = 3Fh) [reset = 4100h]
+To set the nominal input current limit based on the adapter rated current. Write a 7-bit IIN_HOST register
+command using the data format listed in Figure 9-28, and Table 9-50.
+When using a 10-mΩ sense resistor (RSNS_RAC=0b), the charger provides a nominal input-current limit range
+of 50 mA to 6350 mA, with 50-mA resolution. The upper boundary is implemented through DAC clamp, writing
+value higher than limitation will be neglected. The lower boundary is implemented through 50mA offset at code
+0. Note this offset is only applied to code 0, not applied to other codes. The default nominal input current limit is
+3.25 A. Upon adapter removal, the input current limit is reset to the default value of 3.25 A.
+When using a 5-mΩ sense resistor (RSNS_RAC=1b) referring to Section 9.3.6, the input-current limit range can
+be found under certain IADPT pin, EN_FAST_5MOHM bit status. The lower boundary is implemented through
+100-mA offset at code 0. Note this offset is only applied to code 0, not applied to other codes. The default current
+limit is 3.2 A. Due to the USB current setting requirement, the register setting specifies the maximum current
+instead of the typical current. Upon adapter removal, the nominal input current limit is reset to the default value
+of 3.2 A.
+To set the maximum input current limit based on adapter rated current. Additional 100mA(10-mΩ sense resistor)/
+200mA(5-mΩ sense resistor) offset should be added based on above nominal input current limit to obtain the
+maximum input current limit.
+The ACP and ACN pins are used to sense RAC with the default value of 10 mΩ.
+Instead of using the internal IIN_DPM loop, the user can build up an external input current regulation loop and
+have the control signal on the ILIM_HIZ pin.
+In order to disable ILIM_HIZ pin, the host can write to 0x31[7] to disable ILIM_HIZ pin, or pull ILIM_HIZ pin
+above 4.0 V.
+Figure 9-28. IIN_HOST Register With 10-mΩ Sense Resistor (SMBus address = 3Fh) [reset = 4100h]
+15 14 13 12 11 10 9 8
+Reserved Input Current
+set by host, bit
+6
+Input Current
+set by host, bit
+5
+Input Current
+set by host, bit
+4
+Input Current
+set by host, bit
+3
+Input Current
+set by host, bit
+2
+Input Current
+set by host, bit
+1
+Input Current
+set by host, bit
+0
+R/W R/W R/W R/W R/W R/W R/W R/W
+7 6 5 4 3 2 1 0
+Reserved
+R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-50. IIN_HOST Register With 10-mΩ Sense Resistor (SMBus address = 3Fh) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+15 Reserved R/W 0b Not used. 1 = invalid write.
+14 Input Current set by host, bit 6 R/W 1b 0 = Adds 0 mA of input current.
+1 = Adds 3200 mA of input current.
+13 Input Current set by host, bit 5 R/W 0b 0 = Adds 0 mA of input current.
+1 = Adds 1600 mA of input current.
+12 Input Current set by host, bit 4 R/W 0b 0 = Adds 0 mA of input current.
+1 = Adds 800 mA of input current.
+11 Input Current set by host, bit 3 R/W 0b 0 = Adds 0 mA of input current.
+1 = Adds 400 mA of input current.
+10 Input Current set by host, bit 2 R/W 0b 0 = Adds 0 mA of input current.
+1 = Adds 200 mA of input current.
+www.ti.com
+BQ25720
+SLUSDU3 – MAY 2021
+Copyright © 2021 Texas Instruments Incorporated Submit Document Feedback 81
+Product Folder Links: BQ25720
+Table 9-50. IIN_HOST Register With 10-mΩ Sense Resistor (SMBus address = 3Fh) Field Descriptions
+(continued)
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+9 Input Current set by host, bit 1 R/W 0b 0 = Adds 0 mA of input current.
+1 = Adds 100 mA of input current.
+8 Input Current set by host, bit 0 R/W 1b 0 = Adds 0 mA of input current.
+1 = Adds 50 mA of input current.
+Table 9-51. IIN_HOST Register With 10-mΩ Sense Resistor (SMBus address = 3Fh) Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION
+7-0 Reserved R 00000000
+b
+Not used. Value Ignored.
+BQ25720
+SLUSDU3 – MAY 2021 www.ti.com
+82 Submit Document Feedback Copyright © 2021 Texas Instruments Incorporated
+Product Folder Links: BQ25720
+9.6.24 ID Registers
+9.6.24.1 ManufactureID Register (SMBus address = FEh) [reset = 0040h]
+Figure 9-29. ManufactureID Register (SMBus address = FEh) [reset = 0040h]
+7-0
+Manufacturer ID
+R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-52. ManufactureID Register Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION (READ ONLY)
+15-8 Reserved R 00h Reserved
+7-0 MANUFACTURE_ID R 40h 40h
+9.6.24.2 Device ID (DeviceAddress) Register (SMBus address = FFh) [reset = 00E1h]
+Figure 9-30. Device ID (DeviceAddress) Register (SMBus address = FFh) [reset = 00E1h]
+7-0
+DEVICE_ID
+R
+LEGEND: R/W = Read/Write; R = Read only; -n = value after reset
+Table 9-53. Device ID (DeviceAddress) Register Field Descriptions
+SMBus
+BIT FIELD TYPE RESET DESCRIPTION (READ ONLY)
+15-8 Reserved R 00h Reserved
+7-0 DEVICE_ID R BQ25720: 11 10 0001b (E1h)

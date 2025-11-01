@@ -119,6 +119,17 @@ void CLI_ProcessByte(char byte) {
                     CLI_I2CScan();
                     break;
                     
+                case 'w':  // Write test
+                case 'W':
+                    CLI_Print("Writing ChargeOption0 to disable VSYS_UVP...\r\n");
+                    BQ25730_Write(BQ25730_CHARGE_OPTION_0, 0xE34E);
+                    CyDelay(100);
+                    uint16_t readback = BQ25730_Read(BQ25730_CHARGE_OPTION_0);
+                    char buf[60];
+                    sprintf(buf, "  Wrote 0xE34E, readback: 0x%04X\r\n", readback);
+                    CLI_Print(buf);
+                    break;
+                    
                 default:
                     CLI_Print("Unknown command. Type 'h' for help\r\n");
                     break;
@@ -153,6 +164,7 @@ void CLI_PrintHelp(void) {
     CLI_Print("  d - Disable charging\r\n");
     CLI_Print("  r - Read charger registers (debug)\r\n");
     CLI_Print("  s - Scan I2C bus (debug)\r\n");
+    CLI_Print("  w - Write ChargeOption0 test (disable UVP)\r\n");
 }
 
 // Print battery charger status
@@ -226,10 +238,10 @@ void CLI_ReadChargerRegisters(void) {
     uint16_t mfr_id = BQ25730_Read(BQ25730_MANUFACTURER_ID);
     uint16_t dev_id = BQ25730_Read(BQ25730_DEVICE_ID);
     
-    sprintf(buf, "  Mfr ID:     0x%04X (expect 0x0040)\r\n", mfr_id);
+    sprintf(buf, "  Mfr ID:     0x%04X (expect 0x001E for RT9478M)\r\n", mfr_id);
     CLI_Print(buf);
     
-    sprintf(buf, "  Dev ID:     0x%04X (expect 0x0773)\r\n", dev_id);
+    sprintf(buf, "  Dev ID:     0x%04X (expect 0x001C for RT9478M)\r\n", dev_id);
     CLI_Print(buf);
     
     // Read key configuration registers

@@ -22,6 +22,7 @@ volatile uint16 uiWriteEEPROMTimer;
 volatile uint32 ulUARTTempOutputTimer;
 volatile uint16 uiWDResetTimer = WDRESETTIME;
 volatile uint16 uiButtonTimer[NUMBUTTONS];
+volatile uint16 uiButton_Poll_Timer;
 //
 // timer ISR at 250uSec
 CY_ISR(fnTIMER_ISR) {
@@ -34,6 +35,9 @@ CY_ISR(fnTIMER_ISR) {
         
     if(ulUARTTempOutputTimer)
         ulUARTTempOutputTimer--;
+    
+    if(uiButton_Poll_Timer)
+        uiButton_Poll_Timer--;
     
     for(uint8 n=0;n<NUMBUTTONS;n++) { // button timers
         if(uiButtonTimer[n])

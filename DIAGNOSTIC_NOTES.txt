@@ -1,0 +1,24 @@
+RT9478M I2C Communication Diagnostic
+
+PROBLEM: All register reads return 0x0000 or garbage values despite chip responding to I2C scan at 0x6B
+
+WORKING:
+- I2C scan finds chip at 0x6B
+- LatchRead/LatchWrite functions work perfectly for buttons (0x70, 0x71)
+- I2C bus is stable at 50kHz
+
+NOT WORKING:
+- BQ25730_Read() returns garbage
+- Every read returns different random values
+
+NEXT STEPS TO TRY:
+1. Use the working I2CM_SyncRead/SyncWrite functions (from subs.c) instead of raw I2C API
+2. Verify actual I2C address - maybe chip is at 0x6A or 0x6C, not 0x6B
+3. Check hardware: pullups, power supply voltage to RT9478M
+4. Try reading with simpler single-byte read first before 16-bit reads
+
+KEY INSIGHT FROM RICHTEK DATASHEET:
+- Mfr ID should be 0x001E (not 0x0040)
+- Dev ID should be 0x001C (not 0x0773)
+- Register 0x40 (AuxFunction) is needed to unlock BATFET control
+- ChargeOption0 bit 6 (ENZ_VSYS_UVP) must be 1 to disable UVP

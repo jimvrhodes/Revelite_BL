@@ -16,38 +16,29 @@ extern structInfo Info;
 // Low-level I2C Functions
 //=============================================================================
 
-// Write 16-bit value to BQ25730 register using low-level I2C API
+// Write 16-bit value to BQ25730 register using proven I2C functions
 void BQ25730_Write(uint8_t reg, uint16_t value) {
-    I2CM_I2CMasterClearStatus();
+    uint8_t buffer[3];
+    buffer[0] = reg;
+    buffer[1] = value & 0xFF;        // LSB
+    buffer[2] = (value >> 8) & 0xFF; // MSB
     
-    if (I2CM_I2CMasterSendStart(BQ25730_ADDR, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterWriteByte(reg, 25);                   // Register address
-        I2CM_I2CMasterWriteByte(value & 0xFF, 25);          // LSB
-        I2CM_I2CMasterWriteByte((value >> 8) & 0xFF, 25);   // MSB
-    }
-    
-    I2CM_I2CMasterSendStop(25);
+    I2CM_SyncWrite(BQ25730_ADDR, buffer, 3);
 }
 
-// Read 16-bit value from BQ25730 register using low-level I2C API
+// Read 16-bit value from BQ25730 register using proven I2C functions
 uint16_t BQ25730_Read(uint8_t reg) {
-    uint8_t lsb = 0, msb = 0;
-    uint32_t status = 0;
-    
-    I2CM_I2CMasterClearStatus();
+    uint8_t write_buf[1];
+    uint8_t read_buf[2];
     
     // Write register address
-    if (I2CM_I2CMasterSendStart(BQ25730_ADDR, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterWriteByte(reg, 25);
-    }
+    write_buf[0] = reg;
+    I2CM_SyncWrite(BQ25730_ADDR, write_buf, 1);
     
-    // Repeated start for read
-    if (I2CM_I2CMasterSendRestart(BQ25730_ADDR, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, (uint8*)&lsb, 25);   // Read LSB, send ACK
-        I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (uint8*)&msb, 25);   // Read MSB, send NACK
-    }
+    // Read 2 bytes (LSB, MSB)
+    I2CM_SyncRead(BQ25730_ADDR, read_buf, 2);
     
-    return lsb | (msb << 8);
+    return read_buf[0] | (read_buf[1] << 8);
 }
 
 //=============================================================================
@@ -62,6 +53,11 @@ bool BQ25730_Init(void) {
     // This might be a timing issue or chip variant
     
     CyDelay(100);  // Give chip time to be ready
+    
+    // RT9478M SPECIFIC: Unlock BATFET control by writing to AuxFunction register
+    // Register 0x40, bit 7 (UNLOCK_PORT_CTRL) must be 1 to activate EN_PORT_CTRL
+    BQ25730_Write(0x40, 0x8100);  // Set bit 7 = 1, keep default 0x8100 value
+    CyDelay(10);
     
     // ChargeOption0 [0x12]: Basic charge control
     // Bit 0: Enable charging (0=enable, 1=disable)

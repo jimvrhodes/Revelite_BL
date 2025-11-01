@@ -1,0 +1,3143 @@
+17 Functional Register Description
+Table 11. SMBus Address
+Option Code
+7-bit Address
+A
+0x09
+B
+0x6B
+Table 12. Register Type
+Type
+Abbreviation
+Description
+Read Only
+R
+This bit can be read by software. Writes have no effect.
+Read/Write
+RW
+This bit can be read or written by host.
+Read Once Clear
+RWC
+This bit can be read by software and resets to 0.
+Table 13. Register List
+Address
+Register Name
+Default
+Type
+Description
+0x12
+ChargeOption0
+0xE30E
+RW
+0x14
+ChargeCurrent
+0x0000
+RW
+0x15
+ChargeVoltage
+0x0000
+RW
+0x20
+ChargerStatus
+0x0000
+R, RWC
+0x21
+ProchotStatus
+0xB800
+R, RW, RWC
+0x22
+AICR
+0x4100
+R
+0x23
+ADCVBUS
+0x0000
+R
+0x24
+ADCIBAT
+0x0000
+R
+0x25
+ADCIINCMPIN
+0x0000
+R
+0x26
+ADCVSYSVBAT
+0x0000
+R
+0x30
+ChargeOption1
+0x3300
+RW
+0x31
+ChargeOption2
+0x00B7
+RW
+0x32
+ChargeOption3
+0x0634
+RW
+0x33
+ProchotOption0
+0x4A81
+RW
+0x34
+ProchotOption1
+0x41A0
+RW
+0x35
+ADCOption
+0x2000
+RW
+0x36
+ChargeOption4
+0x2048
+R, RW, RWC
+0x37
+VminActiveProtection
+0x0A6C
+RW
+0x3B
+OTGVoltage
+0x09C4
+R, RW
+0x3C
+OTGCurrent
+0x3C00
+R, RW
+0x3D
+MIVR
+0x0000
+R, RW
+0x3E
+VsysMin
+0x0000
+R, RW
+0x3F
+AICRHost
+0x4100
+R, RW
+0x40
+AuxFunction
+0x8100
+R, RW
+0xFE
+MfgID
+0x001E
+R
+0xFF
+DeviceID
+0x001C
+R
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+48
+Table 14. ChargeOption0
+Address: 0x12
+Description: Configure operation options
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+EN_LPWR
+WATCHDOG
+AICR_ AUTO_ DIS
+OTG_ON_CHGOK
+EN_OOA
+PWM_ FREQ
+DIS_ STRGDRV
+Default
+1
+1
+1
+0
+0
+0
+1
+1
+Type
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+EN_CMP_LATCH
+ENZ_ VSYS_ UVP
+EN_ LEARN
+IBUS_
+GAIN
+IBAT_GAIN
+EN_LDO
+EN_AICR
+CHG_ INHIBIT
+Default
+0
+0
+0
+0
+1
+1
+1
+0
+Type
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+Bit Name
+Reg Rest
+Type
+Description
+15
+EN_LPWR
+1
+RW
+Enable low power mode. This bit is effective only when the device is in battery-only mode.
+0: Disable
+1: Enable (default)
+14:13
+WATCHDOG[1:0]
+11
+RW
+Set the WDT (watchdog timer) for battery charge. The WDT is reset by writing any value to either reg 0x14 or reg 0x15. Once the WDT expires, reg 0x14 is reset to 0.
+00: Disable WDT
+01: 5s
+10: 88s
+11: 175s (default)
+12
+AICR_AUTO_DIS
+0
+RW
+AICR auto disables when the CELL_BATPRES pin is pulled down.
+0: Disable this function. AICR is not disabled when CELL_BATPRES goes LOW. (default)
+1: Enable this function. AICR is disabled when CELL_BATPRES goes LOW.
+11
+OTG_ON_CHGOK
+0
+RW
+Add OTG to CHRG_OK. Drive CHRG_OK high when the device is in OTG mode
+0: Disable (default)
+1: Enable
+10
+EN_OOA
+0
+RW
+Out of audio function.
+0: Disable (default)
+1: Enable
+9
+PWM_FREQ
+1
+RW
+Switching frequency selection.
+0: 1200kHz
+1: 800kHz (default)
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+49
+Bit
+Bit Name
+Reg Rest
+Type
+Description
+8
+DIS_STRGDRV
+1
+RW
+Disable strong gate drive.
+Configure the high-side MOSFET to turn on with strong gate drive.
+0: Enable strong gate drive
+1: Disable strong gate drive (default)
+7
+EN_CMP_LATCH
+0
+RW
+Independent comparator output latch.
+0: The independent comparator output does not latch when it is low. (default)
+1: The independent comparator output does latch when it is low. The host can clear the COMPOUT pin by setting this REG 0x12[7] to 0.
+If enabled in the PP_COMP (0x34[6]) = 1, COMP_PP_STAT (0x21[6]) remains 1b after being triggered until read by host and cleared.
+6
+ENZ_VSYS_UVP
+0
+RW
+VSYS undervoltage protection (VSYSUVP) enable (Negative Logic)
+0: Enable (default)
+1: Disable
+5
+EN_LEARN
+0
+RW
+Learn mode enable. When enabled, the device enters learn mode.
+0: Disable (default)
+1: Enable
+4
+IBUS_GAIN
+0
+RW
+Bus current sense pin (CSIP − CSIN) to IBUS output amplifier gain.
+0: x20 (default)
+1: x40
+3
+IBAT_GAIN
+1
+RW
+Battery current sense pin (CSOP − CSON) to IBAT output amplifier gain.
+0: x8
+1: x16 (default)
+2
+EN_LDO
+1
+RW
+LDO charging enable. Controls battery charge current if the battery voltage is less than VSYS_MIN.
+0: Disable; BATFET is fully turned on and the charge current is set by the buck-boost regulator.
+1: Enable; battery charge current is clamped at 384mA by LDO charging. (default)
+1
+EN_AICR
+1
+RW
+Enable AICR. This bit is automatically set to 0 if AICR_AUTO_DIS (0x12[12]) is enabled and CELL_BAT_BATPRES goes to 0.
+0: Disable
+1: Enable (default)
+0
+CHG_INHIBIT
+0
+RW
+Charge inhibit. If enabled, battery charging is stopped.
+0: Disable (default)
+1: Enable
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+50
+Table 15. ChargeCurrent
+Address: 0x14
+Description: Set the battery charge current
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+ICHG_CTRL
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+ICHG_CTRL
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:13
+Reserved
+000
+R
+Reserved
+12:6
+ICHG_CTRL [6:0]
+0000000
+RW
+Charging current setting in 7 bits; LSB = 64mA.
+(RSENSE_BAT = 10m), 128mA (RSENSE_BAT = 5m)
+5:0
+Reserved
+000000
+R
+Reserved
+Table 16. ChargeVoltage
+Address: 0x15
+Description: Set the battery charge termination voltage
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+VBAT_REG
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+VBAT_REG
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15
+Reserved
+0
+R
+Reserved
+14:3
+VBAT_REG [11:0]
+000000000000
+RW
+Battery charge termination voltage setting in 12 bits:
+LSB = 8mV.
+The effective range is 5.0V (0x271) to 19.2V (0x960). Writing values outside of this range will be ignored.
+2:0
+Reserved
+000
+R
+Reserved
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+51
+Table 17. ChargerStatus
+Address: 0x20
+Description: Charger status indicator
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+VBUS_PG
+AICC_ DONE
+IN_VAP
+IN_MIVR
+IN_AICR
+IN_FCHG
+IN_PCHG
+IN_OTG
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+R
+R
+R
+R
+R
+R
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+BUSOVP_FLT
+BATOCP_FLT
+BUSOCP1_FLT
+SYSOVP_FLT
+SYSUVP_FLT
+FORCE_CONV_ OFF_FLT
+OTGOVP_FLT
+OTGUVP_FLT
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RWC
+RWC
+RWC
+RWC
+RWC
+RWC
+RWC
+RWC
+Bit
+Bit Name
+Default
+Type
+Description
+15
+VBUS_PG
+0
+R
+VBUS status.
+0: VBUS is not present (default)
+1: VBUS is present
+14
+AICC_DONE
+0
+R
+Adaptive Input Current Control (AICC) is done.
+0: AICC is not completed (default)
+1: AICC completed
+13
+IN_VAP
+0
+R
+0: Charger is not in VAP mode (default)
+1: Charger is in VAP mode
+12
+IN_MIVR
+0
+R
+0: Charger is not in MIVR. (default)
+1: Charger is in MIVR during forward mode or in voltage regulation during OTG mode.
+11
+IN_AICR
+0
+R
+0: Charger is not in AICR. (default)
+1: Charger is in AICR during forward mode or IOTG_CC is hit during OTG mode.
+10
+IN_FCHG
+0
+R
+0: Charger is not in fast charge (default)
+1: Charger is in fast charge
+9
+IN_PCHG
+0
+R
+0: Charger is not in pre-charge (default)
+1: Charger is in pre-charge
+8
+IN_OTG
+0
+R
+0: Charger is not in OTG (default)
+1: Charge is in OTG
+7
+BUSOVP_FLT
+0
+RWC
+0: No fault (default)
+1: VBUS OV
+This bit is cleared to 0 when the register is read.
+6
+BATOCP_FLT
+0
+RWC
+Fault indicator for BATOC only during normal operation.
+0: No fault (default)
+1: BATOC is triggered
+This bit is cleared to 0 when the register is read.
+5
+BUSOCP1_FLT
+0
+RWC
+0: No fault (default)
+1: BUS OC
+This bit is cleared to 0 when the register is read.
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+52
+Bit
+Bit Name
+Default
+Type
+Description
+4
+SYSOVP_FLT
+0
+RWC
+0: No fault (default)
+1: SYS OVP
+This bit needs to be set to 0 to be cleared.
+3
+SYSUVP_FLT
+0
+RWC
+0: No fault (default)
+1: SYS UVP
+This bit needs to be set to 0 to be cleared.
+2
+FORCE_CONV_ OFF_FLT
+0
+RWC
+0: No fault (default)
+1: Force converter off triggered (when FORCE_CONV_OFF (0x30[3] = 1)
+This bit is cleared to 0 when the register is read.
+1
+OTGOVP_FLT
+0
+RWC
+0: No fault (default)
+1: OTG OVP
+This bit is cleared to 0 when the register is read.
+0
+OTGUVP_FLT
+0
+RWC
+0: No fault (default)
+1: OTG UVP
+This bit is cleared to 0 when the register is read.
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+53
+Table 18. ProchotStatus
+Address: 0x21
+Description: PROCHOT behavior settings and fault indicator
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+EN_PROCHOT_EXT
+PROCHOT_WIDTH
+PROCHOT_CLR
+OTP_FLT
+VAP_FAIL_STAT
+EXIT_
+VAP_PP_STAT
+Default
+1
+0
+1
+1
+1
+0
+0
+0
+Type
+R
+RW
+RW
+RW
+R
+RW
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+MIVR_PP_ STAT
+COMP_ PP_STAT
+ICRIT_ PP_STAT
+INOM_ PP_
+STAT
+IDCHG1_ PP_STAT
+VSYS_ PP_
+STAT
+BATGONE_PP_
+STAT
+VBUSOK_PP_
+STAT
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+RWC
+RWC
+RWC
+RWC
+RWC
+RWC
+RWC
+Bit
+Bit Name
+Default
+Type
+Description
+15
+Reserved
+1
+R
+Reserved
+14
+EN_PROCHOT_ EXT
+0
+RW
+PROCHOT pulse extension
+0: Disable (default)
+1: Enable
+13:12
+PROCHOT_ WIDTH [1:0]
+11
+RW
+PROCHOT minimum pulse width.
+00: 100s
+01: 1ms
+10: 5ms
+11: 10ms (default)
+11
+PROCHOT_CLR
+1
+RW
+PROCHOT clear.
+0: Clear PROCHOT
+1: Idle (default)
+Need to write 0 to reset PROCHOT if pulse extension is enabled (0x21[14] = 1).
+10
+OTP_FLT
+0
+R
+Over-Temperature Protection (OTP).
+0: OTP is not triggered (default)
+1: OTP is triggered
+9
+VAP_FAIL_STAT
+0
+RW
+If VAP exits due to VBUS experiencing 7 consecutive undervoltage events, not only can the VAP_FAIL_STAT assert, but the EXIT_VAP_PP_STAT can assert as well.
+0: No fail (default)
+1: In the VAP failure event, it is latched until the host writes 0.
+8
+EXIT_VAP_PP_ STAT
+0
+RW
+If this bit is set to 1, the charger exits VAP in following conditions:
+Disabled by ACOV, BATUV (CSON < VBAT_OTGEN_F), OTG_VAP = “L” and OTG_VAP_MODE (0x32[5]) = 1.
+0: PROCHOT_EXIT_VAP is not active (default)
+1: PROCHOT_EXIT_VAP is active and latched until the host writes 0.
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+54
+Bit
+Bit Name
+Default
+Type
+Description
+7
+MIVR_PP_STAT
+0
+RW
+PROCHOT profile MIVR status bit
+0: Not triggered (default)
+1: Triggered, the PROCHOT pin remains low until the host writes this status bit to 0 when PP_MIVR = 1.
+6
+COMP_PP_STAT
+0
+RWC
+PROCHOT profile CMPOUT status bit.
+0: Not triggered (default)
+1: Triggered
+This bit is cleared to 0 when the register is read.
+5
+ICRIT_PP_STAT
+0
+RWC
+PROCHOT profile ICRIT status bit
+0: Not triggered (default)
+1: Triggered
+This bit is cleared to 0 when the register is read.
+4
+INOM_PP_STAT
+0
+RWC
+PROCHOT profile INOM status bit.
+0: Not triggered (default)
+1: Triggered
+This bit is cleared to 0 when the register is read.
+3
+IDCHG1_PP_ STAT
+0
+RWC
+PROCHOT profile IDCHG1 status bit.
+0: Not triggered (default)
+1: Triggered
+This bit is cleared to 0 when the register is read.
+2
+VSYS_PP_STAT
+0
+RWC
+PROCHOT profile VSYS status bit.
+0: Not triggered (default)
+1: Triggered
+This bit is cleared to 0 when the register is read.
+1
+BATGONE_PP_ STAT
+0
+RWC
+PROCHOT profile Battery Removal status bit.
+0: Not triggered (default)
+1: Triggered
+This bit is cleared to 0 when the register is read.
+0
+VBUSOK_PP_ STAT
+0
+RWC
+PROCHOT profile Adapter Removal status bit.
+0: Not triggered (default)
+1: Triggered
+This bit is cleared to 0 when the register is read.
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+55
+Table 19. AICR
+Address: 0x22
+Description: Set AICR (Average Input Current Regulation) current
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+IAICR
+Default
+0
+1
+0
+0
+0
+0
+0
+1
+Type
+R
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15
+Reserved
+0
+R
+Reserved
+14:8
+IAICR [6:0]
+1000001
+R
+AICR current setting in 7 bits;
+LSB = 50mA (RSENSE_IN = 10m), 100mA (RSENSE_IN = 5m)
+Note: This register is read only. Write setting value to AICR_HOST (0x3F[14:8]).
+7:0
+Reserved
+00000000
+R
+Reserved
+Table 20. ADCVbus
+Address: 0x23
+Description: VBUS voltage A/D conversion outputs
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+VBUS
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:8
+VBUS [7:0]
+00000000
+R
+VBUS A/D conversion output in 8 bits:
+LSB = 96mV, up to 24.48V
+7:0
+Reserved
+00000000
+R
+Reserved
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+56
+Table 21. ADCIbat
+Address: 0x24
+Description: Battery charge and discharge current A/D conversion outputs
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+IBAT_CHG
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+Reserved
+IBAT_DISCHG
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15
+Reserved
+0
+R
+Reserved
+14:8
+IBAT_CHG [6:0]
+0000000
+R
+Battery charge current A/D conversion output in 7 bits:
+LSB = 64mA (0x30[10] RSNS_BAT = 0, RSENSE_BAT = 10m), up to 8.128A
+LSB = 128mA (0x30[10] RSNS_BAT = 1, RSENSE_BAT = 5m), up to 16.256A
+7
+Reserved
+0
+R
+Reserved
+6:0
+IBAT_DISCHG [6:0]
+0000000
+R
+Battery discharge current A/D conversion output in 7 bits:
+LSB = 256mA (0x30[10] RSNS_BAT = 0, RSENSE_BAT = 10m), up to 20.48A
+LSB = 512mA (0x30[10] RSNS_BAT = 1, RSENSE_BAT = 5m), up to 40.96A
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+57
+Table 22. ADCIinCMPin
+Address: 0x25
+Description: BUS current and Comparator Input voltage A/D conversion outputs
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+IBUS
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+VCOMP
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:8
+IBUS [7:0]
+00000000
+R
+BUS current A/D conversion output in 8 bits:
+LSB = 50mA (0x30[11] RSNS_IN = 0, RSENSE_IN = 10m), up to 12.75A
+LSB = 100mA (0x30[11] RSNS_IN = 1, RSENSE_IN = 5m), up to 25.5A
+7:0
+VCOMP [7:0]
+00000000
+R
+The CMPIN pin voltage A/D conversion output in 8 bits:
+LSB = 8mV (0x35[13] ADC_FULLSCALE = 0), up to 2.04V
+LSB = 12mV (0x35[13] ADC_FULLSCALE = 1), up to 3.06V
+Table 23. ADCVsysVbat
+Address: 0x26
+Description: SYS voltage and battery voltage A/D conversion outputs
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+VSYS
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+VBAT
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:8
+VSYS [7:0]
+00000000
+R
+VSYS voltage A/D conversion output in 8 bits:
+LSB = 64mV, 2.88V to 19.2V
+7:0
+VBAT [7:0]
+00000000
+R
+VBAT voltage A/D conversion output in 8 bits:
+LSB = 64mV 2.88V to 19.2V
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+58
+Table 24. ChargeOption1
+Address: 0x30
+Description: Configure the operation options
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+EN_IBAT_PIN
+EN_ PROCHOT_ LPWR
+Reserved
+RSNS_IN
+RSNS_BAT
+Reserved
+EN_FAST_ 5MOHM
+Default
+0
+0
+1
+1
+0
+0
+1
+1
+Type
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+CMP_REF
+CMP_POL
+CMP_DEG
+EN_ FORCE_ CONV
+Reserved
+EN_SHIP_DCHG
+EN_AUTO_ WAKEUP
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+RW
+RW
+RW
+R
+RW
+RW
+Bit
+Bit Name
+Default
+Type
+Description
+15
+EN_IBAT_PIN
+0
+RW
+Enable IBAT analog output
+0: Disable (default)
+1: Enable
+14
+EN_PROCHOT_ LPWR
+0
+RW
+Enable the external comparator and its PROCHOT in low power mode
+0: Disable (default)
+1: Enable
+13:12
+Reserved
+11
+R
+Reserved
+11
+RSNS_IN
+0
+RW
+Input sense resistor, RSENSE_IN setting
+0: 10m (default)
+1: 5m
+10
+RSNS_BAT
+0
+RW
+Battery sense resistor, RSENSE_BAT setting
+0: 10m (default)
+1: 5m
+9
+Reserved
+1
+R
+Reserved
+8
+EN_FAST_5MOHM
+1
+RW
+Enable fast compensation to increase bandwidth under 5m RSENSE_IN (RSNS_IN = 1b) for input current up to 6.4A application.
+The fast compensation will only work when IBUS pin is configured to less than 160k
+0: Disable
+1: Enable (default)
+7
+CMP_REF
+0
+RW
+Independent comparator’s internal reference
+0: 2.3V (default)
+1: 1.2V
+6
+CMP_POL
+0
+RW
+Independent comparator output polarity
+0: Negative (default)
+1: Positive
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+59
+Bit
+Bit Name
+Default
+Type
+Description
+5:4
+CMP_DEG [1:0]
+00
+RW
+Independent comparator deglitch time. This setting is only applicable to the falling edge
+00: 5s (default)
+01: 2ms
+10: 20ms
+11: 5s
+3
+EN_FORCE_CONV
+0
+RW
+Force converter off
+0: Disable (default)
+1: Enable
+2
+Reserved
+0
+R
+Reserved
+1
+EN_SHIP_DCHG
+0
+RW
+Discharge the CSOP and CSON pins for shipping mode
+0: Disable (default)
+1: Enable
+0
+EN_AUTO_ WAKEUP
+0
+RW
+Enable auto wakeup
+0: Disable (default)
+1: Enable
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+60
+Table 25. ChargeOption2
+Address: 0x31
+Description: Configure the operation options
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+PKPWR_TOVLD_DEG
+EN_ PKPWR_ AICR
+EN_PKPWR_VSYS
+PKPWR_ OVLD_
+STAT
+PKPWR_ RELAX_ STAT
+PKPWR_TMAX
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+EN_EXT_ ILIM
+ICHG_ IDCHG_
+DIR
+Q2_OCP
+IBUS_ OCP2_TH
+EN_IBUS_ OCP1
+IBUS_ OCP1_TH
+EN_BATOC
+BATOC_ VTH
+Default
+1
+0
+1
+1
+0
+1
+1
+1
+Type
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+Bit Name
+Default
+Type
+Description
+15:14
+PKPWR_TOVLD_DEG [1:0]
+00
+RW
+Input overload time in peak power mode
+00: 1ms (default)
+01: 2ms
+10: 5ms
+11: 10ms
+13
+EN_PKPWR_ AICR
+0
+RW
+Enable peak power mode which is triggered by input current overshoot
+0: Disable (default)
+1: Enable
+12
+EN_PKPWR_ VSYS
+0
+RW
+Enable peak power mode which is triggered by system voltage undershoot.
+0: Disable (default)
+1: Enable
+11
+PKPWR_OVLD_ STAT
+0
+RW
+Peak power mode indicator. Write 0 to exit the overloading cycle timer.
+0: Not in peak power mode. (default)
+1: In peak power mode.
+10
+PKPWR_RELAX_ STAT
+0
+RW
+Indicator of peak power relaxation. Write 0 to exit relaxation cycle timer.
+0: Not in relaxation cycle. (default)
+1: In relaxation mode.
+9:8
+PKPWR_TMAX [1:0]
+00
+RW
+Set the peak power mode’s overload and relax cycle times.
+00: 20ms (default)
+01: 40ms
+10: 80ms
+11: 1s
+7
+EN_EXT_ILIM
+1
+RW
+Use the ILIM_HIZ pin to set current limit.
+0: Input current limit is set by AICR register.
+1: Input current limit is set by the minimum value of the ILIM_HIZ pin or AICR register (0x22). (default)
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+61
+Bit
+Bit Name
+Default
+Type
+Description
+6
+ICHG_IDCHG_ DIR
+0
+RW
+The IBAT pin direction
+0: As discharge current (default)
+1: As charge current
+5
+Q2_OCP
+1
+RW
+Set the VDS threshold for Q2 overcurrent protection
+0: 210mV
+1: 150mV (default)
+4
+IBUS_OCP2_TH
+1
+RW
+VBUS sense resistor overcurrent protection at CSIP − CSIN
+0:
+280mV (RSNS_IN = 0)
+200mV (RSNS_IN = 1)
+1:
+150mV (RSNS_IN = 0) (default)
+100mV (RSNS_IN = 1) (default)
+3
+EN_IBUS_OCP1
+0
+RW
+Enable the VBUS sense resistor overcurrent protection
+0: Disable (default)
+1: Enable the threshold; it depends on IBUS_OCP1_TH (0x31[2])
+2
+IBUS_OCP1_TH
+1
+RW
+Set the VBUS sense resistor overcurrent protection value
+0: 133% of IAICR2
+1: 200% of IAICR2 (default)
+1
+EN_BATOC
+1
+RW
+Battery discharge overcurrent (BATOC) protection
+0: Disable
+1: Enable the threshold; its threshold depends on BATOC_VTH (0x31[0]) (default)
+0
+BATOC_VTH
+1
+RW
+Set the battery discharge overcurrent protection value
+0: 133% of DCHG_TH2
+1: 200% of DCHG_TH2 (default)
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+62
+Table 26. ChargeOption3
+Address: 0x32
+Description: Configure the operation options
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+EN_HIZ
+RESET_ REG
+RESET_ MIVR
+EN_OTG
+EN_AICC
+EN_ PORT_ CTRL
+EN_VSYS_ MIN_SOFT_ SR
+EN_OTG_ BIGCAP
+Default
+0
+0
+0
+0
+0
+1
+1
+0
+Type
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+BATFET_ ENZ
+EN_VBUS_ VAP
+OTG_VAP_ MODE
+IL_AVG
+EN_CMP
+BATFETOFF_HIZ
+Reserved
+Default
+0
+0
+1
+1
+0
+1
+0
+0
+Type
+RWC
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+Bit Name
+Default
+Type
+Description
+15
+EN_HIZ
+0
+RW
+Enable HiZ mode
+0: Disable (default)
+1: Enable
+14
+RESET_REG
+0
+RW
+Reset all registers except for the MIVR (0x3F) register.
+0: Idle (default)
+1: Reset; the value goes back to 0 after the reset.
+13
+RESET_MIVR
+0
+RW
+Reset MIVR (0x3D) resister
+0: Idle (default)
+1: Converter is disabled to measure the MIVR threshold.
+12
+EN_OTG
+0
+RW
+OTG mode
+0: Disable (default)
+1: Enable
+11
+EN_AICC
+0
+RW
+Enable Adaptive Input Current Control (AICC)
+0: Disable (default)
+1: Enable
+10
+EN_PORT_CTRL
+1
+RW
+Enable BATFET control. If disabled, BGATE become high impedance.
+0: Disable
+1: Enable (default)
+This bit is activated only if the UNLOCK_PORT_CTRL (0x40[7]) is set to 1.
+9
+EN_VSYS_MIN_ SOFT_SR
+1
+RW
+VSYS_MIN soft slew rate transition.
+0: Disable
+1: Enable (default)
+8
+EN_OTG_ BIGCAP
+0
+RW
+Enable OTG compensation for VBUS effective capacitance larger than 33F.
+0: Disable (default)
+1: Enable
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+63
+Bit
+Bit Name
+Default
+Type
+Description
+7
+BATFET_ENZ
+0
+RWC
+BATFET force turn off at battery only mode. This bit is not written to 1 during bus voltage is available.
+This bit is forced to 0 in OTG mode.
+0: Disable (default)
+1: Enable
+6
+EN_VBUS_VAP
+0
+RW
+VAP mode selection, enable to operate in mode 2 and 3.
+0: Mode 1 (default)
+1: Mode 2 and 3
+5
+OTG_VAP_MODE
+1
+RW
+OTG/VAP/FRS pin function assign
+0: VAP
+1: OTG (default)
+4:3
+IL_AVG [1:0]
+10
+RW
+Converter inductor average current clamp.
+00: 6A
+01: 10A
+10: 15A (default)
+11: Disable
+2
+EN_CMP
+1
+RW
+Enable independent comparator.
+0: Disable
+1: Enable (default)
+1
+BATFETOFF_HIZ
+0
+RW
+Control BATFET on/off during charger HiZ mode.
+0: BATFET on during charger HiZ mode (default)
+1: BATFET off during charger HiZ mode
+0
+Reserved
+0
+RW
+Reserved
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+64
+Table 27. ProchotOption0
+Address: 0x33
+Description: Configure the PROCHOT options
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+IAICR2
+ICRIT_DEG
+PROCHOT_MIVR_80_90
+Default
+0
+1
+0
+0
+1
+0
+1
+0
+Type
+RW
+RW
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+VSYS_TH1
+INOM_ DEG
+LOWER_ PROCHOT_MIVR
+Default
+1
+0
+0
+0
+0
+0
+0
+1
+Type
+RW
+RW
+RW
+Bit
+Bit Name
+Default
+Type
+Description
+15:11
+IAICR2 [4:0]
+01001
+RW
+IAICR2 threshold. Trigger if the current hits the threshold:
+00000: NA
+00001 to 11001: 110% to 230%, step 5%
+11010 to 11110: 250% to 450%, step 50%
+11111: Out of range (ignored)
+01001 (default) is 150%.
+10:9
+ICRIT_DEG [1:0]
+01
+RW
+Typical ICRIT deglitch time to trigger PROCHOT.
+00: 15s
+01: 100s (default)
+10: 400s
+11: 800s
+8
+PROCHOT_MIVR_80_90
+0
+RW
+Lower threshold of the PROCHOT_MIVR comparator
+When REG0x33[0] = 1, the threshold of the PROCHOT_MIVR comparator is determined by this bit setting.
+The minimum setting of 83%/91% of MIVR setting is clamped at VBUS_CONVENZ if the value is lower than VBUS_CONVENZ
+0: 83% of MIVR (0x3D[13:6]) threshold (default)
+1: 91% of MIVR (0x3D[13:6]) threshold
+7:2
+VSYS_TH1 [5:0]
+100000
+RW
+VSYS threshold in VAP mode for VSYS capacitor voltage.
+000000 to 111111: 3.2V to 9.5V in 100mV step
+100000 (default) is 6.4V.
+1
+INOM_DEG
+0
+RW
+INOM deglitch time
+0: 1ms (default)
+1: 60ms
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+65
+Bit
+Bit Name
+Default
+Type
+Description
+0
+LOWER_ PROCHOT_MIVR
+1
+RW
+Enable the lower threshold of the PROCHOT_MIVR comparator.
+0: The threshold of the PROCHOT_MIVR comparator to follow the same MIVR (Reg 0x3D) setting.
+1: The threshold of the PROCHOT_MIVR comparator is determined by the PROCHOT_MIVR_80_90bit (Reg 0x33[8]) setting. (default)
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+66
+Table 28. ProchotOption1
+Address: 0x34
+Description: Configure the PROCHOT options
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+IDCHG_TH1
+IDCHG_DEG1
+Default
+0
+1
+0
+0
+0
+0
+0
+1
+Type
+RW
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+PP_MIVR
+PP_COMP
+PP_ICRIT
+PP_INOM
+PP_
+IDCHG1
+PP_VSYS
+PP_ BATGONE
+PP_ VBUSOK
+Default
+1
+0
+1
+0
+0
+0
+0
+0
+Type
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+Bit Name
+Default
+Type
+Description
+15:10
+IDCHG_TH1 [5:0]
+010000
+RW
+IDCHG level 1 threshold in 6-bits:
+LSB = 512mA
+010000 (default) is 8.192A
+9:8
+IDCHG_DEG1 [1:0]
+01
+RW
+IDCHG level 1 deglitch time
+00: 78ms
+01: 1.25s (default)
+10: 5s
+11: 20s
+7
+PP_MIVR
+1
+RW
+Enable MIVR PROCHOT
+0: Disable
+1: Enable (default)
+6
+PP_COMP
+0
+RW
+Enable independent comparator PROCHOT.
+0: Disable (default)
+1: Enable
+5
+PP_ICRIT
+1
+RW
+Enable ICRIT PROCHOT
+0: Disable
+1: Enable (default)
+4
+PP_INOM
+0
+RW
+Enable INOM PROCHOT
+0: Disable (default)
+1: Enable
+3
+PP_IDCHG1
+0
+RW
+Enable IDCHG1 PROCHOT
+0: Disable (default)
+1: Enable
+2
+PP_VSYS
+0
+RW
+Enable VSYS PROCHOT
+0: Disable (default)
+1: Enable
+1
+PP_BATGONE
+0
+RW
+Enable battery removal PROCHOT when the CELL_BATPRES pin is low
+0: Disable (default)
+1: Enable
+0
+PP_VBUSOK
+0
+RW
+Enable adapter removal PROCHOT
+0: Disable (default)
+1: Enable
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+67
+Table 29. ADCOption
+Address: 0x35
+Description: Enable the A/D converter
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+ADC_
+CONV
+ADC_
+START
+ADC_ FULLSCALE
+Reserved
+Default
+0
+0
+1
+0
+0
+0
+0
+0
+Type
+RW
+RW
+RW
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+EN_ADC_ VCOMP
+EN_ADC_ VBUS
+Reserved
+EN_ADC_ IBUS
+EN_ADC_ IBAT_ DISCHG
+EN_ADC_ IBAT_CHG
+EN_ADC_ VSYS
+EN_ADC_ VBAT
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+RW
+Bit
+Bit Name
+Default
+Type
+Description
+15
+ADC_CONV
+0
+RW
+Enable A/D conversion repeat mode
+0: One-shot (default)
+1: Continuous (1sec cycle)
+14
+ADC_START
+0
+RW
+A/D conversion starts in one-shot mode. Automatically reset to 0 after the one-shot update is complete.
+0: Ready (default)
+1: Start
+13
+ADC_FULLSCALE
+1
+RW
+ADC input voltage full scale range for CMPIN.
+0: 2.04V
+1: 3.06V (default)
+12:8
+Reserved
+00000
+R
+Reserved
+7
+EN_ADC_VCOMP
+0
+RW
+A/D conversion for independent comparator
+0: Disable (default)
+1: Enable
+6
+EN_ADC_VBUS
+0
+RW
+A/D conversion for BUS voltage
+0: Disable (default)
+1: Enable
+5
+Reserved
+0
+R
+Reserved
+4
+EN_ADC_IBUS
+0
+RW
+A/D conversion for BUS current
+0: Disable (default)
+1: Enable
+3
+EN_ADC_IBAT_ DISCHG
+0
+RW
+A/D conversion for battery discharge current
+0: Disable (default)
+1: Enable
+2
+EN_ADC_IBAT_CHG
+0
+RW
+A/D conversion for battery charge current
+0: Disable (default)
+1: Enable
+1
+EN_ADC_VSYS
+0
+RW
+A/D conversion for SYS voltage
+0: Disable (default)
+1: Enable
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+68
+Bit
+Bit Name
+Default
+Type
+Description
+0
+EN_ADC_VBAT
+0
+RW
+A/D conversion for battery voltage
+0: Disable (default)
+1: Enable
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+69
+Table 30. ChargeOption4
+Address: 0x36
+Description: Configure the operation options
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+VSYS_UVP
+DITHER_EN
+VSYS_UVP_ NO_
+HICCUP
+PP_VBUS_ VAP
+VBUS_VAP_ PP_STAT
+Default
+0
+0
+1
+0
+0
+0
+0
+0
+Type
+RW
+RW
+RW
+RW
+RWC
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+IDCHG_DEG2
+IDCHG_TH2
+PP_
+IDCHG2
+IDCHG2_
+PP_STAT
+Reserved
+Default
+0
+1
+0
+0
+1
+0
+0
+0
+Type
+RW
+RW
+RW
+RWC
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:13
+VSYS_UVP [2:0]
+001
+RW
+VSYS undervoltage-lockout.
+000: 3.65V
+001: 3.65V (default)
+010: 4.0V
+011: 4.8V
+100: 5.6V
+101: 6.4V
+110: 7.2V
+111: 8.0V
+12:11
+DITHER_EN [1:0]
+00
+RW
+Frequency dithering configuration
+00: Disable (default)
+01: 2%
+10: 4%
+11: 6%
+10
+VSYS_UVP_NO_ HICCUP
+0
+RW
+Disable VSYS_UVP hiccup configuration
+0: Enable (default)
+1: Disable
+9
+PP_VBUS_VAP
+0
+RW
+Enable VBUS PROCHOT
+0: Disable (default)
+1: Enable
+8
+VBUS_VAP_PP_ STAT
+0
+RWC
+VBUS_VAP PROCHOT status.
+0: Not triggered (default)
+1: Triggered
+7:6
+IDCHG_DEG2 [1:0]
+01
+RW
+Battery discharge current limit 2 deglitch time
+00: 100s
+01: 1.6ms (default)
+10: 6ms
+11: 12ms
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+70
+Bit
+Bit Name
+Default
+Type
+Description
+5:3
+IDCHG_TH2 [2:0]
+001
+RW
+Battery discharge current limit2 based on percentage of IDCHG_TH1.
+000: 125%
+001: 150% (default)
+010: 175%
+011: 200%
+100: 250%
+101: 300%
+110: 350%
+111: 400%
+2
+PP_IDCHG2
+0
+RW
+Enable IDCHG2 PROCHOT
+0: Disable (default)
+1: Enable
+1
+IDCHG2_PP_ STAT
+0
+RWC
+IDCHG2 PROCHOT status.
+0: Not triggered (default)
+1: Triggered
+0
+Reserved
+0
+R
+Reserved
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+71
+Table 31. VAP
+Address: 0x37
+Description: Configure VAP (Vmin Active Protection) operation options
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+VBUS_VAP_TH
+Reserved
+Default
+0
+0
+0
+0
+1
+0
+1
+0
+Type
+RW
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+VSYS_TH2
+EN_TH2_FOLLOW_TH1
+EN_FRS
+Default
+0
+1
+1
+0
+1
+1
+0
+0
+Type
+RW
+RW
+RW
+Bit
+Bit Name
+Default
+Type
+Description
+15:9
+VBUS_VAP_TH [6:0]
+0000101
+RW
+VBUS PROCHOT trigger voltage threshold in 7-bits with 3.2V offset:
+LSB = 100mV
+0000101 (default) is 3.7V
+8
+Reserved
+0
+R
+Reserved
+7:2
+VSYS_TH2 [5:0]
+011011
+RW
+VSYS PROCHOT trigger voltage threshold in 6-bits:
+LSB = 100mV
+011011 (default) is 5.9V
+1
+EN_TH2_ FOLLOW_TH1
+0
+RW
+Enable neglecting register VSYS_TH2 (Reg 0x37 [7:2]) setting
+0: Disable, VSYS_TH2 set by 0x37[7:2] (default)
+1: Enable, VSYS_TH2 follow to VSYS_TH1 (0x33[7:2])
+0
+EN_FRS
+0
+RW
+Fast role swap enables.
+Do not toggle while OTG is enabled.
+0: Disable (default)
+1: Enable
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+72
+Table 32. OTGVoltage
+Address: 0x3B
+Description: Set the OTG output voltage
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+VOTG_REG
+Default
+0
+0
+0
+0
+1
+0
+0
+1
+Type
+R
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+VOTG_REG
+Reserved
+Default
+1
+1
+0
+0
+0
+1
+0
+0
+Type
+RW
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:14
+Reserved
+00
+R
+Reserved
+13:2
+VOTG_REG [11:0]
+00100111 0001
+RW
+OTG output and VAP charge voltage are in 12 bits:
+LSB = 8mV
+The effective range is 3.0V (0x177) to 24.0V (0xBB8). Values written outside of this range are ignored.
+0010 0111 0001 (default) is 5V.
+1:0
+Reserved
+00
+R
+Reserved
+Table 33. OTGCurrent
+Address: 0x3C
+Description: Set the OTG current limit
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+IOTG_REG
+Default
+0
+0
+1
+1
+1
+1
+0
+0
+Type
+R
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15
+Reserved
+0
+R
+Reserved
+14:8
+IOTG_REG [6:0]
+0111100
+RW
+OTG current limit in 7 bits:
+LSB = 50mA (RSENSE_IN = 10m), 100mA (RSENSE_IN = 5m)
+0111100 (default) is 3.0A
+7:0
+Reserved
+00000000
+R
+Reserved
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+73
+Table 34. MIVR
+Address: 0x3D
+Description: Set the MIVR (Minimum Input Voltage Regulation) voltage
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+VMIVR
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+VMIVR
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:14
+Reserved
+00
+R
+Reserved
+13:6
+VMIVR [7:0]
+00000000
+RW
+MIVR voltage in 8 bits with 3.2V offset:
+LSB = 64mV
+The effective range is 3.2V (0x00) to 19.52V (0xFF). Writing values outside of this range is ignored.
+5:0
+Reserved
+000000
+R
+Reserved
+Table 35. VsysMin
+Address: 0x3E
+Description: Set the system minimum voltage
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+VSYS_MIN
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:8
+VSYS_MIN [7:0]
+00000000
+RW
+VSYS_MIN voltage in 8 bits:
+LSB = 100mV
+The effective range is 5.0V (0x32) to 19.2V (0xC0). Writing values outside of this range is ignored.
+7:0
+Reserved
+00000000
+R
+Reserved
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+74
+Table 36. AICRHost
+Address: 0x3F
+Description: Set the AICR (Average Input Current Regulation) current
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+AICR_HOST
+Default
+0
+1
+0
+0
+0
+0
+0
+1
+Type
+R
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15
+Reserved
+0
+R
+Reserved
+14:8
+AICR_HOST [6:0]
+1000001
+RW
+AICR current in 7 bits:
+LSB = 50mA (RSENSE_IN = 10m), 100mA (RSENSE_IN = 5m)
+This register value reflects in 0x22[14:8].
+1000001 (default) is 3.25A
+7:0
+Reserved
+00000000
+R
+Reserved
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+RT9478M_DS-00 May 2025 www.richtek.com
+75
+Table 37. AuxFunction
+Address: 0x40
+Description: Configure micelles operation
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+PROCHOT_DELAY
+VSYS_OVP
+Reserved
+PWM_ LOWFREQ
+SMBUS_ TIMEOUT_ DISABLE
+SMBUS_ TIMEOUT_MODE
+Default
+1
+0
+0
+0
+0
+0
+0
+1
+Type
+RW
+RW
+R
+RW
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+UNLOCK_ PORT_ CTRL
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+RW
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15
+PROCHOT_DELAY
+1
+RW
+0: 1s
+1: 10s (default)
+14:12
+VSYS_OVP [2:0]
+000
+RW
+VSYS overvoltage protection threshold.
+000: Depends on cell count by CELL_BATPRES (default)
+001: 15V
+010: 16V
+011: 20V
+100: 21V
+101: 22V
+110: 23V
+111: 24V
+11
+Reserved
+0
+R
+Reserved
+10
+PWM_LOWFREQ
+0
+RW
+Set PWM frequency.
+0: Follow 0x12[9] setting (1200kHz or 800kHz)
+(default)
+1: 720kHz
+0x40[10] setting has higher priority.
+If 0x40[10] = 1, PWM frequency is set to 720kHz
+regardless 0x12[9] setting.
+9
+SMBUS_TIMEOUT_DISABLE
+0
+RW
+0: Enable Timeout (default)
+1: Disable Timeout
+8
+SMBUS_TIMEOUT_MODE
+1
+RW
+0: SCL
+1: SCL and SDA (default)
+7
+UNLOCK_PORT_ CTRL
+0
+RW
+Activates EN_PORT_CTRL (0x32[10]).
+0: EN_PORT_CTRL is disabled (default)
+1: EN_PORT_CTRL is enabled
+6:0
+Reserved
+0000000
+R
+Reserved
+RT9478M
+Copyright © 2025 Richtek Technology Corporation. All rights reserved. is a registered trademark of Richtek Technology Corporation.
+www.richtek.com RT9478M_DS-00 May 2025
+76
+Table 38. MfgID
+Address: 0xFE
+Description: Manufacturer ID
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+MFG_ID
+Default
+0
+0
+0
+1
+1
+1
+1
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:8
+Reserved
+00000000
+R
+Reserved
+7:0
+MFG_ID [7:0]
+00011110
+R
+Manufacturer ID, 0x1E
+Table 39. DeviceID
+Address: 0xFF
+Description: Device ID
+Bit
+15
+14
+13
+12
+11
+10
+9
+8
+Field
+Reserved
+Default
+0
+0
+0
+0
+0
+0
+0
+0
+Type
+R
+Bit
+7
+6
+5
+4
+3
+2
+1
+0
+Field
+DEVICE_ID
+Default
+0
+0
+0
+1
+1
+1
+0
+0
+Type
+R
+Bit
+Bit Name
+Default
+Type
+Description
+15:8
+Reserved
+00000000
+R
+Reserved
+7:0
+DEVICE_ID [7:0]
+00011100
+R
+Device ID, 0x1C

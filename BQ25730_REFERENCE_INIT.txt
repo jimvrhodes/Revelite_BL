@@ -1,0 +1,51 @@
+BQ25730 / RT9478M Initialization Sequence
+Based on TI BQ25730 EVM Software and Datasheet
+=====================================================
+
+CRITICAL: All register values must account for bit positions!
+
+1. ChargeOption3 (0x32) - Enable BATFET FIRST
+   - Default: 0x0634
+   - Set bit 15 = 0 (EN_HIZ disabled)
+   - Set bit 12 = 0 (EN_OTG disabled) 
+   - Set bit 11 = 0 (EN_AICC disabled)
+   - Set bit 10 = 1 (EN_PORT_CTRL enabled) - REQUIRED FOR BATFET
+   - Write: 0x0634 | (1<<10) = 0x0A34
+
+2. Unlock AuxFunction (0x40) 
+   - Set bit 7 = 1 (UNLOCK_PORT_CTRL)
+   - Read current, OR with 0x80, write back
+
+3. ChargeVoltage (0x15)
+   - For 16.0V: 16000mV / 8mV = 2000 = 0x7D0
+   - Bits [14:3] contain value
+   - Write: (0x7D0 << 3) = 0x3E80
+
+4. ChargeCurrent (0x14)
+   - For 2000mA: 2000mA / 64mA = 31.25 = 31 = 0x1F
+   - Bits [12:6] contain value
+   - Write: (0x1F << 6) = 0x07C0
+
+5. MinSysVoltage (0x3E)
+   - For 12.5V: 12500mV / 256mV = 48.8 = 49 = 0x31
+   - Bits [13:8] contain value (actually [15:8] based on datasheet)
+   - Write: (49 << 8) = 0x3100
+
+6. ChargeOption0 (0x12) - Enable charging
+   - Default: 0xE30E
+   - Bit 0 = 0 (CHG_INHIBIT = 0, charging enabled)
+   - Bit 1 = 1 (EN_AICR enabled)
+   - Bit 2 = 1 (EN_LDO enabled)
+   - Write: 0xE30E (default is correct)
+
+7. ADCOption (0x35) - Enable ADC
+   - Bit 15 = 1 (ADC_CONV = continuous)
+   - Bit 1 = 1 (EN_ADC_VSYS)
+   - Bit 0 = 1 (EN_ADC_VBAT)
+   - Write: 0x8003
+
+IMPORTANT NOTES:
+- RT9478M is drop-in compatible, same registers
+- BATFET control REQUIRES both EN_PORT_CTRL and UNLOCK_PORT_CTRL
+- Charger will NOT start if VSYS_UVP fault is latched
+- Must clear status faults by writing 0 to fault bits

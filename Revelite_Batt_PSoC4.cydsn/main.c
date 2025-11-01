@@ -9,6 +9,10 @@
 //
 //                          
 //
+//  ✅ Max charge voltage: 16.0V (line 45: 4.0V × 4 cells = 16000mV)
+//  ✅ Low cutoff: 12.5V (line 49: 3.125V per cell)
+//  ✅ Charge current: 1A (line 52: 1000mA)
+//
 // TODO
 // 1) 
 // 2) 
@@ -59,19 +63,7 @@
 //#include <RT9478M.h>  // Not compiled yet - using inline functions below
 #include <CLI.h>
 
-// Temporary charger read function - chip is at 0x6B, not 0x22!
-uint8_t RT9478M_Read_Inline(uint8_t reg) {
-    uint8_t value = 0;
-    I2CM_I2CMasterClearStatus();
-    if (I2CM_I2CMasterSendStart(0x6B, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterWriteByte(reg, 25);
-    }
-    if (I2CM_I2CMasterSendRestart(0x6B, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (uint8*)&value, 25);
-    }
-    I2CM_I2CMasterSendStop(25);
-    return value;
-}
+// RT9478M/BQ25730 charger - using battery.c driver
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,6 +78,7 @@ extern uint16 uiBlinkTimer;
 extern volatile uint16 uiWriteEEPROMTimer;
 extern volatile uint32 ulUARTTempOutputTimer;
 extern volatile uint16 uiWDResetTimer;
+extern volatile uint16 uiButton_Poll_Timer;
 //
 // ADC stuff
 volatile bool bDataReady;
@@ -249,11 +242,22 @@ int main(void) {
             uiBlinkTimer = BLINKTIME;
         }
         
-        byButtons = ReadButtonsOnChange(); // get button status
-        if(byButtons != 0x00)  // generic indicator
-            ERRLED_Write(1);
-        else
-            ERRLED_Write(0);
+        // Rate-limit button/latch polling to reduce I2C traffic
+        static uint16_t button_poll_timer = 0;
+        if (!uiButton_Poll_Timer) {
+            uiButton_Poll_Timer = 25;  // Poll buttons every 20ms instead of every loop
+            
+            byButtons = ReadButtonsOnChange(); // get button status
+            if(byButtons != 0x00)  // generic indicator
+                ERRLED_Write(1);
+            else
+                ERRLED_Write(0);
+                
+            // Also write latch updates here to batch I2C transactions
+            LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
+        }
+        if (button_poll_timer) 
+            button_poll_timer--;
 
         // TODO: Battery monitoring disabled until charger/fuel gauge verified
         // Update battery status every 500ms
@@ -359,8 +363,8 @@ int main(void) {
             }
         }
         
-        // Write the latch with battery/timer LED updates
-        LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
+        // Write the latch with battery/timer LED updates (only when button polling happens)
+        // Latch write moved inside button poll timer block above to reduce I2C traffic
             
         // this is our ON/OFF button - toggle LEDs
         if(bLEDsOn == true) {
@@ -415,97 +419,8 @@ int main(void) {
         }
 
 #ifdef DEBUGOUT
-        // Heartbeat every 2 seconds - test charger and fuel gauge
-        static uint16_t heartbeat = 0;
-        static bool did_i2c_scan = false;
-        
-        // Do targeted I2C reads for Saleae capture
-        if(!did_i2c_scan) {
-            did_i2c_scan = true;
-            
-            UART_SpiUartPutArray((uint8*)"=== Charger at 0x6B ===\r\n", 25);
-            CyDelay(500);
-            
-            // Read actual device ID registers (16-bit at 0xFE and 0xFF)
-            uint8_t mfg_lsb = RT9478M_Read_Inline(0xFE);
-            uint8_t mfg_msb = RT9478M_Read_Inline(0xFF);
-            uint8_t dev_lsb = RT9478M_Read_Inline(0xFF);
-            uint8_t dev_msb = RT9478M_Read_Inline(0xFF);  // Same register, will fix after testing
-            uint16_t count = sprintf((char*)byUARTBuffer,"MfgID: 0x%02X%02X (expect 0x001E)\r\n", mfg_msb, mfg_lsb);
-            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-            count = sprintf((char*)byUARTBuffer,"DevID: 0x%02X%02X (expect 0x001C)\r\n", dev_msb, dev_lsb);
-            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-            
-            // Read key registers
-            UART_SpiUartPutArray((uint8*)"\r\nKey Registers:\r\n", 18);
-            uint8_t opt0_lsb = RT9478M_Read_Inline(0x12);
-            uint8_t opt0_msb = RT9478M_Read_Inline(0x13);
-            count = sprintf((char*)byUARTBuffer,"ChargeOpt0 [0x12]: 0x%02X%02X\r\n", opt0_msb, opt0_lsb);
-            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-            
-            uint8_t status_lsb = RT9478M_Read_Inline(0x20);
-            uint8_t status_msb = RT9478M_Read_Inline(0x21);
-            count = sprintf((char*)byUARTBuffer,"Status [0x20]: 0x%02X%02X\r\n", status_msb, status_lsb);
-            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-            
-            uint8_t vbat_reg = RT9478M_Read_Inline(0x26);  // Lower byte has VBAT
-            uint16_t vbat_mv = (uint16_t)vbat_reg * 64;  // LSB = 64mV
-            count = sprintf((char*)byUARTBuffer,"VBAT [0x26]: 0x%02X = %umV\r\n", vbat_reg, vbat_mv);
-            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-            
-            // 5 reads at 0x22 for reference
-            UART_SpiUartPutArray((uint8*)"Reading 0x22 (5x):\r\n", 20);
-            for(uint8_t i = 0; i < 5; i++) {
-                uint16_t val = BQ25730_Read(BQ25730_CHARGER_STATUS);
-                uint16_t count = sprintf((char*)byUARTBuffer,"  Read %d: 0x%04X\r\n", i+1, val);
-                UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-                CyDelay(100);
-            }
-            
-            CyDelay(500);
-            
-            // 5 reads at 0x6B (expected BQ25730 address)
-            UART_SpiUartPutArray((uint8*)"Reading 0x6B (5x):\r\n", 20);
-            // Temporarily change address
-            for(uint8_t i = 0; i < 5; i++) {
-                uint8_t lsb = 0, msb = 0;
-                I2CM_I2CMasterClearStatus();
-                if (I2CM_I2CMasterSendStart(0x6B, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-                    I2CM_I2CMasterWriteByte(BQ25730_CHARGER_STATUS, 25);
-                }
-                if (I2CM_I2CMasterSendRestart(0x6B, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-                    I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, (uint8*)&lsb, 25);
-                    I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (uint8*)&msb, 25);
-                }
-                I2CM_I2CMasterSendStop(25);
-                uint16_t val = lsb | (msb << 8);
-                uint16_t count = sprintf((char*)byUARTBuffer,"  Read %d: 0x%04X\r\n", i+1, val);
-                UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-                CyDelay(100);
-            }
-            
-            UART_SpiUartPutArray((uint8*)"=== Test Complete ===\r\n", 24);
-        }
-        
-        if (!heartbeat) {
-            heartbeat = 2000;
-            
-            // Test BQ25730 charger
-            uint16_t chg_status = BQ25730_Read(BQ25730_CHARGER_STATUS);
-            uint16_t chg_voltage = BQ25730_GetBatteryVoltage_mV();
-            
-            // Test LTC2944 fuel gauge - calculate voltage properly
-            uint16_t fg_voltage_raw = LTC2944_Read16(LTC2944_REG_VOLTAGE_MSB);
-            uint16_t fg_voltage_mv = (uint16_t)((float)fg_voltage_raw * 1.44f);  // 1.44mV per LSB
-            uint16_t fg_charge_raw = LTC2944_Read16(LTC2944_REG_ACC_CHARGE_MSB);
-            uint8_t fg_control = LTC2944_Read(LTC2944_REG_CONTROL);
-            
-            int16_t pos = QuadDec_GetPosition();
-            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d Chg:0x%04X ChgV:%umV FgV:%umV(0x%04X) FgQ:0x%04X FgCtrl:0x%02X\n\r", 
-                                    pos, chg_status, chg_voltage, fg_voltage_mv, fg_voltage_raw, fg_charge_raw, fg_control);
-            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-        }
-        if (heartbeat) heartbeat--;
+        // Heartbeat disabled - was causing constant I2C traffic
+        // Use CLI commands 'b' and 'f' to poll charger/fuel gauge on demand
 #endif
 
         uiTemp = GetAverageTEMP(); // DRIVER temperature rollback?
