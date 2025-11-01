@@ -1755,7 +1755,104 @@
 <name v="link_deps">
 <CyGuid_f44455c5-3770-4452-b988-0a7a7ff46256 type_name="CyDesigner.Common.ProjMgmt.Model.CyConfigDependencies" version="1">
 <dependency_info name="c9323d49-d323-40b8-9b59-cc008d68a989@Debug@CortexM0" xml_contents_version="2">
-<CyGuid_1173175f-1b9b-4ad4-a065-754a48a27021 type_name="CyDesigner.Common.Base.CyFileDeps" version="1" />
+<CyGuid_1173175f-1b9b-4ad4-a065-754a48a27021 type_name="CyDesigner.Common.Base.CyFileDeps" version="1">
+<file name=".\CortexM0\ARM_GCC_541\Debug\Revelite_Batt_PSoC4.hex">
+<dep name=".\CortexM0\ARM_GCC_541\Debug\main.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\subs.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\isr.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\battery.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\LTC2944.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CLI.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\buttons.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\cyfitter_cfg.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\cymetadata.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\PWM_1.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\PWM_1_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\Clock_1.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\PWM1.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\PWM1_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\PWM_2.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\PWM_2_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\PWM2.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\PWM2_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\DIM_isr.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ADC.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ADC_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ADC_INT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\VSENSE.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\VSENSE_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\VBUS_SENSE.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\VBUS_SENSE_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\Clock_2.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\B.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\B_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\BATT_NTC.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\BATT_NTC_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\THERM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\THERM_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\A.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\A_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\VBAT_SENSE.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\VBAT_SENSE_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_SPI_UART.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_SPI_UART_INT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_UART.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_BOOT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_UART_BOOT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ACTLED.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ACTLED_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ERRLED.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ERRLED_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\QuadDec.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\QuadDec_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_I2C_INT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_I2C.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_I2C_BOOT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_I2C_MASTER.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_BOOT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\Encoder_isr.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\OC_FLAG.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\OC_FLAG_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\USB_isr.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\LATCH_isr.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\USB_INT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\USB_INT_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\LATCH_INT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\LATCH_INT_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CHRG_OK.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CHRG_OK_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CMP_OUT.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CMP_OUT_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\OTG_VAP.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\OTG_VAP_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ADC_IRQ.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\ADC_intClock.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_SCBCLK.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_tx.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_tx_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_rx.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\UART_rx_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_SCBCLK.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_sda.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_sda_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_scl.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_scl_PM.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\I2CM_SCB_IRQ.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\Cm0Start.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CyFlash.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CyLib.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\cyPm.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\cyutils.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CyBootAsmGnu.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\CyLFClk.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\cy_em_eeprom.o" />
+<dep name=".\CortexM0\ARM_GCC_541\Debug\Revelite_Batt_PSoC4.a" />
+</file>
+</CyGuid_1173175f-1b9b-4ad4-a065-754a48a27021>
 </dependency_info>
 </CyGuid_f44455c5-3770-4452-b988-0a7a7ff46256>
 </name>
@@ -2351,7 +2448,7 @@
 <dataGuid v="769d31ea-68b1-4f0c-b90a-7c10a43ee563">
 <CyGuid_769d31ea-68b1-4f0c-b90a-7c10a43ee563 type_name="CyDesigner.Common.ProjMgmt.Model.CyLinkCustomData" version="1">
 <link_deps_times>
-<name_val_pair name="c9323d49-d323-40b8-9b59-cc008d68a989@Debug@CortexM0" v="134064849429206894" />
+<name_val_pair name="c9323d49-d323-40b8-9b59-cc008d68a989@Debug@CortexM0" v="134064850026431360" />
 </link_deps_times>
 </CyGuid_769d31ea-68b1-4f0c-b90a-7c10a43ee563>
 </dataGuid>

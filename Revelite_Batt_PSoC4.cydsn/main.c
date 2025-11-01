@@ -404,23 +404,45 @@ int main(void) {
         static uint16_t heartbeat = 0;
         static bool did_i2c_scan = false;
         
-        // Do I2C scan once on startup
+        // Do targeted I2C reads for Saleae capture
         if(!did_i2c_scan) {
             did_i2c_scan = true;
-            uint16_t count = sprintf((char*)byUARTBuffer,"I2C Scan: ");
-            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
             
-            for(uint8_t addr = 0x08; addr < 0x78; addr++) {
-                I2CM_I2CMasterClearStatus();
-                uint32_t status = I2CM_I2CMasterSendStart(addr, I2CM_I2C_WRITE_XFER_MODE, 100);
-                I2CM_I2CMasterSendStop(25);
-                if(status == I2CM_I2C_MSTR_NO_ERROR) {
-                    count = sprintf((char*)byUARTBuffer,"0x%02X ", addr);
-                    UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-                }
+            UART_SpiUartPutArray((uint8*)"=== I2C Test for Saleae ===\r\n", 29);
+            CyDelay(1000);  // Pause before starting
+            
+            // 5 reads at 0x22 (where BQ25730 is found)
+            UART_SpiUartPutArray((uint8*)"Reading 0x22 (5x):\r\n", 20);
+            for(uint8_t i = 0; i < 5; i++) {
+                uint16_t val = BQ25730_Read(BQ25730_CHARGER_STATUS);
+                uint16_t count = sprintf((char*)byUARTBuffer,"  Read %d: 0x%04X\r\n", i+1, val);
+                UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+                CyDelay(100);
             }
-            count = sprintf((char*)byUARTBuffer,"\n\r");
-            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+            
+            CyDelay(500);
+            
+            // 5 reads at 0x6B (expected BQ25730 address)
+            UART_SpiUartPutArray((uint8*)"Reading 0x6B (5x):\r\n", 20);
+            // Temporarily change address
+            for(uint8_t i = 0; i < 5; i++) {
+                uint8_t lsb = 0, msb = 0;
+                I2CM_I2CMasterClearStatus();
+                if (I2CM_I2CMasterSendStart(0x6B, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+                    I2CM_I2CMasterWriteByte(BQ25730_CHARGER_STATUS, 25);
+                }
+                if (I2CM_I2CMasterSendRestart(0x6B, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+                    I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, (uint8*)&lsb, 25);
+                    I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (uint8*)&msb, 25);
+                }
+                I2CM_I2CMasterSendStop(25);
+                uint16_t val = lsb | (msb << 8);
+                uint16_t count = sprintf((char*)byUARTBuffer,"  Read %d: 0x%04X\r\n", i+1, val);
+                UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+                CyDelay(100);
+            }
+            
+            UART_SpiUartPutArray((uint8*)"=== Test Complete ===\r\n", 24);
         }
         
         if (!heartbeat) {
