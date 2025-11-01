@@ -120,7 +120,9 @@ typedef enum {
 } TimerState_t;
 
 static TimerState_t timer_state = TIMER_OFF;
-static uint32_t auto_off_timer = 0;  // Countdown in milliseconds
+extern volatile uint32 uiAuto_Off_Timer;  // Managed in ISR
+extern volatile uint16 uiLED_Display_Timer;  // Managed in ISR
+#define LED_DISPLAY_TIME 2000  // Show LEDs for 2 seconds
 
 int main(void) {
         
@@ -243,9 +245,9 @@ int main(void) {
         }
         
         // Rate-limit button/latch polling to reduce I2C traffic
-        static uint16_t button_poll_timer = 0;
+        extern volatile uint16 uiButton_Poll_Timer;
         if (!uiButton_Poll_Timer) {
-            uiButton_Poll_Timer = 25;  // Poll buttons every 20ms instead of every loop
+            uiButton_Poll_Timer = 20;  // Poll buttons every 20ms
             
             byButtons = ReadButtonsOnChange(); // get button status
             if(byButtons != 0x00)  // generic indicator
@@ -256,8 +258,6 @@ int main(void) {
             // Also write latch updates here to batch I2C transactions
             LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
         }
-        if (button_poll_timer) 
-            button_poll_timer--;
 
         // TODO: Battery monitoring disabled until charger/fuel gauge verified
         // Update battery status every 500ms
@@ -320,47 +320,68 @@ int main(void) {
                 timer_state = TIMER_OFF;
             }
             
-            // Set timer based on state
+            // Set timer based on state (managed in ISR)
             switch(timer_state) {
                 case TIMER_OFF:
-                    auto_off_timer = 0;
+                    uiAuto_Off_Timer = 0;
                     break;
                 case TIMER_1HR:
-                    auto_off_timer = 60UL * 60UL * 1000UL;  // 1 hour in ms
+                    uiAuto_Off_Timer = 60UL * 60UL * 1000UL;  // 1 hour in ms
                     break;
                 case TIMER_3HR:
-                    auto_off_timer = 3UL * 60UL * 60UL * 1000UL;  // 3 hours in ms
+                    uiAuto_Off_Timer = 3UL * 60UL * 60UL * 1000UL;  // 3 hours in ms
                     break;
                 case TIMER_5HR:
-                    auto_off_timer = 5UL * 60UL * 60UL * 1000UL;  // 5 hours in ms
+                    uiAuto_Off_Timer = 5UL * 60UL * 60UL * 1000UL;  // 5 hours in ms
                     break;
                 default:
                     timer_state = TIMER_OFF;
-                    auto_off_timer = 0;
+                    uiAuto_Off_Timer = 0;
                     break;
             }
+            
+            // Show LEDs for 2 seconds when button pressed
+            uiLED_Display_Timer = LED_DISPLAY_TIME;
         }
         
-        // Display timer state on LEDs when not showing battery
-        if(!(byButtons & BUTTON1)) {
-            // Clear timer LEDs
-            byLatch1 &= ~(LED2 | LED3 | LED4);
+        // Display timer state on LEDs (only show if button pressed or timer active)
+        // When BUTTON1 pressed: show battery status for 2 seconds
+        // When BUTTON2 pressed: show timer state for 2 seconds
+        if((byButtons & BUTTON1) && !(byLastButton & BUTTON1)) {
+            // BUTTON1 just pressed - show battery status
+            uiLED_Display_Timer = LED_DISPLAY_TIME;
+            // TODO: Update battery status display when battery monitoring implemented
+        }
+        
+        // Only update LEDs if display timer is active
+        if(uiLED_Display_Timer > 0) {
+            // Clear all indicator LEDs
+            byLatch1 &= ~(LED1 | LED2 | LED3 | LED4);
             
-            switch(timer_state) {
-                case TIMER_1HR:
-                    byLatch1 |= LED2;
-                    break;
-                case TIMER_3HR:
-                    byLatch1 |= LED3;
-                    break;
-                case TIMER_5HR:
-                    byLatch1 |= LED4;
-                    break;
-                case TIMER_OFF:
-                default:
-                    // No LED for timer off
-                    break;
+            if(byButtons & BUTTON1) {
+                // Show battery status (placeholder - implement when battery monitoring ready)
+                // For now, show all LEDs
+                byLatch1 |= (LED1 | LED2 | LED3 | LED4);
+            } else {
+                // Show timer state
+                switch(timer_state) {
+                    case TIMER_OFF:
+                        byLatch1 |= LED1;
+                        break;                
+                    case TIMER_1HR:
+                        byLatch1 |= LED2;
+                        break;
+                    case TIMER_3HR:
+                        byLatch1 |= LED3;
+                        break;
+                    case TIMER_5HR:
+                        byLatch1 |= LED4;
+                        break;
+                }
             }
+        } else {
+            // Timer expired - turn off all indicator LEDs to save power
+            byLatch1 &= ~(LED1 | LED2 | LED3 | LED4);
         }
         
         // Write the latch with battery/timer LED updates (only when button polling happens)
@@ -392,9 +413,9 @@ int main(void) {
         if (fBrightness < 0.0f) fBrightness = 0.0f;
         if (fBrightness > 1.0f) fBrightness = 1.0f;
         
-        // Auto-off timer is decremented by the 1ms timer ISR, not here
+        // Auto-off timer is decremented by the 1ms timer ISR
         // Check if timer expired
-        if(bLEDsOn && timer_state != TIMER_OFF && auto_off_timer == 0) {
+        if(bLEDsOn && timer_state != TIMER_OFF && uiAuto_Off_Timer == 0) {
             bLEDsOn = false;  // Auto turn off
         }
         

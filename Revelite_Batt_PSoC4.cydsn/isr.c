@@ -23,8 +23,10 @@ volatile uint32 ulUARTTempOutputTimer;
 volatile uint16 uiWDResetTimer = WDRESETTIME;
 volatile uint16 uiButtonTimer[NUMBUTTONS];
 volatile uint16 uiButton_Poll_Timer;
+volatile uint32 uiAuto_Off_Timer;  // Auto-off timer in ms
+volatile uint16 uiLED_Display_Timer;  // LED indicator display timer in ms
 //
-// timer ISR at 250uSec
+// timer ISR at 1ms
 CY_ISR(fnTIMER_ISR) {
             
     if(uiBlinkTimer)
@@ -38,6 +40,12 @@ CY_ISR(fnTIMER_ISR) {
     
     if(uiButton_Poll_Timer)
         uiButton_Poll_Timer--;
+    
+    if(uiAuto_Off_Timer)
+        uiAuto_Off_Timer--;
+    
+    if(uiLED_Display_Timer)
+        uiLED_Display_Timer--;
     
     for(uint8 n=0;n<NUMBUTTONS;n++) { // button timers
         if(uiButtonTimer[n])
