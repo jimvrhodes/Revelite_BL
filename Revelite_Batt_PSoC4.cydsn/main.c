@@ -205,21 +205,36 @@ int main(void) {
         else
             ERRLED_Write(0);
 
+        // this is our battery charge indicator, using the four LEDs on LATCH1
+        // one LED flashing - battery is too low to operate fixture
+        // one LED illuminated says we are <25% of charge
+        // two LEDs illuminated says we are 25-50% charge
+        // three LEDs illuminate is 60-75% charge
+        // four LEDs illuminate is 75-100% charge
         if(byButtons & BUTTON1)
             byLatch1 |= LED2;
         else
             byLatch1 &= ~LED2;
         
+        // this is our timer indicator, fixture can turn off automatically when time elapses
+        //   push this button to set the LED and set the time, round robin on the settings each time button is pushed
+        // LED1 - no timer, just run until battery is exhausted
+        // LED2 - automatic off at 1 hour
+        // LED3 - automatic off at 3 hours
+        // LED4 - automatic off at 5 hours
         if(byButtons & BUTTON2)
             byLatch1 |= LED3;
         else
             byLatch1 &= ~LED3;
             
         // this is our ON/OFF button - toggle LEDs
-        if((byButtons & BUTTON3) && !(byLastButton & BUTTON3)) {
-            // Button just pressed - toggle state
-            bLEDsOn = !bLEDsOn;
-        }
+        if(bLEDsOn == true) {
+            if(ButtonState.byButtonLong & BUTTON3)
+                bLEDsOn = false;
+        } else if( (byButtons & BUTTON3) && (byButtons != byLastButton)) {
+            bLEDsOn = true;
+        }        
+        
         byLastButton = byButtons;
             
             
