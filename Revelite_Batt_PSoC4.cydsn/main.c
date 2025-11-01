@@ -59,14 +59,14 @@
 //#include <RT9478M.h>  // Not compiled yet - using inline functions below
 #include <CLI.h>
 
-// Temporary RT9478M read function until RT9478M.c is added to project
+// Temporary charger read function - chip is at 0x6B, not 0x22!
 uint8_t RT9478M_Read_Inline(uint8_t reg) {
     uint8_t value = 0;
     I2CM_I2CMasterClearStatus();
-    if (I2CM_I2CMasterSendStart(0x22, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+    if (I2CM_I2CMasterSendStart(0x6B, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
         I2CM_I2CMasterWriteByte(reg, 25);
     }
-    if (I2CM_I2CMasterSendRestart(0x22, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+    if (I2CM_I2CMasterSendRestart(0x6B, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
         I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (uint8*)&value, 25);
     }
     I2CM_I2CMasterSendStop(25);
@@ -423,7 +423,7 @@ int main(void) {
         if(!did_i2c_scan) {
             did_i2c_scan = true;
             
-            UART_SpiUartPutArray((uint8*)"=== RT9478M ID Check ===\r\n", 27);
+            UART_SpiUartPutArray((uint8*)"=== Charger at 0x6B ===\r\n", 25);
             CyDelay(500);
             
             // Read actual device ID registers (16-bit at 0xFE and 0xFF)
