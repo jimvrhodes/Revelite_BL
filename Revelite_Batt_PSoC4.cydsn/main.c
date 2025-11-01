@@ -214,7 +214,7 @@ int main(void) {
             } else {
                 byLatch1 &= ~LED1;
             }
-            LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
+            // Don't write here - write after all LED updates below
         }
         
         byButtons = ReadButtonsOnChange(); // get button status
@@ -324,6 +324,9 @@ int main(void) {
                     break;
             }
         }
+        
+        // Write the latch with battery/timer LED updates
+        LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
             
         // this is our ON/OFF button - toggle LEDs
         if(bLEDsOn == true) {
@@ -351,20 +354,19 @@ int main(void) {
         if (fBrightness < 0.0f) fBrightness = 0.0f;
         if (fBrightness > 1.0f) fBrightness = 1.0f;
         
-        // Check auto-off timer
-        if(bLEDsOn && auto_off_timer > 0) {
-            if(auto_off_timer > 0) {
-                auto_off_timer--;
-            }
-            if(auto_off_timer == 0) {
-                bLEDsOn = false;  // Auto turn off
-            }
+        // Auto-off timer is decremented by the 1ms timer ISR, not here
+        // Check if timer expired
+        if(bLEDsOn && timer_state != TIMER_OFF && auto_off_timer == 0) {
+            bLEDsOn = false;  // Auto turn off
         }
         
-        // Check for low battery - force off if too low
-        if(battery_low_warning && bLEDsOn) {
-            bLEDsOn = false;
-        }
+        // TODO: Re-enable when battery monitoring is working correctly
+        // Check for low battery - force off if too low (only on transition)
+        //static bool was_low_warning = false;
+        //if(battery_low_warning && !was_low_warning && bLEDsOn) {
+        //    bLEDsOn = false;
+        //}
+        //was_low_warning = battery_low_warning;
         
         // Apply ON/OFF control
         if (bLEDsOn) {
