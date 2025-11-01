@@ -168,15 +168,39 @@ int main(void) {
     LatchWrite(LATCH2, PCLA9538_OUTREG, byLatch2);
     
     // Initialize battery charger (BQ25730) for 4S LiPo
-    if (BQ25730_Init()) {
-        // Charger initialized successfully
-        // Already configured for 16.8V max, 1A charge current
-        uiChargerStatus = BQ25730_Read(BQ25730_CHARGER_STATUS);
+#ifdef DEBUGOUT
+    UART_SpiUartPutString("Init BQ25730...\r\n");
+    // Try reading device ID first
+    uint16_t dev_id = BQ25730_Read(BQ25730_DEVICE_ID);
+    uint16_t mfg_id = BQ25730_Read(BQ25730_MANUFACTURER_ID);
+    uint16_t count = sprintf((char*)byUARTBuffer,"BQ ID:0x%04X MFG:0x%04X\r\n", dev_id, mfg_id);
+    UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+#endif
+    bool chg_ok = BQ25730_Init();
+#ifdef DEBUGOUT
+    if(chg_ok) {
+        UART_SpiUartPutString("BQ25730 OK\r\n");
+    } else {
+        UART_SpiUartPutString("BQ25730 FAIL\r\n");
     }
+#endif
     
     // Initialize fuel gauge (LTC2944)
     // Use M_1024 prescaler for ~3500mAh battery
-    LTC2944_Init((uint16_t)BATTERY_CAPACITY_MAH, LTC2944_PRESCALER_M_1024);
+#ifdef DEBUGOUT
+    UART_SpiUartPutString("Init LTC2944...\r\n");
+#endif
+    bool fg_ok = LTC2944_Init((uint16_t)BATTERY_CAPACITY_MAH, LTC2944_PRESCALER_M_1024);
+#ifdef DEBUGOUT
+    if(fg_ok) {
+        UART_SpiUartPutString("LTC2944 OK\r\n");
+    } else {
+        UART_SpiUartPutString("LTC2944 FAIL\r\n");
+    }
+    uint8_t fg_ctrl = LTC2944_Read(LTC2944_REG_CONTROL);
+    uint16_t count = sprintf((char*)byUARTBuffer,"LTC2944 Ctrl: 0x%02X (expect 0xEA)\r\n", fg_ctrl);
+    UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+#endif
     
 #ifdef DEBUGOUT
     UART_Start();
