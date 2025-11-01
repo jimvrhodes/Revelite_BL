@@ -11,7 +11,7 @@
 #include <math.h>
 
 // BQ25730 I2C Address
-#define BQ25730_ADDR 0x6B // 7-bit I2C address
+#define BQ25730_ADDR 0x22 // 7-bit I2C address (hardware strapped to 0x22)
 
 // BQ25730 Register Addresses
 #define BQ25730_CHARGE_OPTION_0     0x12
