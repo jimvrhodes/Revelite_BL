@@ -64,14 +64,17 @@
 #define LTC2944_STATUS_CHARGE_OVERFLOW     0x01
 
 // Conversion Constants
-#define LTC2944_CHARGE_LSB              0.34  // mAh per LSB with 50mOhm sense resistor
-#define LTC2944_VOLTAGE_LSB             1.44  // mV per LSB
-#define LTC2944_CURRENT_LSB_60mV        0.0293  // mA per LSB for 60mV full scale (typical)
-#define LTC2944_TEMP_LSB                0.25  // °C per LSB
-#define LTC2944_TEMP_OFFSET             273.15  // Kelvin offset
+// Note: Charge LSB depends on prescaler and sense resistor
+// qLSB = 0.34mAh × (50mΩ/RSENSE) × (M/4096) for prescaler M
+// With 15mΩ and M=1024: qLSB = 0.34 × (50/15) × (1024/4096) = 0.283 mAh/LSB
+#define LTC2944_CHARGE_LSB              0.283  // mAh per LSB with 15mΩ sense resistor, M=1024
+#define LTC2944_VOLTAGE_LSB             1.44   // mV per LSB (23.6mV to 60V range)
+#define LTC2944_CURRENT_LSB_60mV        0.0293 // mA per LSB for 60mV full scale
+#define LTC2944_TEMP_LSB                0.25   // °C per LSB
+#define LTC2944_TEMP_OFFSET             273.15 // Kelvin offset
 
-// Sense Resistor Value (Ohms) - adjust based on your hardware
-#define RSENSE                          0.050  // 50 milliohms
+// Sense Resistor Value (Ohms) - 15 milliohms for this design
+#define RSENSE                          0.015  // 15 milliohms
 
 // Battery capacity from battery.h will be used
 // For 50.4Wh at 14.4V nominal = ~3500mAh
