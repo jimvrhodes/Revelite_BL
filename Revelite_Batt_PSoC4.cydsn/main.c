@@ -384,8 +384,9 @@ int main(void) {
         if (!heartbeat) {
             heartbeat = 2000;
             int16_t pos = QuadDec_GetPosition();
-            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d V:%umV SoC:%.1f%% Chg:0x%04X\n\r", 
-                                    pos, battery_voltage_mv, battery_soc, uiChargerStatus);
+            uint16_t soc_int = (uint16_t)battery_soc;  // Convert to integer to avoid float printf
+            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d V:%umV SoC:%u%% Chg:0x%04X\n\r", 
+                                    pos, battery_voltage_mv, soc_int, uiChargerStatus);
             UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
             // Don't wait for TX to complete
         }
