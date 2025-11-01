@@ -56,6 +56,7 @@
 #include <buttons.h>
 #include <battery.h>
 #include <LTC2944.h>
+#include <RT9478M.h>
 #include <CLI.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -408,10 +409,24 @@ int main(void) {
         if(!did_i2c_scan) {
             did_i2c_scan = true;
             
-            UART_SpiUartPutArray((uint8*)"=== I2C Test for Saleae ===\r\n", 29);
-            CyDelay(1000);  // Pause before starting
+            UART_SpiUartPutArray((uint8*)"=== RT9478M Register Dump ===\r\n", 32);
+            CyDelay(500);
             
-            // 5 reads at 0x22 (where BQ25730 is found)
+            // Read device ID
+            uint8_t dev_id = RT9478M_GetDeviceID();
+            uint16_t count = sprintf((char*)byUARTBuffer,"Device ID: 0x%02X\r\n", dev_id);
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+            
+            // Dump all registers 0x00-0x0F
+            UART_SpiUartPutArray((uint8*)"Registers 0x00-0x0F:\r\n", 23);
+            for(uint8_t reg = 0x00; reg <= 0x0F; reg++) {
+                uint8_t val = RT9478M_Read(reg);
+                count = sprintf((char*)byUARTBuffer,"  [0x%02X] = 0x%02X\r\n", reg, val);
+                UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+                CyDelay(50);
+            }
+            
+            // 5 reads at 0x22 for reference
             UART_SpiUartPutArray((uint8*)"Reading 0x22 (5x):\r\n", 20);
             for(uint8_t i = 0; i < 5; i++) {
                 uint16_t val = BQ25730_Read(BQ25730_CHARGER_STATUS);
