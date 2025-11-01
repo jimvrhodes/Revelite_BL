@@ -173,8 +173,8 @@ int main(void) {
     // Try reading device ID first
     uint16_t dev_id = BQ25730_Read(BQ25730_DEVICE_ID);
     uint16_t mfg_id = BQ25730_Read(BQ25730_MANUFACTURER_ID);
-    uint16_t count = sprintf((char*)byUARTBuffer,"BQ ID:0x%04X MFG:0x%04X\r\n", dev_id, mfg_id);
-    UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+    uint16_t cnt = sprintf((char*)byUARTBuffer,"BQ ID:0x%04X MFG:0x%04X\r\n", dev_id, mfg_id);
+    UART_SpiUartPutArray((uint8*)&byUARTBuffer, cnt);
 #endif
     bool chg_ok = BQ25730_Init();
 #ifdef DEBUGOUT
@@ -198,8 +198,8 @@ int main(void) {
         UART_SpiUartPutString("LTC2944 FAIL\r\n");
     }
     uint8_t fg_ctrl = LTC2944_Read(LTC2944_REG_CONTROL);
-    uint16_t count = sprintf((char*)byUARTBuffer,"LTC2944 Ctrl: 0x%02X (expect 0xEA)\r\n", fg_ctrl);
-    UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+    cnt = sprintf((char*)byUARTBuffer,"LTC2944 Ctrl: 0x%02X (expect 0xEA)\r\n", fg_ctrl);
+    UART_SpiUartPutArray((uint8*)&byUARTBuffer, cnt);
 #endif
     
 #ifdef DEBUGOUT
