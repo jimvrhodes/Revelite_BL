@@ -423,22 +423,35 @@ int main(void) {
         if(!did_i2c_scan) {
             did_i2c_scan = true;
             
-            UART_SpiUartPutArray((uint8*)"=== RT9478M Register Dump ===\r\n", 32);
+            UART_SpiUartPutArray((uint8*)"=== RT9478M ID Check ===\r\n", 27);
             CyDelay(500);
             
-            // Read device ID
-            uint8_t dev_id = RT9478M_Read_Inline(0x00);
-            uint16_t count = sprintf((char*)byUARTBuffer,"Device ID: 0x%02X\r\n", dev_id);
+            // Read actual device ID registers (16-bit at 0xFE and 0xFF)
+            uint8_t mfg_lsb = RT9478M_Read_Inline(0xFE);
+            uint8_t mfg_msb = RT9478M_Read_Inline(0xFE+1);
+            uint8_t dev_lsb = RT9478M_Read_Inline(0xFF);
+            uint8_t dev_msb = RT9478M_Read_Inline(0xFF+1);  
+            uint16_t count = sprintf((char*)byUARTBuffer,"MfgID: 0x%02X%02X (expect 0x001E)\r\n", mfg_msb, mfg_lsb);
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+            count = sprintf((char*)byUARTBuffer,"DevID: 0x%02X%02X (expect 0x001C)\r\n", dev_msb, dev_lsb);
             UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
             
-            // Dump all registers 0x00-0x0F
-            UART_SpiUartPutArray((uint8*)"Registers 0x00-0x0F:\r\n", 23);
-            for(uint8_t reg = 0x00; reg <= 0x0F; reg++) {
-                uint8_t val = RT9478M_Read_Inline(reg);
-                count = sprintf((char*)byUARTBuffer,"  [0x%02X] = 0x%02X\r\n", reg, val);
-                UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
-                CyDelay(50);
-            }
+            // Read key registers
+            UART_SpiUartPutArray((uint8*)"\r\nKey Registers:\r\n", 18);
+            uint8_t opt0_lsb = RT9478M_Read_Inline(0x12);
+            uint8_t opt0_msb = RT9478M_Read_Inline(0x13);
+            count = sprintf((char*)byUARTBuffer,"ChargeOpt0 [0x12]: 0x%02X%02X\r\n", opt0_msb, opt0_lsb);
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+            
+            uint8_t status_lsb = RT9478M_Read_Inline(0x20);
+            uint8_t status_msb = RT9478M_Read_Inline(0x21);
+            count = sprintf((char*)byUARTBuffer,"Status [0x20]: 0x%02X%02X\r\n", status_msb, status_lsb);
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
+            
+            uint8_t vbat_reg = RT9478M_Read_Inline(0x26);  // Lower byte has VBAT
+            uint16_t vbat_mv = (uint16_t)vbat_reg * 64;  // LSB = 64mV
+            count = sprintf((char*)byUARTBuffer,"VBAT [0x26]: 0x%02X = %umV\r\n", vbat_reg, vbat_mv);
+            UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
             
             // 5 reads at 0x22 for reference
             UART_SpiUartPutArray((uint8*)"Reading 0x22 (5x):\r\n", 20);
