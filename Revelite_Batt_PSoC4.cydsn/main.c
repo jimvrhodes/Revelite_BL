@@ -96,6 +96,24 @@ volatile uint16 uiChargerStatus;
 
 volatile uint8_t byButtons = 0;
 
+// Battery monitoring
+static uint16_t battery_update_timer = 0;
+static float battery_soc = 100.0f;  // State of charge percentage
+static uint16_t battery_voltage_mv = 0;
+static bool battery_low_warning = false;
+
+// Timer states for auto-off feature
+typedef enum {
+    TIMER_OFF = 0,      // No timer, run until battery exhausted
+    TIMER_1HR,          // Auto off at 1 hour
+    TIMER_3HR,          // Auto off at 3 hours
+    TIMER_5HR,          // Auto off at 5 hours
+    TIMER_MAX
+} TimerState_t;
+
+static TimerState_t timer_state = TIMER_OFF;
+static uint32_t auto_off_timer = 0;  // Countdown in milliseconds
+
 int main(void) {
         
     bool bWriteInfo = false;
@@ -205,27 +223,107 @@ int main(void) {
         else
             ERRLED_Write(0);
 
-        // this is our battery charge indicator, using the four LEDs on LATCH1
-        // one LED flashing - battery is too low to operate fixture
-        // one LED illuminated says we are <25% of charge
-        // two LEDs illuminated says we are 25-50% charge
-        // three LEDs illuminate is 60-75% charge
-        // four LEDs illuminate is 75-100% charge
-        if(byButtons & BUTTON1)
-            byLatch1 |= LED2;
-        else
-            byLatch1 &= ~LED2;
+        // Update battery status every 500ms
+        if(!battery_update_timer) {
+            battery_update_timer = 500;
+            
+            // Read fuel gauge
+            FuelGauge_t fg_status = LTC2944_GetStatus();
+            battery_soc = fg_status.state_of_charge;
+            battery_voltage_mv = (uint16_t)fg_status.voltage_mv;
+            
+            // Check for low battery condition
+            if(battery_voltage_mv < BATTERY_LOW_CUTOFF_MV) {
+                battery_low_warning = true;
+            } else if(battery_voltage_mv > (BATTERY_LOW_CUTOFF_MV + 200)) {  // 200mV hysteresis
+                battery_low_warning = false;
+            }
+            
+            // Read charger status
+            uiChargerStatus = BQ25730_Read(BQ25730_CHARGER_STATUS);
+        }
+        if(battery_update_timer) battery_update_timer--;
+
+        // Battery charge indicator using four LEDs on LATCH1
+        // Display when BUTTON1 is pressed
+        if(byButtons & BUTTON1) {
+            // Clear all battery LEDs first
+            byLatch1 &= ~(LED1 | LED2 | LED3 | LED4);
+            
+            if(battery_low_warning) {
+                // Flash single LED for critically low battery
+                if(uiBlinkTimer < (BLINKTIME/2)) {
+                    byLatch1 |= LED1;
+                }
+            } else if(battery_soc < 25.0f) {
+                // One LED - less than 25%
+                byLatch1 |= LED1;
+            } else if(battery_soc < 50.0f) {
+                // Two LEDs - 25-50%
+                byLatch1 |= (LED1 | LED2);
+            } else if(battery_soc < 75.0f) {
+                // Three LEDs - 50-75%
+                byLatch1 |= (LED1 | LED2 | LED3);
+            } else {
+                // Four LEDs - 75-100%
+                byLatch1 |= (LED1 | LED2 | LED3 | LED4);
+            }
+        }
         
-        // this is our timer indicator, fixture can turn off automatically when time elapses
-        //   push this button to set the LED and set the time, round robin on the settings each time button is pushed
+        // Timer indicator - cycle through timer states with BUTTON2
         // LED1 - no timer, just run until battery is exhausted
         // LED2 - automatic off at 1 hour
         // LED3 - automatic off at 3 hours
         // LED4 - automatic off at 5 hours
-        if(byButtons & BUTTON2)
-            byLatch1 |= LED3;
-        else
-            byLatch1 &= ~LED3;
+        if((byButtons & BUTTON2) && !(byLastButton & BUTTON2)) {
+            // Button just pressed - cycle to next timer state
+            timer_state++;
+            if(timer_state >= TIMER_MAX) {
+                timer_state = TIMER_OFF;
+            }
+            
+            // Set timer based on state
+            switch(timer_state) {
+                case TIMER_OFF:
+                    auto_off_timer = 0;
+                    break;
+                case TIMER_1HR:
+                    auto_off_timer = 60UL * 60UL * 1000UL;  // 1 hour in ms
+                    break;
+                case TIMER_3HR:
+                    auto_off_timer = 3UL * 60UL * 60UL * 1000UL;  // 3 hours in ms
+                    break;
+                case TIMER_5HR:
+                    auto_off_timer = 5UL * 60UL * 60UL * 1000UL;  // 5 hours in ms
+                    break;
+                default:
+                    timer_state = TIMER_OFF;
+                    auto_off_timer = 0;
+                    break;
+            }
+        }
+        
+        // Display timer state on LEDs when not showing battery
+        if(!(byButtons & BUTTON1)) {
+            // Clear timer LEDs
+            byLatch1 &= ~(LED2 | LED3 | LED4);
+            
+            switch(timer_state) {
+                case TIMER_1HR:
+                    byLatch1 |= LED2;
+                    break;
+                case TIMER_3HR:
+                    byLatch1 |= LED3;
+                    break;
+                case TIMER_5HR:
+                    byLatch1 |= LED4;
+                    break;
+                case TIMER_OFF:
+                default:
+                    // No LED for timer off
+                    break;
+            }
+        }
             
         // this is our ON/OFF button - toggle LEDs
         if(bLEDsOn == true) {
@@ -253,6 +351,21 @@ int main(void) {
         if (fBrightness < 0.0f) fBrightness = 0.0f;
         if (fBrightness > 1.0f) fBrightness = 1.0f;
         
+        // Check auto-off timer
+        if(bLEDsOn && auto_off_timer > 0) {
+            if(auto_off_timer > 0) {
+                auto_off_timer--;
+            }
+            if(auto_off_timer == 0) {
+                bLEDsOn = false;  // Auto turn off
+            }
+        }
+        
+        // Check for low battery - force off if too low
+        if(battery_low_warning && bLEDsOn) {
+            bLEDsOn = false;
+        }
+        
         // Apply ON/OFF control
         if (bLEDsOn) {
             // LEDs are ON - use the brightness from encoder
@@ -266,12 +379,13 @@ int main(void) {
         }
 
 #ifdef DEBUGOUT
-        // Heartbeat every 2 seconds
+        // Heartbeat every 2 seconds with battery status
         static uint16_t heartbeat = 0;
         if (!heartbeat) {
             heartbeat = 2000;
             int16_t pos = QuadDec_GetPosition();
-            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d\n\r", pos);
+            uint16_t count = sprintf((char*)byUARTBuffer,"Pos:%d V:%umV SoC:%.1f%% Chg:0x%04X\n\r", 
+                                    pos, battery_voltage_mv, battery_soc, uiChargerStatus);
             UART_SpiUartPutArray((uint8*)&byUARTBuffer, count);
             // Don't wait for TX to complete
         }

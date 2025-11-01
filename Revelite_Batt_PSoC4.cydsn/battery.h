@@ -38,17 +38,18 @@
 #define BQ25730_MANUFACTURER_ID     0xFE
 #define BQ25730_DEVICE_ID           0xFF
 
-// Battery Configuration for 4S LiPo (14.4V nominal, 16.8V max)
+// Battery Configuration for 4S LiPo (14.4V nominal, 16V max charge)
 #define BATTERY_CELLS               4
-#define CELL_MAX_VOLTAGE_MV         4200    // 4.2V per cell max
-#define BATTERY_MAX_VOLTAGE_MV      (CELL_MAX_VOLTAGE_MV * BATTERY_CELLS)  // 16800 mV
+#define CELL_MAX_VOLTAGE_MV         4000    // 4.0V per cell max (conservative)
+#define BATTERY_MAX_VOLTAGE_MV      (CELL_MAX_VOLTAGE_MV * BATTERY_CELLS)  // 16000 mV
 #define BATTERY_CAPACITY_WH         50.4    // 50.4 Watt-hours
 #define BATTERY_NOMINAL_VOLTAGE     14.4    // Volts
 #define BATTERY_CAPACITY_MAH        ((BATTERY_CAPACITY_WH / BATTERY_NOMINAL_VOLTAGE) * 1000)  // ~3500 mAh
+#define BATTERY_LOW_CUTOFF_MV       12500   // Low voltage cutoff (3.125V per cell)
 
 // Charging Parameters
 #define CHARGE_CURRENT_MA           1000    // 1A charge current
-#define MIN_SYS_VOLTAGE_MV          12800   // Minimum system voltage (3.2V per cell)
+#define MIN_SYS_VOLTAGE_MV          12500   // Minimum system voltage for safe operation
 
 // Charger Status Bits
 #define BQ25730_STATUS_AC_STAT          (1 << 15)
