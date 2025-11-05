@@ -7,6 +7,7 @@
 #include "CLI.h"
 #include "battery.h"
 #include "LTC2944.h"
+#include "fusb302.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -295,6 +296,8 @@ void CLI_I2CScan(void) {
             // Identify known devices
             if (addr == BQ25730_ADDR) {
                 CLI_Print(" (BQ25730 Charger)\r\n");
+            } else if (addr == FUSB302_ADDR) {
+                CLI_Print(" (FUSB302 USB-C PD)\r\n");
             } else if (addr == LTC2944_ADDR) {
                 CLI_Print(" (LTC2944 Fuel Gauge)\r\n");
             } else if (addr == 0x70 || addr == 0x71) {

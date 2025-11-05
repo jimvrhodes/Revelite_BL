@@ -26,17 +26,46 @@ void BQ25730_Write(uint8_t reg, uint16_t value) {
     I2CM_SyncWrite(BQ25730_ADDR, buffer, 3);
 }
 
-// Read 16-bit value from BQ25730 register using proven I2C functions
+// Read 16-bit value from BQ25730/RT9478M register using proven I2C functions
 uint16_t BQ25730_Read(uint8_t reg) {
     uint8_t write_buf[1];
     uint8_t read_buf[2];
     
-    // Write register address
-    write_buf[0] = reg;
-    I2CM_SyncWrite(BQ25730_ADDR, write_buf, 1);
+    // Initialize read buffer to detect communication errors
+    read_buf[0] = 0xFF;
+    read_buf[1] = 0xFF;
     
-    // Read 2 bytes (LSB, MSB)
-    I2CM_SyncRead(BQ25730_ADDR, read_buf, 2);
+    I2CM_I2CMasterClearStatus();
+    
+    // Write register address - use minimal timeout to keep clock running
+    uint32 status = I2CM_I2CMasterSendStart(BQ25730_ADDR, I2CM_I2C_WRITE_XFER_MODE, 10);
+    if (status != I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterSendStop(10);
+        return 0xFFFF;  // Return error indicator
+    }
+    
+    // Write register byte with minimal timeout (780us pause is here!)
+    status = I2CM_I2CMasterWriteByte(reg, 1);  // Changed from 25 to 1 to minimize delay
+    if (status != I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterSendStop(10);
+        return 0xFFFF;
+    }
+    
+    // NO DELAY HERE! Clock must run continuously during the transaction
+    // Immediately send repeated start - minimize timeout
+    
+    // Repeated start for read operation - keep clock running continuously
+    status = I2CM_I2CMasterSendRestart(BQ25730_ADDR, I2CM_I2C_READ_XFER_MODE, 1);  // Minimal timeout
+    if (status != I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterSendStop(10);
+        return 0xFFFF;
+    }
+    
+    // Read 2 bytes: LSB first, then MSB (per SMBus protocol) - minimal timeouts
+    I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, &read_buf[0], 1);  // LSB with ACK
+    I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, &read_buf[1], 1);  // MSB with NACK
+    
+    I2CM_I2CMasterSendStop(10);
     
     return read_buf[0] | (read_buf[1] << 8);
 }
@@ -45,77 +74,117 @@ uint16_t BQ25730_Read(uint8_t reg) {
 // BQ25730 Initialization and Configuration
 //=============================================================================
 
-// Initialize BQ25730 battery charger for 4S LiPo battery
+// Initialize BQ25730/RT9478M battery charger for 4S LiPo battery
+// IMPORTANT: I2C master (I2CM) must be configured for 100kHz (not 50kHz)
+// Set this in PSoC Creator: Double-click I2CM component -> Data Rate = 100 kbps
 bool BQ25730_Init(void) {
     
-    // Note: Skipping ID check as register reads are returning 0xFFFF
-    // The chip responds to I2C address scan, so it's present
-    // This might be a timing issue or chip variant
+    CyDelay(100);  // Give chip time to be ready after power-up
     
-    CyDelay(100);  // Give chip time to be ready
+    // No unlock sequence needed - BQ25720EVM testing showed immediate communication works
+    // Clock must run continuously during each transaction (no delays mid-transaction)
+    // The 15ms delays are only BETWEEN separate transactions, not within one
     
-    // RT9478M SPECIFIC: Unlock BATFET control by writing to AuxFunction register
-    // Register 0x40, bit 7 (UNLOCK_PORT_CTRL) must be 1 to activate EN_PORT_CTRL
-    BQ25730_Write(0x40, 0x8100);  // Set bit 7 = 1, keep default 0x8100 value
-    CyDelay(10);
+#ifdef DEBUGOUT
+    char buffer[100];
+    int cnt;
+    
+    UART_SpiUartPutArray((uint8*)"Charger: Testing SMBus communication...\r\n", 41);
+    
+    // Try reading some known registers to verify I2C is working
+    uint16_t reg_12 = BQ25730_Read(0x12);  // ChargeOption0 - should have default value
+    cnt = sprintf(buffer, "Reg 0x12 (ChargeOpt0) = 0x%04X\r\n", reg_12);
+    UART_SpiUartPutArray((uint8*)buffer, cnt);
+    CyDelay(15);  // 15ms between transactions
+    
+    uint16_t reg_20 = BQ25730_Read(0x20);  // ChargerStatus
+    cnt = sprintf(buffer, "Reg 0x20 (Status) = 0x%04X\r\n", reg_20);
+    UART_SpiUartPutArray((uint8*)buffer, cnt);
+    CyDelay(15);  // 15ms between transactions
+    
+    uint16_t reg_40 = BQ25730_Read(0x40);  // AuxFunction
+    cnt = sprintf(buffer, "Reg 0x40 (AuxFunc) = 0x%04X\r\n", reg_40);
+    UART_SpiUartPutArray((uint8*)buffer, cnt);
+    CyDelay(15);  // 15ms between transactions
+    
+    // Try the manufacturer/device ID registers
+    uint16_t mfg_id = BQ25730_Read(0xFE);
+    cnt = sprintf(buffer, "Reg 0xFE (MfgID) = 0x%04X\r\n", mfg_id);
+    UART_SpiUartPutArray((uint8*)buffer, cnt);
+    CyDelay(15);  // 15ms between transactions
+    
+    uint16_t dev_id = BQ25730_Read(0xFF);
+    cnt = sprintf(buffer, "Reg 0xFF (DevID) = 0x%04X\r\n", dev_id);
+    UART_SpiUartPutArray((uint8*)buffer, cnt);
+    CyDelay(15);  // 15ms between transactions
+    
+    if (reg_12 == 0xFFFF && reg_20 == 0xFFFF) {
+        UART_SpiUartPutArray((uint8*)"ERROR: No SMBus communication!\r\n", 33);
+        return false;
+    }
+    
+    if (mfg_id == 0xFFFF || dev_id == 0xFFFF) {
+        UART_SpiUartPutArray((uint8*)"Note: Mfg/Dev ID regs not responding\r\n", 39);
+    }
+#endif
     
     // ChargeOption0 [0x12]: Basic charge control
     // Bit 0: Enable charging (0=enable, 1=disable)
     // Bit 5: Enable IBAT (1=enable)
     // Bit 8: Enable IDPM (1=enable)
     BQ25730_Write(BQ25730_CHARGE_OPTION_0, 0x0120);  // Enable charging, IBAT, IDPM
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing - 15ms between transactions
     
     // Set Maximum Charge Voltage [0x15]
     // Resolution: 8mV per LSB
     // For 4S LiPo: 4.2V * 4 = 16.8V = 16800mV
     // Register value = 16800mV / 8mV = 2100 (0x0834)
     BQ25730_Write(BQ25730_MAX_CHARGE_VOLTAGE, BATTERY_MAX_VOLTAGE_MV / 8);
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     // Set Charge Current [0x14]
     // Resolution: 64mA per LSB
     // For 1A charge current: 1000mA / 64 = 15.625 -> 16 (0x0010)
     BQ25730_Write(BQ25730_CHARGE_CURRENT, CHARGE_CURRENT_MA / 64);
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     // Set Minimum System Voltage [0x3E]
     // Resolution: 256mV per LSB
     // For 12.8V: 12800mV / 256 = 50 (0x0032)
     BQ25730_Write(BQ25730_MIN_SYS_VOLTAGE, MIN_SYS_VOLTAGE_MV / 256);
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     // Set Input Voltage [0x3D] - typical USB-C PD voltage
     // Resolution: 64mV per LSB
     // For 20V input: 20000mV / 64 = 312 (0x0138)
     BQ25730_Write(BQ25730_INPUT_VOLTAGE, 20000 / 64);
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     // Set Input Current [0x3F] - limit to reasonable value
     // Resolution: 50mA per LSB
     // For 3A input: 3000mA / 50 = 60 (0x003C)
     BQ25730_Write(BQ25730_INPUT_CURRENT, 3000 / 50);
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     // ChargeOption1 [0x30]: ADC and safety timer settings
     // Enable ADC for monitoring
     BQ25730_Write(BQ25730_CHARGE_OPTION_1, 0x0000);  // Default settings
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     // ChargeOption2 [0x31]: ILIM and other settings
     BQ25730_Write(BQ25730_CHARGE_OPTION_2, 0x0000);  // Default settings
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     // ChargeOption3 [0x32]: OTG and other settings
     BQ25730_Write(BQ25730_CHARGE_OPTION_3, 0x0000);  // Default settings, OTG disabled
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     // ADC Option [0x35]: Enable continuous ADC conversion
     // Bit 15: ADC_EN (1=enable)
     // Bit 14: ADC_CONV (1=one-shot, 0=continuous)
     // Bit 13: ADC_START (1=start conversion)
     BQ25730_Write(BQ25730_ADC_OPTION, BQ25730_ADC_EN | BQ25730_ADC_CONV_START);
-    CyDelay(10);
+    CyDelay(15);  // SMBus timing
     
     return true;
 }

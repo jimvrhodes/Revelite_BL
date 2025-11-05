@@ -60,6 +60,7 @@
 #include <buttons.h>
 #include <battery.h>
 #include <LTC2944.h>
+#include <fusb302.h>
 //#include <RT9478M.h>  // Not compiled yet - using inline functions below
 #include <CLI.h>
 
@@ -180,18 +181,13 @@ int main(void) {
     // Initialize battery charger (BQ25730) for 4S LiPo
 #ifdef DEBUGOUT
     UART_SpiUartPutArray((uint8*)"Init BQ25730...\r\n", 17);
-    // Try reading device ID first
-    uint16_t dev_id = BQ25730_Read(BQ25730_DEVICE_ID);
-    uint16_t mfg_id = BQ25730_Read(BQ25730_MANUFACTURER_ID);
-    uint16_t cnt = sprintf((char*)byUARTBuffer,"BQ ID:0x%04X MFG:0x%04X\r\n", dev_id, mfg_id);
-    UART_SpiUartPutArray((uint8*)&byUARTBuffer, cnt);
 #endif
     bool chg_ok = BQ25730_Init();
 #ifdef DEBUGOUT
     if(chg_ok) {
-        UART_SpiUartPutArray((uint8*)"BQ25730 OK\r\n", 12);
+        UART_SpiUartPutArray((uint8*)"BQ25730 Init OK\r\n", 17);
     } else {
-        UART_SpiUartPutArray((uint8*)"BQ25730 FAIL\r\n", 14);
+        UART_SpiUartPutArray((uint8*)"BQ25730 Init FAIL\r\n", 19);
     }
 #endif
     
@@ -208,8 +204,25 @@ int main(void) {
         UART_SpiUartPutArray((uint8*)"LTC2944 FAIL\r\n", 14);
     }
     uint8_t fg_ctrl = LTC2944_Read(LTC2944_REG_CONTROL);
-    cnt = sprintf((char*)byUARTBuffer,"LTC2944 Ctrl: 0x%02X (expect 0xEA)\r\n", fg_ctrl);
+    int cnt = sprintf((char*)byUARTBuffer,"LTC2944 Ctrl: 0x%02X (expect 0xEA)\r\n", fg_ctrl);
     UART_SpiUartPutArray((uint8*)&byUARTBuffer, cnt);
+#endif
+    
+    // Initialize FUSB302BMPX USB-PD controller (address 0x22)
+#ifdef DEBUGOUT
+    UART_SpiUartPutArray((uint8*)"Init FUSB302...\r\n", 17);
+#endif
+    bool pd_ok = FUSB302_Init();
+#ifdef DEBUGOUT
+    if(pd_ok) {
+        UART_SpiUartPutArray((uint8*)"FUSB302 OK\r\n", 12);
+        FUSB302_Status_t pd_status = FUSB302_GetStatus();
+        cnt = sprintf((char*)byUARTBuffer,"FUSB302: VBUS=%s CC=%d\r\n", 
+                     pd_status.vbus_ok ? "OK" : "NO", pd_status.cc_termination);
+        UART_SpiUartPutArray((uint8*)&byUARTBuffer, cnt);
+    } else {
+        UART_SpiUartPutArray((uint8*)"FUSB302 FAIL\r\n", 14);
+    }
 #endif
     
 #ifdef DEBUGOUT
@@ -245,18 +258,18 @@ int main(void) {
         }
         
         // Rate-limit button/latch polling to reduce I2C traffic
-        extern volatile uint16 uiButton_Poll_Timer;
+        // extern volatile uint16 uiButton_Poll_Timer;
         if (!uiButton_Poll_Timer) {
             uiButton_Poll_Timer = 20;  // Poll buttons every 20ms
             
-            byButtons = ReadButtonsOnChange(); // get button status
+        //    byButtons = ReadButtonsOnChange(); // get button status
             if(byButtons != 0x00)  // generic indicator
                 ERRLED_Write(1);
             else
                 ERRLED_Write(0);
                 
             // Also write latch updates here to batch I2C transactions
-            LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
+        //    LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
         }
 
         // TODO: Battery monitoring disabled until charger/fuel gauge verified
