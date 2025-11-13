@@ -24,11 +24,25 @@ typedef uint8 BYTE;
 //
 // prototypes
 uint16 GetAverageTEMP(void);
+
+// Legacy I2C functions (consider migrating to unified functions below)
 void LatchWrite(uint8 byAddress, uint8 byReg, uint8 byData);
-bool I2CM_SyncWrite(uint8 bySlaveAddr, uint8 *buffer, uint8 length);
 void LatchRead(uint8 byAddress, uint8 byReg, uint8* byData, uint8 byLength);
+void I2CRead16(uint8 byAddress, uint8 byReg, uint8* byData, uint8 byLength);  // Deprecated
+void I2CWrite16(uint8 byAddress, uint8 byReg, uint16 uiData);
+
+// Generic I2C buffer read/write functions
+bool I2CM_SyncWrite(uint8 bySlaveAddr, uint8 *buffer, uint8 length);
 bool I2CM_SyncRead(uint8 bySlaveAddr, uint8 *buffer, uint8 length);
 
+// Unified I2C single byte and word functions (use these for new code)
+uint8_t I2C_ReadByte(uint8_t addr, uint8_t reg);          // Read 8-bit register with repeated start
+void I2C_WriteByte(uint8_t addr, uint8_t reg, uint8_t value);  // Write 8-bit register
+uint16_t I2C_ReadWord(uint8_t addr, uint8_t reg);         // Read 16-bit LSB-first with repeated start
+uint16_t I2C_ReadWord_MSB(uint8_t addr, uint8_t reg);     // Read 16-bit MSB-first with repeated start
+void I2C_WriteWord(uint8_t addr, uint8_t reg, uint16_t value);  // Write 16-bit LSB-first
+//
+//
 // Quadrature decoder functions
 void InitQuadDec(void);
 float QuadDec_GetBrightnessScalar(void);

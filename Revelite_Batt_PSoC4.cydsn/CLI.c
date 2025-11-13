@@ -236,30 +236,34 @@ void CLI_ReadChargerRegisters(void) {
     char buf[80];
     
     // Try to read manufacturer ID and device ID
-    uint16_t mfr_id = BQ25730_Read(BQ25730_MANUFACTURER_ID);
-    uint16_t dev_id = BQ25730_Read(BQ25730_DEVICE_ID);
-    
-    sprintf(buf, "  Mfr ID:     0x%04X (expect 0x001E for RT9478M)\r\n", mfr_id);
+    I2CRead16(BQ25730_ADDR, BQ25730_MANUFACTURER_ID, (uint8*)buf, 2);    
+    uint16 mfr_id = buf[0];    
+    sprintf(buf, "  Mfr ID 0x2E:     0x%04X (expect 0x0040)\r\n", mfr_id);
     CLI_Print(buf);
     
-    sprintf(buf, "  Dev ID:     0x%04X (expect 0x001C for RT9478M)\r\n", dev_id);
+    I2CRead16(BQ25730_ADDR, BQ25730_DEVICE_ID, (uint8*)buf, 2);    
+    uint16 dev_id = buf[0] + (buf[1] << 8);    
+    sprintf(buf, "  Dev ID 0x2F:     0x%04X (expect 0x00D5)\r\n", dev_id);
     CLI_Print(buf);
     
-    // Read key configuration registers
-    uint16_t charge_opt0 = BQ25730_Read(BQ25730_CHARGE_OPTION_0);
-    uint16_t charge_curr = BQ25730_Read(BQ25730_CHARGE_CURRENT);
-    uint16_t charge_volt = BQ25730_Read(BQ25730_MAX_CHARGE_VOLTAGE);
-    uint16_t status = BQ25730_Read(BQ25730_CHARGER_STATUS);
-    
+    // Read key configuration registers   
+    I2CRead16(BQ25730_ADDR, BQ25730_CHARGE_OPTION_0, (uint8*)buf, 2);    
+    uint16 charge_opt0 = buf[0] + (buf[1] << 8);
     sprintf(buf, "  ChgOpt0:    0x%04X\r\n", charge_opt0);
     CLI_Print(buf);
     
+    I2CRead16(BQ25730_ADDR, BQ25730_CHARGE_CURRENT, (uint8*)buf, 2);    
+    uint16 charge_curr = buf[0] + (buf[1] << 8);    
     sprintf(buf, "  ChgCurr:    0x%04X (%u mA)\r\n", charge_curr, charge_curr * 64);
     CLI_Print(buf);
     
+    I2CRead16(BQ25730_ADDR, BQ25730_MAX_CHARGE_VOLTAGE, (uint8*)buf, 2);    
+    uint16 charge_volt = buf[0] + (buf[1] << 8);    
     sprintf(buf, "  ChgVolt:    0x%04X (%u mV)\r\n", charge_volt, charge_volt * 8);
     CLI_Print(buf);
-    
+        
+    I2CRead16(BQ25730_ADDR, BQ25730_CHARGER_STATUS, (uint8*)buf, 2);    
+    uint16 status = buf[0] + (buf[1] << 8);    
     sprintf(buf, "  Status:     0x%04X\r\n", status);
     CLI_Print(buf);
 }

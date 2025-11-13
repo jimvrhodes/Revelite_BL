@@ -13,30 +13,32 @@
 // BQ25730 I2C Address
 #define BQ25730_ADDR 0x6B // 7-bit I2C address (hardware strapped to 0x6B)
 
-// BQ25730 Register Addresses
-#define BQ25730_CHARGE_OPTION_0     0x12
-#define BQ25730_CHARGE_CURRENT      0x14
-#define BQ25730_MAX_CHARGE_VOLTAGE  0x15
-#define BQ25730_CHARGE_OPTION_1     0x30
-#define BQ25730_CHARGE_OPTION_2     0x31
-#define BQ25730_CHARGE_OPTION_3     0x32
-#define BQ25730_PROCHOT_OPTION_0    0x33
-#define BQ25730_PROCHOT_OPTION_1    0x34
-#define BQ25730_ADC_OPTION          0x35
+// NEW from GUI - BQ25730 Register Addresses
+#define BQ25730_CHARGE_OPTION_0     0x00
+#define BQ25730_CHARGE_CURRENT      0x02
+#define BQ25730_MAX_CHARGE_VOLTAGE  0x04
+#define BQ25730_OTG_VOLTAGE         0x06
+#define BQ25730_OTG_CURRENT         0x08
+#define BQ25730_INPUT_VOLTAGE       0x0A
+#define BQ25730_MIN_SYS_VOLTAGE     0x0C
+#define BQ25730_INHOST       0x0E
 #define BQ25730_CHARGER_STATUS      0x20
-#define BQ25730_PROCHOT_STATUS      0x21
-#define BQ25730_IIN_DPM             0x22
-#define BQ25730_ADC_VBUS_PSYS       0x23
-#define BQ25730_ADC_IBAT            0x24
-#define BQ25730_ADC_CMPIN_IIN       0x25
-#define BQ25730_ADC_VSYS_VBAT       0x26
-#define BQ25730_OTG_VOLTAGE         0x3B
-#define BQ25730_OTG_CURRENT         0x3C
-#define BQ25730_INPUT_VOLTAGE       0x3D
-#define BQ25730_MIN_SYS_VOLTAGE     0x3E
-#define BQ25730_INPUT_CURRENT       0x3F
-#define BQ25730_MANUFACTURER_ID     0xFE
-#define BQ25730_DEVICE_ID           0xFF
+#define BQ25730_PROCHOT_STATUS      0x22
+#define BQ25730_IIN_DPM             0x24
+#define BQ25730_ADC_VBUS_PSYS       0x26
+#define BQ25730_ADC_IBAT            0x28
+#define BQ25730_ADC_CMPIN_IIN       0x2A
+#define BQ25730_ADC_VSYS_VBAT       0x2C
+#define BQ25730_MANUFACTURER_ID     0x2E
+#define BQ25730_DEVICE_ID           0x2F
+#define BQ25730_CHARGE_OPTION_1     0x30
+#define BQ25730_CHARGE_OPTION_2     0x32
+#define BQ25730_CHARGE_OPTION_3     0x34
+#define BQ25730_PROCHOT_OPTION_0    0x36
+#define BQ25730_PROCHOT_OPTION_1    0x38
+#define BQ25730_ADC_OPTION          0x3A
+#define BQ25730_CHARGE_OPTION_4     0x3C
+#define BQ25730_VMIN_ACT_PROt       0x3E
 
 // Battery Configuration for 4S LiPo (14.4V nominal, 16V max charge)
 #define BATTERY_CELLS               4

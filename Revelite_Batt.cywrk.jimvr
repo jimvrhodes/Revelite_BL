@@ -13,7 +13,7 @@
 <v>Output</v>
 </TreeKeys>
 <TreeStates>
-<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="Revelite_Batt\Revelite_Batt_PSoC4\TopDesign">
+<CyGuid_2a325b3b-c96a-4e9f-b7a0-2c44ecb5f237 type_name="CyDesigner.Common.Base.Controls.CyTreeViewState" version="1" SelectedNodeId="Revelite_Batt\Revelite_Batt_PSoC4\Source Files\subs.c">
 <ExpandedNodeIds>
 <v>Revelite_Batt</v>
 <v>Revelite_Batt\Revelite_Batt_PSoC4</v>
@@ -321,15 +321,16 @@
 </CyGuid_fdba8dfd-b15b-4469-9bbb-9e40c3e70997>
 <Unloaded />
 <OpenDocs>
+<name v=".\Revelite_Batt_PSoC4.cydsn\TopDesign\TopDesign.cysch" />
 <name v=".\Revelite_Batt_PSoC4.cydsn\main.c" />
 <name v=".\Revelite_Batt_PSoC4.cydsn\isr.c" />
-<name v=".\Revelite_Batt_PSoC4.cydsn\TopDesign\TopDesign.cysch" />
-<name v=".\Revelite_Batt_PSoC4.cydsn\subs.c" />
-<name v=".\Revelite_Batt_PSoC4.cydsn\main.h" />
 <name v=".\Revelite_Batt_PSoC4.cydsn\battery.c" />
+<name v=".\Revelite_Batt_PSoC4.cydsn\buttons.c" />
+<name v=".\Revelite_Batt_PSoC4.cydsn\main.h" />
+<name v=".\Revelite_Batt_PSoC4.cydsn\CLI.c" />
 <name v=".\Revelite_Batt_PSoC4.cydsn\battery.h" />
-<name v=".\Revelite_Batt_PSoC4.cydsn\LTC2944.h" />
-<name v=".\Revelite_Batt_PSoC4.cydsn\LTC2944.c" />
+<name v=".\Revelite_Batt_PSoC4.cydsn\fusb302.c" />
+<name v=".\Revelite_Batt_PSoC4.cydsn\fusb302.h" />
 </OpenDocs>
 <OpenDocsLayout><![CDATA[<?xml version="1.0"?><!--
 
@@ -337,7 +338,7 @@
   Copyright (c) 2001-2016 Actipro Software LLC.  All rights reserved.
   http://www.actiprosoftware.com
 
---><DocumentLayout Version="1.0"><LayoutData><TabbedMdiRootContainer Orientation="Horizontal"><TabbedMdiContainer Size="1409, 891" SelectedTabbedMdiWindow="acd09827-c67f-4379-9d79-57f3cc397d15"><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\main.c" Guid="d64c005c-6e56-4ff8-90dd-62fa77f4faad" /><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\isr.c" Guid="876eabd3-28b7-439e-ae5f-f9ba545914f9" /><ToolWindow Key="Start Page:bd4649ab-da6b-4d04-a663-c722b8bf99db:Start Page" Guid="411d0942-8ea7-41ea-80e9-bc5f0735753d" /><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\TopDesign\TopDesign.cysch" Guid="903f0d9e-aefc-43ea-b888-f9092bbc3806" /><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\subs.c" Guid="beafc26c-2e5d-4b62-a3a3-615573ae5d65" /><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\main.h" Guid="cc906a6a-a622-498e-9820-cfb769cec400" /><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\battery.c" Guid="acd09827-c67f-4379-9d79-57f3cc397d15" /><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\battery.h" Guid="af6aecea-7ceb-4227-b440-f9cf39e3b688" /><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\LTC2944.h" Guid="f06c23eb-169e-438b-a77f-b8b4e78f2d37" /><DocumentWindow Key="C:\Users\jimvr\Documents\NED_Repo\Cerno\RevliteBPBatteryPowered\Software\Revelitel_Batt_PSoC4\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\LTC2944.c" Guid="40cb7e8f-53c9-44fb-b7ab-eb869a7a9061" /></TabbedMdiContainer></TabbedMdiRootContainer><FloatingContainers /></LayoutData></DocumentLayout>]]></OpenDocsLayout>
+--><DocumentLayout Version="1.0"><LayoutData><TabbedMdiRootContainer Orientation="Horizontal"><TabbedMdiContainer Size="1257, 891" SelectedTabbedMdiWindow="f54ce92c-311b-4a43-a249-0134001330f2"><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\TopDesign\TopDesign.cysch" Guid="faa542b1-ad25-4265-9cba-b08b57b96d22" /><ToolWindow Key="Start Page:bd4649ab-da6b-4d04-a663-c722b8bf99db:Start Page" Guid="411d0942-8ea7-41ea-80e9-bc5f0735753d" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\main.c" Guid="9213ff8b-beea-44d3-ba8e-49868593ad05" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\isr.c" Guid="be97f74b-7a53-449b-88ce-ab371f1b134a" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\battery.c" Guid="f54ce92c-311b-4a43-a249-0134001330f2" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\buttons.c" Guid="bcbcc65b-a739-4b6d-a071-f145917d964e" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\main.h" Guid="7d470d30-f34f-4a05-b6c9-974f00001472" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\CLI.c" Guid="7e572670-893c-4b81-b1df-9ed0d8f60211" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\battery.h" Guid="9dfa7c96-59d2-4502-87dd-3f0976c1458f" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\fusb302.c" Guid="96932202-3290-4405-81cd-871ff42aa93f" /><DocumentWindow Key="C:\Users\jimvr\WarpWorking\Revelite_Batt\Revelite_Batt_PSoC4.cydsn\fusb302.h" Guid="5759e274-d405-4f5c-a285-d37e4b611373" /></TabbedMdiContainer></TabbedMdiRootContainer><FloatingContainers /></LayoutData></DocumentLayout>]]></OpenDocsLayout>
 <config v="" />
 <AutoUpdate v="true" />
 </CyGuid_843a90a4-0c4b-4e44-991d-05e7fb117a21>

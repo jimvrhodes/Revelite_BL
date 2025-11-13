@@ -7,11 +7,7 @@
 // Revision History
 // 1.00B0		09-29-2025	First compile
 //
-//                          
 //
-//  ✅ Max charge voltage: 16.0V (line 45: 4.0V × 4 cells = 16000mV)
-//  ✅ Low cutoff: 12.5V (line 49: 3.125V per cell)
-//  ✅ Charge current: 1A (line 52: 1000mA)
 //
 // TODO
 // 1) 
@@ -178,26 +174,16 @@ int main(void) {
     byLatch2 |= BOOSTEN;
     LatchWrite(LATCH2, PCLA9538_OUTREG, byLatch2);
     
-    // Initialize battery charger (BQ25730) for 4S LiPo
-#ifdef DEBUGOUT
-    UART_SpiUartPutArray((uint8*)"Init BQ25730...\r\n", 17);
-#endif
     bool chg_ok = BQ25730_Init();
-#ifdef DEBUGOUT
     if(chg_ok) {
         UART_SpiUartPutArray((uint8*)"BQ25730 Init OK\r\n", 17);
     } else {
         UART_SpiUartPutArray((uint8*)"BQ25730 Init FAIL\r\n", 19);
     }
-#endif
     
     // Initialize fuel gauge (LTC2944)
     // Use M_1024 prescaler for ~3500mAh battery
-#ifdef DEBUGOUT
-    UART_SpiUartPutArray((uint8*)"Init LTC2944...\r\n", 17);
-#endif
     bool fg_ok = LTC2944_Init((uint16_t)BATTERY_CAPACITY_MAH, LTC2944_PRESCALER_M_1024);
-#ifdef DEBUGOUT
     if(fg_ok) {
         UART_SpiUartPutArray((uint8*)"LTC2944 OK\r\n", 12);
     } else {
@@ -206,14 +192,9 @@ int main(void) {
     uint8_t fg_ctrl = LTC2944_Read(LTC2944_REG_CONTROL);
     int cnt = sprintf((char*)byUARTBuffer,"LTC2944 Ctrl: 0x%02X (expect 0xEA)\r\n", fg_ctrl);
     UART_SpiUartPutArray((uint8*)&byUARTBuffer, cnt);
-#endif
     
     // Initialize FUSB302BMPX USB-PD controller (address 0x22)
-#ifdef DEBUGOUT
-    UART_SpiUartPutArray((uint8*)"Init FUSB302...\r\n", 17);
-#endif
     bool pd_ok = FUSB302_Init();
-#ifdef DEBUGOUT
     if(pd_ok) {
         UART_SpiUartPutArray((uint8*)"FUSB302 OK\r\n", 12);
         FUSB302_Status_t pd_status = FUSB302_GetStatus();
@@ -223,12 +204,9 @@ int main(void) {
     } else {
         UART_SpiUartPutArray((uint8*)"FUSB302 FAIL\r\n", 14);
     }
-#endif
     
-#ifdef DEBUGOUT
     UART_Start();
     CLI_Init();  // Initialize command line interface
-#endif
     
     ADC_Start();
 	ADC_StartConvert();
@@ -256,70 +234,41 @@ int main(void) {
             ACTLED_Write(~ACTLED_Read());
             uiBlinkTimer = BLINKTIME;
         }
-        
+                
         // Rate-limit button/latch polling to reduce I2C traffic
         // extern volatile uint16 uiButton_Poll_Timer;
         if (!uiButton_Poll_Timer) {
-            uiButton_Poll_Timer = 20;  // Poll buttons every 20ms
-            
-        //    byButtons = ReadButtonsOnChange(); // get button status
-            if(byButtons != 0x00)  // generic indicator
-                ERRLED_Write(1);
-            else
-                ERRLED_Write(0);
-                
-            // Also write latch updates here to batch I2C transactions
-        //    LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
+            uiButton_Poll_Timer = 50;  // Poll buttons every 20ms            
+            byButtons = ReadButtonsOnChange(); // get button status
         }
 
-        // TODO: Battery monitoring disabled until charger/fuel gauge verified
-        // Update battery status every 500ms
-        //if(!battery_update_timer) {
-        //    battery_update_timer = 500;
-        //    
-        //    // Read fuel gauge
-        //    FuelGauge_t fg_status = LTC2944_GetStatus();
-        //    battery_soc = fg_status.state_of_charge;
-        //    battery_voltage_mv = (uint16_t)fg_status.voltage_mv;
-        //    
-        //    // Check for low battery condition
-        //    if(battery_voltage_mv < BATTERY_LOW_CUTOFF_MV) {
-        //        battery_low_warning = true;
-        //    } else if(battery_voltage_mv > (BATTERY_LOW_CUTOFF_MV + 200)) {  // 200mV hysteresis
-        //        battery_low_warning = false;
-        //    }
-        //    
-        //    // Read charger status
-        //    uiChargerStatus = BQ25730_Read(BQ25730_CHARGER_STATUS);
-        //}
-        //if(battery_update_timer) battery_update_timer--;
-
-        // TODO: Battery charge indicator - disabled until battery monitoring working
         // Battery charge indicator using four LEDs on LATCH1
         // Display when BUTTON1 is pressed
-        //if(byButtons & BUTTON1) {
-        //    // Clear all battery LEDs first
-        //    byLatch1 &= ~(LED1 | LED2 | LED3 | LED4);
-        //    
-        //    if(battery_low_warning) {
-        //        // Flash single LED for critically low battery
-        //        if(uiBlinkTimer < (BLINKTIME/2)) {
-        //            byLatch1 |= LED1;
-        //        }
-        //    } else if(battery_soc < 25.0f) {
-        //        // One LED - less than 25%
-        //        byLatch1 |= LED1;
-        //    } else if(battery_soc < 50.0f) {
-        //        // Two LEDs - 25-50%
-        //        byLatch1 |= (LED1 | LED2);
-        //    } else if(battery_soc < 75.0f) {
-        //        // Three LEDs - 50-75%
-        //        byLatch1 |= (LED1 | LED2 | LED3);
-        //    } else {
-        //        // Four LEDs - 75-100%
-        //        byLatch1 |= (LED1 | LED2 | LED3 | LED4);
-        //    }
-        //}
+        if(byButtons & BUTTON1 && !(byLastButton & BUTTON1)) {
+            // Clear all battery LEDs first
+            byLatch1 &= ~(LED1 | LED2 | LED3 | LED4);
+            
+            if(battery_low_warning) {
+                // Flash single LED for critically low battery
+                if(uiBlinkTimer < (BLINKTIME/2)) {
+                    byLatch1 |= LED1;
+                }
+            } else if(battery_soc < 25.0f) {
+                // One LED - less than 25%
+                byLatch1 |= LED1;
+            } else if(battery_soc < 50.0f) {
+                // Two LEDs - 25-50%
+                byLatch1 |= (LED1 | LED2);
+            } else if(battery_soc < 75.0f) {
+                // Three LEDs - 50-75%
+                byLatch1 |= (LED1 | LED2 | LED3);
+            } else {
+                // Four LEDs - 75-100%
+                byLatch1 |= (LED1 | LED2 | LED3 | LED4);
+            }
+            
+            LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
+        }
         
         // Timer indicator - cycle through timer states with BUTTON2
         // LED1 - no timer, just run until battery is exhausted
@@ -378,6 +327,7 @@ int main(void) {
             } else {
                 // Show timer state
                 switch(timer_state) {
+                    case TIMER_MAX:
                     case TIMER_OFF:
                         byLatch1 |= LED1;
                         break;                
@@ -392,14 +342,14 @@ int main(void) {
                         break;
                 }
             }
+            
+            LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
         } else {
             // Timer expired - turn off all indicator LEDs to save power
             byLatch1 &= ~(LED1 | LED2 | LED3 | LED4);
+            LatchWrite(LATCH1, PCLA9538_OUTREG, byLatch1);
         }
-        
-        // Write the latch with battery/timer LED updates (only when button polling happens)
-        // Latch write moved inside button poll timer block above to reduce I2C traffic
-            
+                    
         // this is our ON/OFF button - toggle LEDs
         if(bLEDsOn == true) {
             if(ButtonState.byButtonLong & BUTTON3)
@@ -409,22 +359,20 @@ int main(void) {
         }        
         
         byLastButton = byButtons;
-            
-            
-#ifdef DEBUGOUT
+                        
         // Process CLI input
         if (UART_SpiUartGetRxBufferSize() > 0) {
             uint8_t byte = UART_SpiUartReadRxData();
             CLI_ProcessByte((char)byte);
         }
-#endif
 
         // Get brightness from quadrature decoder (0.0 to 1.0)
         float fBrightness = QuadDec_GetBrightnessScalar();
-        
         // Clamp brightness to valid range
-        if (fBrightness < 0.0f) fBrightness = 0.0f;
-        if (fBrightness > 1.0f) fBrightness = 1.0f;
+        if (fBrightness < 0.0f)
+            fBrightness = 0.0f;
+        if (fBrightness > 1.0f)
+            fBrightness = 1.0f;
         
         // Auto-off timer is decremented by the 1ms timer ISR
         // Check if timer expired
@@ -432,13 +380,12 @@ int main(void) {
             bLEDsOn = false;  // Auto turn off
         }
         
-        // TODO: Re-enable when battery monitoring is working correctly
         // Check for low battery - force off if too low (only on transition)
-        //static bool was_low_warning = false;
-        //if(battery_low_warning && !was_low_warning && bLEDsOn) {
-        //    bLEDsOn = false;
-        //}
-        //was_low_warning = battery_low_warning;
+        static bool was_low_warning = false;
+        if(battery_low_warning && !was_low_warning && bLEDsOn) {
+            bLEDsOn = false;
+        }
+        was_low_warning = battery_low_warning;
         
         // Apply ON/OFF control
         if (bLEDsOn) {
@@ -452,11 +399,6 @@ int main(void) {
             uiPWMTarget2 = 0;
         }
 
-#ifdef DEBUGOUT
-        // Heartbeat disabled - was causing constant I2C traffic
-        // Use CLI commands 'b' and 'f' to poll charger/fuel gauge on demand
-#endif
-
         uiTemp = GetAverageTEMP(); // DRIVER temperature rollback?
         if(bWeHaveSampledTEMP) {
             if(uiTemp <= MINTEMPADC)
@@ -467,9 +409,6 @@ int main(void) {
         }
             
 
-        
-        
-        
         
         if(bWriteInfo && !uiWriteEEPROMTimer) {
             bWriteInfo = false;

@@ -14,64 +14,23 @@ extern structInfo Info;
 extern bool blSaveToInfo;
 
 //=============================================================================
-// Low-level I2C Functions
+// Low-level I2C Functions - Using unified I2C functions from subs.c
 //=============================================================================
 
-// Write 8-bit value to LTC2944 register using low-level I2C API
+// Write 8-bit value to LTC2944 register
 void LTC2944_Write(uint8_t reg, uint8_t value) {
-    I2CM_I2CMasterClearStatus();
-    
-    if (I2CM_I2CMasterSendStart(LTC2944_ADDR, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterWriteByte(reg, 25);
-        I2CM_I2CMasterWriteByte(value, 25);
-    }
-    
-    I2CM_I2CMasterSendStop(25);
+    I2C_WriteByte(LTC2944_ADDR, reg, value);
 }
 
-// Read 8-bit value from LTC2944 register using low-level I2C API
+// Read 8-bit value from LTC2944 register
 uint8_t LTC2944_Read(uint8_t reg) {
-    uint8_t value = 0;
-    uint32_t status = 0;
-    
-    I2CM_I2CMasterClearStatus();
-    
-    // Write register address
-    if (I2CM_I2CMasterSendStart(LTC2944_ADDR, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterWriteByte(reg, 25);
-    }
-    
-    // Repeated start for read
-    if (I2CM_I2CMasterSendRestart(LTC2944_ADDR, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (uint8*)&value, 25);  // Read single byte, send NACK
-    }
-    
-    I2CM_I2CMasterSendStop(25);
-    
-    return value;
+    return I2C_ReadByte(LTC2944_ADDR, reg);
 }
 
 // Read 16-bit value (MSB first) starting at specified register
+// LTC2944 uses big-endian (MSB first) format
 uint16_t LTC2944_Read16(uint8_t reg_msb) {
-    uint8_t msb = 0, lsb = 0;
-    uint32_t status = 0;
-    
-    I2CM_I2CMasterClearStatus();
-    
-    // Write register address
-    if (I2CM_I2CMasterSendStart(LTC2944_ADDR, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterWriteByte(reg_msb, 25);
-    }
-    
-    // Repeated start for read
-    if (I2CM_I2CMasterSendRestart(LTC2944_ADDR, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, (uint8*)&msb, 25);   // Read MSB, send ACK
-        I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, (uint8*)&lsb, 25);   // Read LSB, send NACK
-    }
-    
-    I2CM_I2CMasterSendStop(25);
-    
-    return ((uint16_t)msb << 8) | lsb;
+    return I2C_ReadWord_MSB(LTC2944_ADDR, reg_msb);
 }
 
 //=============================================================================

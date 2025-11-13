@@ -11,31 +11,17 @@
 extern structInfo Info;
 
 //=============================================================================
-// Low-level I2C Functions
+// Low-level I2C Functions - Using unified I2C functions from subs.c
 //=============================================================================
 
 // Write 8-bit value to FUSB302 register
 void FUSB302_Write(uint8_t reg, uint8_t value) {
-    uint8_t buffer[2];
-    buffer[0] = reg;
-    buffer[1] = value;
-    
-    I2CM_SyncWrite(FUSB302_ADDR, buffer, 2);
+    I2C_WriteByte(FUSB302_ADDR, reg, value);
 }
 
 // Read 8-bit value from FUSB302 register
 uint8_t FUSB302_Read(uint8_t reg) {
-    uint8_t write_buf[1];
-    uint8_t read_buf[1];
-    
-    // Write register address
-    write_buf[0] = reg;
-    I2CM_SyncWrite(FUSB302_ADDR, write_buf, 1);
-    
-    // Read 1 byte
-    I2CM_SyncRead(FUSB302_ADDR, read_buf, 1);
-    
-    return read_buf[0];
+    return I2C_ReadByte(FUSB302_ADDR, reg);
 }
 
 //=============================================================================

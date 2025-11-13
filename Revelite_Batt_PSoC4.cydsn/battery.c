@@ -13,61 +13,17 @@
 extern structInfo Info;
 
 //=============================================================================
-// Low-level I2C Functions
+// Low-level I2C Functions - Using unified I2C functions from subs.c
 //=============================================================================
 
-// Write 16-bit value to BQ25730 register using proven I2C functions
+// Write 16-bit value to BQ25730 register (LSB-first per SMBus)
 void BQ25730_Write(uint8_t reg, uint16_t value) {
-    uint8_t buffer[3];
-    buffer[0] = reg;
-    buffer[1] = value & 0xFF;        // LSB
-    buffer[2] = (value >> 8) & 0xFF; // MSB
-    
-    I2CM_SyncWrite(BQ25730_ADDR, buffer, 3);
+    I2C_WriteWord(BQ25730_ADDR, reg, value);
 }
 
-// Read 16-bit value from BQ25730/RT9478M register using proven I2C functions
+// Read 16-bit value from BQ25730/RT9478M register (LSB-first per SMBus)
 uint16_t BQ25730_Read(uint8_t reg) {
-    uint8_t write_buf[1];
-    uint8_t read_buf[2];
-    
-    // Initialize read buffer to detect communication errors
-    read_buf[0] = 0xFF;
-    read_buf[1] = 0xFF;
-    
-    I2CM_I2CMasterClearStatus();
-    
-    // Write register address - use minimal timeout to keep clock running
-    uint32 status = I2CM_I2CMasterSendStart(BQ25730_ADDR, I2CM_I2C_WRITE_XFER_MODE, 10);
-    if (status != I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterSendStop(10);
-        return 0xFFFF;  // Return error indicator
-    }
-    
-    // Write register byte with minimal timeout (780us pause is here!)
-    status = I2CM_I2CMasterWriteByte(reg, 1);  // Changed from 25 to 1 to minimize delay
-    if (status != I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterSendStop(10);
-        return 0xFFFF;
-    }
-    
-    // NO DELAY HERE! Clock must run continuously during the transaction
-    // Immediately send repeated start - minimize timeout
-    
-    // Repeated start for read operation - keep clock running continuously
-    status = I2CM_I2CMasterSendRestart(BQ25730_ADDR, I2CM_I2C_READ_XFER_MODE, 1);  // Minimal timeout
-    if (status != I2CM_I2C_MSTR_NO_ERROR) {
-        I2CM_I2CMasterSendStop(10);
-        return 0xFFFF;
-    }
-    
-    // Read 2 bytes: LSB first, then MSB (per SMBus protocol) - minimal timeouts
-    I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, &read_buf[0], 1);  // LSB with ACK
-    I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, &read_buf[1], 1);  // MSB with NACK
-    
-    I2CM_I2CMasterSendStop(10);
-    
-    return read_buf[0] | (read_buf[1] << 8);
+    return I2C_ReadWord(BQ25730_ADDR, reg);
 }
 
 //=============================================================================
@@ -78,6 +34,10 @@ uint16_t BQ25730_Read(uint8_t reg) {
 // IMPORTANT: I2C master (I2CM) must be configured for 100kHz (not 50kHz)
 // Set this in PSoC Creator: Double-click I2CM component -> Data Rate = 100 kbps
 bool BQ25730_Init(void) {
+    
+    
+return true;    
+    
     
     CyDelay(100);  // Give chip time to be ready after power-up
     
@@ -163,7 +123,7 @@ bool BQ25730_Init(void) {
     // Set Input Current [0x3F] - limit to reasonable value
     // Resolution: 50mA per LSB
     // For 3A input: 3000mA / 50 = 60 (0x003C)
-    BQ25730_Write(BQ25730_INPUT_CURRENT, 3000 / 50);
+    BQ25730_Write(BQ25730_INHOST, 3000 / 50);
     CyDelay(15);  // SMBus timing
     
     // ChargeOption1 [0x30]: ADC and safety timer settings

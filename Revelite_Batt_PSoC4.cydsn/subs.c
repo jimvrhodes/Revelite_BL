@@ -169,6 +169,125 @@ bool I2CM_SyncRead(uint8 bySlaveAddr, uint8 *buffer, uint8 length) {
     return(error);
 }
 
+// Deprecated - use I2C_ReadWord() instead
+void I2CRead16(uint8 byAddress, uint8 byReg, uint8* byData, uint8 byLength) {
+    
+    uint8 buffer[2];
+    buffer[0] = byReg;
+    
+    I2CM_SyncWrite(byAddress, buffer, 1);
+    uint8 error = I2CM_SyncRead(byAddress, (uint8*)buffer, byLength);
+    
+    memcpy(byData, buffer, byLength);  // return value
+}
+
+//=============================================================================
+// Unified I2C Functions for Single Byte and Word Operations
+//=============================================================================
+
+// Read single byte (8-bit) from device register using repeated start
+uint8_t I2C_ReadByte(uint8_t addr, uint8_t reg) {
+    uint8_t value = 0;
+    
+    I2CM_I2CMasterClearStatus();
+    
+    // Write register address
+    if (I2CM_I2CMasterSendStart(addr, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterWriteByte(reg, 25);
+    }
+    
+    // Repeated start for read
+    if (I2CM_I2CMasterSendRestart(addr, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, &value, 25);  // Read single byte, send NACK
+    }
+    
+    I2CM_I2CMasterSendStop(25);
+    
+    return value;
+}
+
+// Write single byte (8-bit) to device register
+void I2C_WriteByte(uint8_t addr, uint8_t reg, uint8_t value) {
+    I2CM_I2CMasterClearStatus();
+    
+    if (I2CM_I2CMasterSendStart(addr, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterWriteByte(reg, 25);
+        I2CM_I2CMasterWriteByte(value, 25);
+    }
+    
+    I2CM_I2CMasterSendStop(25);
+}
+
+// Read 16-bit word from device register using repeated start
+// Returns LSB-first format (standard for most devices)
+uint16_t I2C_ReadWord(uint8_t addr, uint8_t reg) {
+    uint8_t lsb = 0, msb = 0;
+    
+    I2CM_I2CMasterClearStatus();
+    
+    // Write register address
+    if (I2CM_I2CMasterSendStart(addr, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterWriteByte(reg, 25);
+    }
+    
+    // Repeated start for read
+    if (I2CM_I2CMasterSendRestart(addr, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, &lsb, 25);   // Read LSB, send ACK
+        I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, &msb, 25);   // Read MSB, send NACK
+    }
+    
+    I2CM_I2CMasterSendStop(25);
+    
+    return (uint16_t)lsb | ((uint16_t)msb << 8);
+}
+
+// Read 16-bit word MSB-first (for devices that use big-endian)
+uint16_t I2C_ReadWord_MSB(uint8_t addr, uint8_t reg) {
+    uint8_t msb = 0, lsb = 0;
+    
+    I2CM_I2CMasterClearStatus();
+    
+    // Write register address
+    if (I2CM_I2CMasterSendStart(addr, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterWriteByte(reg, 25);
+    }
+    
+    // Repeated start for read
+    if (I2CM_I2CMasterSendRestart(addr, I2CM_I2C_READ_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterReadByte(I2CM_I2C_ACK_DATA, &msb, 25);   // Read MSB, send ACK
+        I2CM_I2CMasterReadByte(I2CM_I2C_NAK_DATA, &lsb, 25);   // Read LSB, send NACK
+    }
+    
+    I2CM_I2CMasterSendStop(25);
+    
+    return ((uint16_t)msb << 8) | (uint16_t)lsb;
+}
+
+// Write 16-bit word to device register (LSB-first format)
+void I2C_WriteWord(uint8_t addr, uint8_t reg, uint16_t value) {
+    I2CM_I2CMasterClearStatus();
+    
+    if (I2CM_I2CMasterSendStart(addr, I2CM_I2C_WRITE_XFER_MODE, 100) == I2CM_I2C_MSTR_NO_ERROR) {
+        I2CM_I2CMasterWriteByte(reg, 25);
+        I2CM_I2CMasterWriteByte(value & 0xFF, 25);        // LSB
+        I2CM_I2CMasterWriteByte((value >> 8) & 0xFF, 25); // MSB
+    }
+    
+    I2CM_I2CMasterSendStop(25);
+}
+
+
+// this is the write to the connector board PCLA9538 latch
+void I2CWrite16(uint8 byAddress, uint8 byReg, uint16 uiData) {
+    
+    uint8 buffer[3];
+    buffer[0] = byReg;
+    buffer[1] = uiData;
+    buffer[2] = uiData >> 8;
+        
+    uint8 error = I2CM_SyncWrite(byAddress, (uint8*)buffer, 3);
+}
+
 
 // EEPROM stuff
 const structInfo defaultInfo = {
